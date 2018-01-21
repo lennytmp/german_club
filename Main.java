@@ -17,7 +17,7 @@ public class Main {
   public static final int HP_UNIT = 5;
   public static boolean isProd = false;
 
-  private static final String[] mainButtons = {"fight", "profile", "wiseman"};
+  private static final String[] mainButtons = {"fight", "profile"};
   private static final String[] levelPointsButtons = {
     "improve strength", "improve vitality", "improve luck"
   };
@@ -264,19 +264,6 @@ public class Main {
       return;
     }
 
-    if (client.status == Client.Status.FIGHTING) {
-      for (int i = 0; i < client.challenge.length; i++) {
-        if (txt.equals(dict.get(client.challenge[i])[0])) {
-          client.lastFightActivitySince = curTime;
-          client.timeoutWarningSent = false;
-          Client opponent = Storage.getClientByChatId(client.fightingChatId);
-          handleHit(client, opponent, i == 0);
-          Storage.saveClients(opponent, client);
-        }
-      }
-      return;
-    }
-
     if (txt.equals("/healing potion") || txt.startsWith("healing potion [")) {
       if (!client.hasItem(Game.Item.HPOTION)) {
         msg(client, "You don't have any potions.");
@@ -344,6 +331,20 @@ public class Main {
       }
       return;
     }
+
+    if (client.status == Client.Status.FIGHTING) {
+      for (int i = 0; i < client.challenge.length; i++) {
+        if (txt.equals(dict.get(client.challenge[i])[0])) {
+          client.lastFightActivitySince = curTime;
+          client.timeoutWarningSent = false;
+          Client opponent = Storage.getClientByChatId(client.fightingChatId);
+          handleHit(client, opponent, i == 0);
+          Storage.saveClients(opponent, client);
+        }
+      }
+      return;
+    }
+
 
     // TODO: Add help page link here
     msg(client, "Use buttons below to make valid actions.");
