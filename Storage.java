@@ -11,7 +11,7 @@ import java.util.Set;
 class Storage {
   private static Map<Integer, String> clients = new HashMap<>();
   private static Gson g = new Gson();
-
+  
   static void saveClients(Client... clients) {
     String[] names =  new String[clients.length];
     String[] values =  new String[clients.length];

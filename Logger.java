@@ -19,6 +19,7 @@ import java.nio.file.StandardCopyOption;
 
 import java.util.Date;
 import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -30,6 +31,7 @@ class Logger {
   private static String clientsPath;
   private static String varsPath;
   private static String exceptionsLog;
+  private static String dictFile;
   private static final String EXT = ".db";
   private static final String BACKUP_FILE = ".backup";
   private static final String CONFIG_FILE = "config.json";
@@ -40,6 +42,23 @@ class Logger {
       restoreClientsFromBackup();
       removeClientsBackup();
     }
+  }
+
+  static ArrayList<String[]> getDictionary() {
+    ArrayList<String[]> dict = new ArrayList<String[]>();
+    try (BufferedReader br = new BufferedReader(new FileReader(dictFile))) {
+      String line = "";
+      while ((line = br.readLine()) != null) {
+        String[] entry = line.split("\t");
+        if (entry.length != 2) {
+          throw new Exception(String.format("Invalid line in dict: %s", line));
+        }
+        dict.add(entry);
+      }
+    } catch (Exception e) {
+      Logger.logException(e);
+    }
+    return dict;
   }
 
   static void logException(Exception e) {
@@ -80,6 +99,7 @@ class Logger {
     clientsPath = path + "/clients/";
     exceptionsLog = path + "/exceptions_log";
     logsFile = path + "/network";
+    dictFile = path + "/dict.tsv";
     varsPath = path + "/vars/";
   }
 
@@ -216,16 +236,16 @@ class Logger {
   }
 
   static String readAllFile(String filename) {
-    String jsonStr = "";
+    String str = "";
     try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
       String line = "";
       while ((line = br.readLine()) != null) {
-        jsonStr += line;
+        str += line;
       }
     } catch (Exception e) {
       Logger.logException(e);
     }
-    return jsonStr;
+    return str;
   }
 
   private static PrintWriter getLogsWriter() {

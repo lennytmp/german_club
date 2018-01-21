@@ -27,6 +27,7 @@ public class Main {
   private static Set<Integer> injuredChats = new HashSet<>();
   private static Set<Integer> readyToFightChats = new HashSet<>();
   private static Set<Integer> fightingChats = new HashSet<>();
+  private static ArrayList<String[]> dict = null;
 
   private static int curTime;
 
@@ -76,6 +77,7 @@ public class Main {
     }
     Logger.setDbPath(args[0]);
     Logger.initialize();
+    dict = Logger.getDictionary();
     TelegramApi.initialize();
     Phrases.initialize();
 
@@ -263,6 +265,7 @@ public class Main {
       }
       return;
     }
+
     if (txt.startsWith("hit ")) {
       String where = txt.substring(4, txt.length());
       Client.BodyPart target = getBodyPartFromString(where);
@@ -486,7 +489,7 @@ public class Main {
 
   private static void sendFightInstruction(Client client) {
     if (client.fightsWon == 0) {
-      msg(client, "You need to choose which part of your body to block and where to hit.");
+      msg(client, "You need to pick the correct translation to damage the opponent.");
     }
   }
 
