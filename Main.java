@@ -163,6 +163,7 @@ public class Main {
   private static void stopFightsTimeoutIfNeeded(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
+          || client.chatId < 0
           || !client.timeoutWarningSent
           || client.lastFightActivitySince > curTime - 50) {
         continue;
@@ -418,7 +419,7 @@ public class Main {
   }
 
   private static void activateBot(Client client) {
-    boolean success = Utils.rndInRange(1, 3) == 1;
+    boolean success = Utils.rndInRange(1, 10) < 9;
     client.lastFightActivitySince = curTime;
     client.timeoutWarningSent = false;
     Client opponent = Storage.getClientByChatId(client.fightingChatId);
@@ -581,9 +582,6 @@ public class Main {
   private static void handleHit(Client client, Client opponent, boolean success) {
     boolean isBot = opponent.chatId < 0;
     makeAHit(client, opponent, success);
-    if (isBot) {
-      activateBot(opponent);
-    }
     // Finish fight if needed
     Client winner = null;
     Client loser = null;
@@ -599,6 +597,9 @@ public class Main {
       loser.hp = 0;
       finishFight(winner, loser);
     } else {
+      if (isBot) {
+        activateBot(opponent);
+      }
       sendChallenge(client);
     }
   }
