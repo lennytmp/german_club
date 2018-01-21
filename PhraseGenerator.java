@@ -76,15 +76,15 @@ class PhraseGenerator {
                                              String[] challengeWord) {
     return offender.username + " incorrectly translated the word `" +
            challengeWord[0] + "`. No damage to you!"
-           + "[" + victim.hp + "/" + victim.getMaxHp() + "]";
+           + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
   }
 
   static String incorrectTranslationToOffender(Client offender,
                                                Client victim,
                                                String[] challengeWord) {
-   return "Correct trnaslation is: `" + challengeWord[0] +
+   return "Correct translation is: `" + challengeWord[0] +
           "`. You caused no damage." +
-          "[" + victim.hp + "/" + victim.getMaxHp() + "]";
+          " [" + victim.hp + "/" + victim.getMaxHp() + "]";
   }
 
   static String correctTranslationToVictim(Client offender,

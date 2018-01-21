@@ -679,7 +679,7 @@ public class Main {
     if (critRnd < client.luck) {
       return client.getMaxDamage() + Utils.rndInRange(1, client.getMaxDamage());
     }
-    return Utils.rndInRange(0, client.getMaxDamage());
+    return Utils.rndInRange(1, client.getMaxDamage());
   }
 
   private static void levelUpIfNeeded(Client client) {
