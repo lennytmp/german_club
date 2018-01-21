@@ -1,4 +1,4 @@
-# Fight club Telegram bot
+# German Club Telegram bot
 
 ## First run
 
