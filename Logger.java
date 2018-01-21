@@ -31,10 +31,10 @@ class Logger {
   private static String clientsPath;
   private static String varsPath;
   private static String exceptionsLog;
-  private static String dictFile;
   private static final String EXT = ".db";
   private static final String BACKUP_FILE = ".backup";
   private static final String CONFIG_FILE = "config.json";
+  private static final String DICT_FILE = "dict.tsv";
   private static PrintWriter logsWriter;
 
   public static void initialize() {
@@ -46,7 +46,7 @@ class Logger {
 
   static ArrayList<String[]> getDictionary() {
     ArrayList<String[]> dict = new ArrayList<String[]>();
-    try (BufferedReader br = new BufferedReader(new FileReader(dictFile))) {
+    try (BufferedReader br = new BufferedReader(new FileReader(DICT_FILE))) {
       String line = "";
       while ((line = br.readLine()) != null) {
         String[] entry = line.split("\t");
@@ -99,7 +99,6 @@ class Logger {
     clientsPath = path + "/clients/";
     exceptionsLog = path + "/exceptions_log";
     logsFile = path + "/network";
-    dictFile = path + "/dict.tsv";
     varsPath = path + "/vars/";
   }
 
