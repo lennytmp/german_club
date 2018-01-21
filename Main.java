@@ -475,7 +475,7 @@ public class Main {
     int index = 1;
     int answerIndex = Utils.rndInRange(1, 3);
     if (index == answerIndex) {
-      options.add(dict.get(questionId)[1]);
+      options.add(dict.get(questionId)[0]);
     }
     while (index < 3) {
       int optionId = Utils.rndInRange(0, dict.size() - 1);
