@@ -15,9 +15,9 @@ class Client {
   String lang = "en";
   int chatId = 0;
   boolean nameChangeHintSent = false;
-  BodyPart hit = null;
-  BodyPart block = null;
   Status status = Client.Status.IDLE;
+  // challenge: [questionId, optionId, optionId, optionId]
+  int[] challenge = new int[4];
   int fightingChatId = 0;
   int lastRestore = 0;
   int readyToFightSince = 0;

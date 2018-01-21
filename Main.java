@@ -120,7 +120,6 @@ public class Main {
       }
       Client bot = new Client(-client.chatId, client);
       setFightingStatus(client, bot);
-      generateRandomHitBlock(bot);
       Storage.saveClients(bot, client);
 
       msg(client, "You're now fighting with " + bot.username + ".");
@@ -150,7 +149,6 @@ public class Main {
   private static void sendTimoutWarningsIfNeeded(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
-          || (client.hit != null && client.block != null)
           || client.timeoutWarningSent
           || client.lastFightActivitySince > curTime - 30) {
           continue;
@@ -265,33 +263,16 @@ public class Main {
       return;
     }
 
-    if (txt.startsWith("hit ")) {
-      String where = txt.substring(4, txt.length());
-      Client.BodyPart target = getBodyPartFromString(where);
-      if (client.status != Client.Status.FIGHTING) {
-        msg(client, "You need to start a fight first.", mainButtons);
-        return;
+    if (client.status == Client.Status.FIGHTING) {
+      for (int i = 0; i < client.challenge.length; i++) {
+        if (txt.equals(dict.get(client.challenge[i])[0])) {
+          client.lastFightActivitySince = curTime;
+          client.timeoutWarningSent = false;
+          Client opponent = Storage.getClientByChatId(client.fightingChatId);
+          handleHit(client, opponent, i == 0);
+          Storage.saveClients(opponent, client);
+        }
       }
-      if (target == null) {
-        msg(client, "Don't know how to hit `" + where + "`.");
-        return;
-      }
-      setHit(client, target);
-      return;
-    }
-
-    if (txt.startsWith("block ")) {
-      String where = txt.substring(6, txt.length());
-      Client.BodyPart target = getBodyPartFromString(where);
-      if (client.status != Client.Status.FIGHTING) {
-        msg(client, "You need to start a fight first.");
-        return;
-      }
-      if (target == null) {
-        msg(client, "Don't know how to block `" + where + "`.");
-        return;
-      }
-      setBlock(client, target);
       return;
     }
 
@@ -436,10 +417,13 @@ public class Main {
     Storage.saveClient(client);
   }
 
-  private static void generateRandomHitBlock(Client client) {
-    Client.BodyPart[] values = Client.BodyPart.values();
-    client.hit = values[Utils.rndInRange(0, values.length - 1)];
-    client.block = values[Utils.rndInRange(0, values.length - 1)];
+  private static void activateBot(Client client) {
+    boolean success = Utils.rndInRange(1, 3) == 1;
+    client.lastFightActivitySince = curTime;
+    client.timeoutWarningSent = false;
+    Client opponent = Storage.getClientByChatId(client.fightingChatId);
+    handleHit(client, opponent, success);
+    Storage.saveClients(opponent, client);
   }
 
   private static void improveSkill(Client client, String skill) {
@@ -486,52 +470,36 @@ public class Main {
 
   private static void sendChallenge(Client client) {
     int questionId = Utils.rndInRange(0, dict.size() - 1);
-    int[] optionIds = new int[3];
+    client.challenge[0] = questionId;
     ArrayList<String> options = new ArrayList<>();
-    int index = 0;
+    int index = 1;
+    int answerIndex = Utils.rndInRange(1, 3);
+    if (index == answerIndex) {
+      options.add(dict.get(questionId)[1]);
+    }
     while (index < 3) {
       int optionId = Utils.rndInRange(0, dict.size() - 1);
       if (optionId != questionId) {
-        optionIds[index] = optionId;
-        options.add(dict.get(optionId)[1]);
+        client.challenge[index] = optionId;
+        options.add(dict.get(optionId)[0]);
         index++;
+        if (index == answerIndex) {
+          options.add(dict.get(questionId)[0]);
+        }
       }
     }
+    Storage.saveClient(client);
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     if (numPotions > 0) {
       options.add("healing potion [" + numPotions + "]");
     }
-    msg(client, dict.get(questionId)[0], options.toArray(new String[0])); 
+    msg(client, dict.get(questionId)[1], options.toArray(new String[0])); 
   }
 
   private static void sendFightInstruction(Client client) {
     if (client.fightsWon == 0) {
       msg(client, "You need to pick the correct translation to damage the opponent.");
     }
-  }
-
-  private static void setHit(Client client, Client.BodyPart target) {
-    client.hit = target;
-    client.lastFightActivitySince = curTime;
-    client.timeoutWarningSent = false;
-    Client opponent = Storage.getClientByChatId(client.fightingChatId);
-    assert opponent != null;
-    if (readyToHitBlock(client, opponent)) {
-      handleHit(client, opponent);
-    }
-    Storage.saveClients(opponent, client);
-  }
-
-  private static void setBlock(Client client, Client.BodyPart target) {
-    client.block = target;
-    client.lastFightActivitySince = curTime;
-    client.timeoutWarningSent = false;
-    Client opponent = Storage.getClientByChatId(client.fightingChatId);
-    assert opponent != null;
-    if (readyToHitBlock(client, opponent)) {
-      handleHit(client, opponent);
-    }
-    Storage.saveClients(opponent, client);
   }
 
   private static void consumePotion(Client client) {
@@ -568,24 +536,10 @@ public class Main {
     return null;
   }
 
-  private static boolean readyToHitBlock(Client client, Client opponent) {
-    if (client.hit == null) {
-      msg(client, "Where do you want to hit?");
-      return false;
-    }
-    if (client.block == null) {
-      msg(client, "Where do you want to block?");
-      return false;
-    }
-    if (opponent.hit == null || opponent.block == null) {
-      msg(client, "Waiting for " + opponent.username + "...");
-      return false;
-    }
-    return true;
-  }
-
   private static void msg(Client client, String message) {
-    msg(client, message, new String[] {});
+    if (client.chatId > 0) {
+      msg(client, message, new String[] {});
+    }
   }
 
   private static void msg(int chatId, String message) {
@@ -599,71 +553,36 @@ public class Main {
     TelegramApi.say(client.chatId, message, replies);
   }
 
-  private static void makeAHit(Client client, Client victim) {
-    Map<String, String> hitPhrase;
+  private static void makeAHit(Client client, Client victim, boolean success) {
     String clientPrefix = "\uD83D\uDDE1 ";
     String victimPrefix = "\uD83D\uDEE1 ";
-    if (victim.block == client.hit) {
-      hitPhrase =
-        PhraseGenerator.getBlockPhrase(client, victim, client.hit);
-      msg(victim, victimPrefix + hitPhrase.get(victim.lang));
-      msg(client, clientPrefix + hitPhrase.get(client.lang));
+    String[] challengeWord = dict.get(client.challenge[0]);
+    if (!success) {
+      msg(victim, victimPrefix + 
+        PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
+      msg(client, clientPrefix +
+        PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord));
       return;
     }
     int clientHits = getDamage(client);
     victim.hp = Math.max(victim.hp - clientHits, 0);
-    if (clientHits == 0) {
-      hitPhrase =
-        PhraseGenerator.getMissPhrase(client, victim, client.hit);
-      msg(victim, victimPrefix + hitPhrase.get(victim.lang));
-      msg(client, clientPrefix + hitPhrase.get(client.lang));
-      return;
-    }
-    hitPhrase = PhraseGenerator.getHitPhrase(
-      client,
-      victim,
-      client.hit,
-      clientHits > client.getMaxDamage(),
-      clientHits
-    );
-    msg(victim, victimPrefix + hitPhrase.get(victim.lang));
-    msg(client, clientPrefix + hitPhrase.get(client.lang));
+    msg(victim, victimPrefix + 
+        PhraseGenerator.correctTranslationToVictim(client,
+                                                   victim,
+                                                   clientHits,
+                                                   challengeWord));
+    msg(client, clientPrefix +
+      PhraseGenerator.correctTranslationToOffender(client,
+                                                   victim,
+                                                   clientHits,
+                                                   challengeWord));
   }
 
-  private static void handleHit(Client client, Client opponent) {
+  private static void handleHit(Client client, Client opponent, boolean success) {
     boolean isBot = opponent.chatId < 0;
-    // Who goes first
-    Client first = client;
-    Client second = opponent;
-    int clientValue = client.luck;
-    int opponentValue = opponent.luck;
-    if (clientValue == opponentValue) {
-      clientValue = Utils.rndInRange(0, 100);
-      opponentValue = Utils.rndInRange(0, 100);
-    }
-    if (clientValue > opponentValue) {
-      first = client;
-      second = opponent;
-    } else {
-      first = opponent;
-      second = client;
-    }
-    // Making hits
-    makeAHit(first, second);
-    if (second.hp == 0) {
-      msg(first, "Lucky you! You didn't get any damage because "
-        + second.username + " is defeated.");
-      msg(second, "Oops, you didn't have much time to attack.");
-    } else {
-      makeAHit(second, first);
-    }
-    client.hit = null;
-    client.block = null;
-    if (!isBot) {
-      opponent.hit = null;
-      opponent.block = null;
-    } else {
-      generateRandomHitBlock(opponent);
+    makeAHit(client, opponent, success);
+    if (isBot) {
+      activateBot(opponent);
     }
     // Finish fight if needed
     Client winner = null;
@@ -679,6 +598,8 @@ public class Main {
     if (winner != null) {
       loser.hp = 0;
       finishFight(winner, loser);
+    } else {
+      sendChallenge(client);
     }
   }
 
@@ -756,7 +677,7 @@ public class Main {
     // TODO(lenny): lvl30 has 100% chance to give crit?!
     int critRnd = Utils.rndInRange(0, 30);
     if (critRnd < client.luck) {
-      return client.getMaxDamage() + Utils.rndInRange(0, client.getMaxDamage());
+      return client.getMaxDamage() + Utils.rndInRange(1, client.getMaxDamage());
     }
     return Utils.rndInRange(0, client.getMaxDamage());
   }

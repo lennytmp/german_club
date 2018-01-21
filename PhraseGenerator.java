@@ -71,37 +71,48 @@ class PhraseGenerator {
     return result;
   }
 
-  static Map<String, String> getBlockPhrase(Client offender,
-                               Client victim,
-                               Client.BodyPart part) {
-    Map<String, String> result = new HashMap<>();
-    for (String lang : languages) {
-      result.put(lang, offender.username + " " + 
-        Utils.getRnd(getTranslation(Phrases.combatTexts.wasTrying, lang)) +
-        " " + Utils.getRnd(getTranslation(
-            Phrases.combatTexts.toHit, lang)[part.ordinal()]) +
-        " " + Utils.getRnd(getTranslation(Phrases.combatTexts.but, lang)) +
-        " " + victim.username +  " " +
-        Utils.getRnd(getTranslation(Phrases.combatTexts.blocked, lang)) +
-        ". " + "[" + victim.hp + "/" + victim.getMaxHp() + "]");
-    }
-    return result;
+  static String incorrectTranslationToVictim(Client offender,
+                                             Client victim,
+                                             String[] challengeWord) {
+    return offender.username + " incorrectly translated the word `" +
+           challengeWord[0] + "`. No damage to you!"
+           + "[" + victim.hp + "/" + victim.getMaxHp() + "]";
   }
 
-  static Map<String, String> getMissPhrase(Client offender,
-                              Client victim,
-                              Client.BodyPart part) {
-    Map<String, String> result = new HashMap<>();
-    for (String lang : languages) {
-      result.put(lang, offender.username + " " +
-        Utils.getRnd(getTranslation(Phrases.combatTexts.wasTrying, lang)) +
-        " " + Utils.getRnd(getTranslation(
-            Phrases.combatTexts.toHit, lang)[part.ordinal()]) +
-        " " + Utils.getRnd(getTranslation(Phrases.combatTexts.but, lang)) +
-        " " + Utils.getRnd(getTranslation(Phrases.combatTexts.missed, lang)) +
-        ". " + "[" + victim.hp + "/" + victim.getMaxHp() + "]");
+  static String incorrectTranslationToOffender(Client offender,
+                                               Client victim,
+                                               String[] challengeWord) {
+   return "Correct trnaslation is: `" + challengeWord[0] +
+          "`. You caused no damage." +
+          "[" + victim.hp + "/" + victim.getMaxHp() + "]";
+  }
+
+  static String correctTranslationToVictim(Client offender,
+                                           Client victim,
+                                           int damage,
+                                           String[] challengeWord) {
+    // Don't think about StringBuilder, it's a lie.
+    // https://stackoverflow.com/questions/4965513/stringbuilder-vs-string-considering-replace 
+    String  tmp = offender.username + " correctly translated the word `" +
+                  challengeWord[0] + "`! ";
+    if (damage > offender.getMaxDamage()) {
+      tmp += " Critical hit! ";
     }
-    return result;
+    tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
+    return tmp;
+  }
+
+  static String correctTranslationToOffender(Client offender,
+                                             Client victim,
+                                             int damage,
+                                             String[] challengeWord) {
+    String  tmp = "You have correctly translated the word `" +
+                  challengeWord[0] + "`! ";
+    if (damage > offender.getMaxDamage()) {
+      tmp += " Critical hit! ";
+    }
+    tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
+    return tmp;
   }
 
 
