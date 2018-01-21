@@ -24,7 +24,6 @@ import com.google.gson.JsonDeserializationContext;
 
 class TelegramApi {
   static String token;
-  static String helpFile;
   private static final String URL = "https://api.telegram.org/bot";
   private final String method;
   private final String params;
@@ -40,7 +39,6 @@ class TelegramApi {
     String configText = Logger.getConfigText();
     Config c = g.fromJson(configText, Config.class);
     token =  c.token;
-    helpFile = c.file;
   }
 
   public static void say(int chatId, String text, String[] buttonTexts) {
@@ -69,12 +67,6 @@ class TelegramApi {
       params += "&reply_markup={\"keyboard\":" + g.toJson(arr) + "}";
     }
     TelegramApi req = new TelegramApi("sendMessage", params);
-    req.execute();
-  }
-
-  public static void sendHelp(int chatId) {
-    String params = "chat_id=" + chatId + "&photo=" + helpFile;
-    TelegramApi req = new TelegramApi("sendPhoto", params);
     req.execute();
   }
 
