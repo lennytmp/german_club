@@ -1,0 +1,18 @@
+TODO:
+- If you delete conversation, buttons disappear
+- Display items owned in the profile (healing potions)
+- Crafting
+  - Define which mobs drop what
+  - Make a crafting recipe & craft button
+  - Make a characteristic (Crafting) which influences chance to get a potion
+  - Give exp for succesful brewing
+  - Add nice buttons for inventory
+
+IDEAS:
+- Add a shop
+- Add leaderboard / stats
+- Fight many to many, many to one
+- Generate fantasy names
+- Injuries when hit by more hp than you have
+- It would be very nice to show messages more slowly, as if somebody's typing them
+- Send "typing" event when waiting for opponents etc.
