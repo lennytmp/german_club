@@ -123,11 +123,10 @@ public class Main {
       generateRandomHitBlock(bot);
       Storage.saveClients(bot, client);
 
-      msg(client,
-          "You're now fighting with " + bot.username + ".",
-          getFightingButtons(client));
+      msg(client, "You're now fighting with " + bot.username + ".");
       msg(client, getClientStats(bot));
       sendFightInstruction(client);
+      sendChallenge(client);
     }
   }
 
@@ -475,36 +474,40 @@ public class Main {
   private static void startFightReal(Client client, Client opponent) {
     setFightingStatus(client, opponent);
     Storage.saveClients(client, opponent);
-    msg(client,
-        "You're now fighting with " + opponent.username + ".",
-        getFightingButtons(client));
-    msg(opponent,
-        "You're now fighting with " + client.username + ".",
-        getFightingButtons(opponent));
+    msg(client, "You're now fighting with " + opponent.username + ".");
+    msg(opponent, "You're now fighting with " + client.username + ".");
     msg(client, getClientStats(opponent));
     msg(opponent, getClientStats(client));
     sendFightInstruction(client);
     sendFightInstruction(opponent);
+    sendChallenge(client);
+    sendChallenge(opponent);
+  }
+
+  private static void sendChallenge(Client client) {
+    int questionId = Utils.rndInRange(0, dict.size() - 1);
+    int[] optionIds = new int[3];
+    ArrayList<String> options = new ArrayList<>();
+    int index = 0;
+    while (index < 3) {
+      int optionId = Utils.rndInRange(0, dict.size() - 1);
+      if (optionId != questionId) {
+        optionIds[index] = optionId;
+        options.add(dict.get(optionId)[1]);
+        index++;
+      }
+    }
+    int numPotions = client.getItemNum(Game.Item.HPOTION);
+    if (numPotions > 0) {
+      options.add("healing potion [" + numPotions + "]");
+    }
+    msg(client, dict.get(questionId)[0], options.toArray(new String[0])); 
   }
 
   private static void sendFightInstruction(Client client) {
     if (client.fightsWon == 0) {
       msg(client, "You need to pick the correct translation to damage the opponent.");
     }
-  }
-
-  private static String[] getFightingButtons(Client client) {
-    ArrayList<String> buttons = new ArrayList<>(
-      Arrays.asList(new String[] {
-        "hit head", "hit torso", "hit legs",
-        "block head", "block torso", "block legs"
-      })
-    );
-    int numPotions = client.getItemNum(Game.Item.HPOTION);
-    if (numPotions > 0) {
-      buttons.add("healing potion [" + numPotions + "]");
-    }
-    return buttons.toArray(new String[0]);
   }
 
   private static void setHit(Client client, Client.BodyPart target) {
@@ -543,7 +546,7 @@ public class Main {
         client.getItemNum(Game.Item.HPOTION) + " left. " +
         "[" + client.hp + "/" + client.getMaxHp() + "]";
     if (client.status == Client.Status.FIGHTING) {
-      msg(client, clientMsg, getFightingButtons(client));
+      msg(client, clientMsg);
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       msg(opponent, "\uD83C\uDF76 " + client.username + " have consumed a healing potion " +
       "[" + client.hp + "/" + client.getMaxHp() + "]");
