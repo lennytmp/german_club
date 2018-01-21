@@ -18,7 +18,6 @@ public class Main {
   public static boolean isProd = false;
 
   private static final String[] mainButtons = {"fight", "profile", "wiseman"};
-  private static final String[] langButtons = {"English", "Русский"};
   private static final String[] levelPointsButtons = {
     "improve strength", "improve vitality", "improve luck"
   };
@@ -34,7 +33,7 @@ public class Main {
   public static void main(String[] args)
       throws InterruptedException, Exception {
     initialize(args);
-    System.out.println("Fight Club Server started...");
+    System.out.println("German Club Server started...");
     while (true) {
       try {
         int maxUpdateId = Storage.getMaxUpdateId();
@@ -200,8 +199,7 @@ public class Main {
     Storage.saveClient(client);
 
     if (newClient) {
-      msg(client, "Welcome to the Fight Club!", mainButtons);
-      msg(client, "Which language do you prefer?", langButtons);
+      msg(client, "Welcome to the German Club!", mainButtons);
       sendToActiveUsers(PhraseGenerator.getJoinedTheFightClub(
           client.username));
     }
@@ -209,18 +207,6 @@ public class Main {
     String txt = upd.message.text;
 
     if (txt.equals("/start")) {
-      return;
-    }
-
-    if (txt.equals("English")) {
-      setLanguage(client, "en");
-      msg(client, "English language is set.", mainButtons);
-      return;
-    }
-
-    if (txt.equals("Русский")) {
-      setLanguage(client, "ru");
-      msg(client, "Включен русский язык.", mainButtons);
       return;
     }
 
