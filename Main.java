@@ -125,7 +125,7 @@ public class Main {
       msg(client, "You're now fighting with " + bot.username + ".");
       msg(client, getClientStats(bot));
       sendFightInstruction(client);
-      sendChallenge(client);
+      sendChallenge(client, 0);
     }
   }
 
@@ -313,12 +313,14 @@ public class Main {
 
     if (client.status == Client.Status.FIGHTING &&
         !txt.startsWith("/")) {
-      String message = txt;
+      client.lastFightActivitySince = curTime;
+      client.timeoutWarningSent = false;
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Map<String, String> sayingPhrase = PhraseGenerator.getSayingPhrase(client,
-          message, opponent);
-      msg(client, sayingPhrase.get(client.lang));
-      msg(opponent, sayingPhrase.get(client.lang));
+      handleHit(client, opponent, txt.equals(dict.get(client.challenge[0])[0]));
+      Storage.saveClients(opponent, client);
+      if (opponent.chatId < 0) {
+        activateBot(opponent);
+      }
       return;
     }
 
@@ -328,19 +330,6 @@ public class Main {
         PhraseGenerator.getLangMap(message)) - 1;
       if (numListeners == 0) {
         msg(client, "You were not heard by anyone :(");
-      }
-      return;
-    }
-
-    if (client.status == Client.Status.FIGHTING) {
-      for (int i = 0; i < client.challenge.length; i++) {
-        if (txt.equals(dict.get(client.challenge[i])[0])) {
-          client.lastFightActivitySince = curTime;
-          client.timeoutWarningSent = false;
-          Client opponent = Storage.getClientByChatId(client.fightingChatId);
-          handleHit(client, opponent, i == 0);
-          Storage.saveClients(opponent, client);
-        }
       }
       return;
     }
@@ -419,13 +408,14 @@ public class Main {
     Storage.saveClient(client);
   }
 
-  private static void activateBot(Client client) {
-    boolean success = Utils.rndInRange(1, 10) < 9;
-    client.lastFightActivitySince = curTime;
-    client.timeoutWarningSent = false;
-    Client opponent = Storage.getClientByChatId(client.fightingChatId);
-    handleHit(client, opponent, success);
-    Storage.saveClients(opponent, client);
+  private static void activateBot(Client bot) {
+    boolean success = (bot.challenge[1] == 0 && Utils.rndInRange(1, 10) < 9) ||
+                      Utils.rndInRange(1,10) < 5;
+    bot.lastFightActivitySince = curTime;
+    bot.timeoutWarningSent = false;
+    Client opponent = Storage.getClientByChatId(bot.fightingChatId);
+    handleHit(bot, opponent, success);
+    Storage.saveClients(opponent, bot);
   }
 
   private static void improveSkill(Client client, String skill) {
@@ -466,13 +456,51 @@ public class Main {
     msg(opponent, getClientStats(client));
     sendFightInstruction(client);
     sendFightInstruction(opponent);
-    sendChallenge(client);
-    sendChallenge(opponent);
+    int clientDif = 0;
+    if (client.level > opponent.level) {
+      clientDif = 1;
+    }
+    int opponentDif = (client.level == opponent.level) ? 0 : 1 - clientDif;
+    sendChallenge(client, clientDif);
+    sendChallenge(opponent, opponentDif);
   }
 
-  private static void sendChallenge(Client client) {
+  private static void sendChallenge(Client client, int difficulty) {
     int questionId = Utils.rndInRange(0, dict.size() - 1);
+    String[] question = dict.get(questionId);
     client.challenge[0] = questionId;
+    client.challenge[1] = difficulty;
+    ArrayList<String> options = null;
+    if (difficulty > 0 && hasArticle(question[0])) {
+      options = generateArticleOptions(question[0]);
+    } else {
+      options = generateSimpleOptions(questionId);
+    }
+    Storage.saveClient(client);
+    int numPotions = client.getItemNum(Game.Item.HPOTION);
+    if (numPotions > 0) {
+      options.add("healing potion [" + numPotions + "]");
+    }
+    msg(client,
+        "Please translate to German the word: " + question[1],
+        options.toArray(new String[0])); 
+  }
+
+  private static boolean hasArticle(String word) {
+    return word.toLowerCase().startsWith("das ") ||
+      word.toLowerCase().startsWith("der ") ||
+      word.toLowerCase().startsWith("die ");
+  }
+
+  private static ArrayList<String> generateArticleOptions(String word) {
+    ArrayList<String> options = new ArrayList<>();
+    options.add("Das " + word.substring(4));
+    options.add("Der " + word.substring(4));
+    options.add("Die " + word.substring(4));
+    return options;
+  }
+
+  private static ArrayList<String> generateSimpleOptions(int questionId) {
     ArrayList<String> options = new ArrayList<>();
     int index = 1;
     int answerIndex = Utils.rndInRange(1, 3);
@@ -482,7 +510,6 @@ public class Main {
     while (index < 3) {
       int optionId = Utils.rndInRange(0, dict.size() - 1);
       if (optionId != questionId) {
-        client.challenge[index] = optionId;
         options.add(dict.get(optionId)[0]);
         index++;
         if (index == answerIndex) {
@@ -490,12 +517,7 @@ public class Main {
         }
       }
     }
-    Storage.saveClient(client);
-    int numPotions = client.getItemNum(Game.Item.HPOTION);
-    if (numPotions > 0) {
-      options.add("healing potion [" + numPotions + "]");
-    }
-    msg(client, dict.get(questionId)[1], options.toArray(new String[0])); 
+    return options;
   }
 
   private static void sendFightInstruction(Client client) {
@@ -581,7 +603,6 @@ public class Main {
   }
 
   private static void handleHit(Client client, Client opponent, boolean success) {
-    boolean isBot = opponent.chatId < 0;
     makeAHit(client, opponent, success);
     // Finish fight if needed
     Client winner = null;
@@ -598,10 +619,11 @@ public class Main {
       loser.hp = 0;
       finishFight(winner, loser);
     } else {
-      if (isBot) {
-        activateBot(opponent);
+      int clientDif = 0;
+      if (success) {
+        clientDif = 1;
       }
-      sendChallenge(client);
+      sendChallenge(client, clientDif);
     }
   }
 
@@ -678,7 +700,7 @@ public class Main {
   private static int getDamage(Client client) {
     // TODO(lenny): lvl30 has 100% chance to give crit?!
     int critRnd = Utils.rndInRange(0, 30);
-    if (critRnd < client.luck) {
+    if (client.challenge[1] > 0) {
       return client.getMaxDamage() + Utils.rndInRange(1, client.getMaxDamage());
     }
     return Utils.rndInRange(1, client.getMaxDamage());

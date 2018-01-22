@@ -16,8 +16,8 @@ class Client {
   int chatId = 0;
   boolean nameChangeHintSent = false;
   Status status = Client.Status.IDLE;
-  // challenge: [questionId, optionId, optionId, optionId]
-  int[] challenge = new int[4];
+  // challenge: [questionId, difficulty]
+  int[] challenge = new int[2];
   int fightingChatId = 0;
   int lastRestore = 0;
   int readyToFightSince = 0;
