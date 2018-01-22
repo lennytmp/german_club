@@ -21,8 +21,10 @@ class Client {
   int fightingChatId = 0;
   int lastRestore = 0;
   int readyToFightSince = 0;
+
   int lastFightActivitySince = 0;
   int lastActivity = 0;
+  
   boolean timeoutWarningSent = false;
 
   int totalFights = 0;

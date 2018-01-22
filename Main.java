@@ -561,18 +561,12 @@ public class Main {
   }
 
   private static void msg(Client client, String message) {
-    if (client.chatId > 0) {
-      msg(client, message, new String[] {});
-    }
-  }
-
-  private static void msg(int chatId, String message) {
-    TelegramApi.say(chatId, message, new String[] {});
+    msg(client, message, new String[] {});
   }
 
   private static void msg(Client client, String message, String[] replies) {
     if (client.chatId < 0) {
-      return; //no message for bots
+      return;
     }
     TelegramApi.say(client.chatId, message, replies);
   }
