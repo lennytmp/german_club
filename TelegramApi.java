@@ -41,7 +41,10 @@ class TelegramApi {
     token =  c.token;
   }
 
-  public static void say(int chatId, String text, String[] buttonTexts) {
+  public static void say(int chatId,
+                         String text,
+                         String[] buttonTexts,
+                         boolean removeButtonsIfNeeded) {
     try {
       text = URLEncoder.encode(text, "UTF-8");
     } catch (Exception e) {
@@ -65,14 +68,11 @@ class TelegramApi {
         }
       }
       params += "&reply_markup={\"keyboard\":" + g.toJson(arr) + "}";
+    } else if (buttonTexts.length == 0 && removeButtonsIfNeeded) {
+      params += "&reply_markup={\"remove_keyboard\":true}";
     }
     TelegramApi req = new TelegramApi("sendMessage", params);
     req.execute();
-  }
-
-  public static void say(int chatId, String text) {
-    String[] replies = {};
-    say(chatId, text, replies);
   }
 
   public static Telegram.Update[] getUpdates(int offset) {
