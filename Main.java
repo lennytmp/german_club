@@ -661,6 +661,7 @@ public class Main {
     if (loser.hp < loser.getMaxHp() && loser.chatId > 0) {
       Messenger.send(loser.chatId, "Fight is finished. Your health will recover in "
         + 3*(loser.getMaxHp() - loser.hp) + " seconds.", mainButtons);
+      Messenger.flush(loser.chatId);
       injuredChats.add(loser.chatId);
     } else {
       Messenger.send(loser.chatId, "Fight is finished.", mainButtons);
