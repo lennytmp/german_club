@@ -41,6 +41,7 @@ class Messenger {
                           msg.removeOptionsIfNeeded);
           lastTimeSent.put(msg.chatId, curTime);
         } else {
+          TelegramApi.sendTypingEvent(msg.chatId);
           newQueue.add(msg);
         }
       }
@@ -71,6 +72,7 @@ class Messenger {
     if (chatId < 0) {
       return;
     }
+    TelegramApi.sendTypingEvent(chatId);
     queue.add(new Message(chatId, msg, options, removeOptionsIfNeeded));
   }
 

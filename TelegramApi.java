@@ -75,6 +75,12 @@ class TelegramApi {
     req.execute();
   }
 
+  public static void sendTypingEvent(int chatId) {
+    String params = "chat_id=" + chatId + "&action=typing";
+    TelegramApi req = new TelegramApi("sendChatAction", params);
+    req.execute();
+  }
+
   public static Telegram.Update[] getUpdates(int offset) {
     TelegramApi req = new TelegramApi(
       "getUpdates",
