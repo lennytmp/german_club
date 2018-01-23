@@ -120,13 +120,13 @@ public class Main {
         return;
       }
       Client bot = new Client(-client.chatId, client);
-      setFightingStatus(client, bot);
+      prepareToFight(client, bot);
       Storage.saveClients(bot, client);
 
       Messenger.send(client.chatId, "You're now fighting with " + bot.username + ".");
       Messenger.send(client.chatId, getClientStats(bot));
       sendFightInstruction(client);
-      sendChallenge(client, 0);
+      sendChallenge(client);
     }
   }
 
@@ -317,7 +317,7 @@ public class Main {
       client.lastFightActivitySince = curTime;
       client.timeoutWarningSent = false;
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      handleHit(client, opponent, txt.equals(dict.get(client.challenge[0])[0]));
+      handleHit(client, opponent, txt);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
         activateBot(opponent);
@@ -410,12 +410,15 @@ public class Main {
   }
 
   private static void activateBot(Client bot) {
-    boolean success = (bot.challenge[1] == 0 && Utils.rndInRange(1, 10) < 9) ||
-                      Utils.rndInRange(1,10) < 5;
+    boolean success = (bot.challenge[1] + 1)*Utils.rndInRange(1, 10) < 9; 
+    String response = "";
+    if (success) {
+      response = dict.get(bot.challenge[0])[0];
+    }
     bot.lastFightActivitySince = curTime;
     bot.timeoutWarningSent = false;
     Client opponent = Storage.getClientByChatId(bot.fightingChatId);
-    handleHit(bot, opponent, success);
+    handleHit(bot, opponent, response);
     Storage.saveClients(opponent, bot);
   }
 
@@ -449,7 +452,7 @@ public class Main {
   }
 
   private static void startFightReal(Client client, Client opponent) {
-    setFightingStatus(client, opponent);
+    prepareToFight(client, opponent);
     Storage.saveClients(client, opponent);
     Messenger.send(client.chatId, "You're now fighting with " + opponent.username + ".");
     Messenger.send(opponent.chatId, "You're now fighting with " + client.username + ".");
@@ -457,30 +460,8 @@ public class Main {
     Messenger.send(opponent.chatId, getClientStats(client));
     sendFightInstruction(client);
     sendFightInstruction(opponent);
-    int clientDif = 0;
-    if (client.level > opponent.level) {
-      clientDif = 1;
-    }
-    int opponentDif = (client.level == opponent.level) ? 0 : 1 - clientDif;
-    sendChallenge(client, clientDif);
-    sendChallenge(opponent, opponentDif);
-  }
-
-  private static void sendChallenge(Client client, int difficulty) {
-    int questionId = Utils.rndInRange(0, dict.size() - 1);
-    String[] question = dict.get(questionId);
-    client.challenge[0] = questionId;
-    client.challenge[1] = difficulty;
-    ArrayList<String> options = null;
-    if (difficulty > 0 && hasArticle(question[0])) {
-      options = generateArticleOptions(question[0]);
-    } else {
-      options = generateSimpleOptions(questionId);
-    }
-    addPotions(client, options);
-    Messenger.send(client.chatId,
-        "Please translate to German the word: " + question[1],
-        options.toArray(new String[0])); 
+    sendChallenge(client);
+    sendChallenge(opponent);
   }
 
   private static ArrayList<String> addPotions(Client client,
@@ -497,34 +478,6 @@ public class Main {
     return word.toLowerCase().startsWith("das ") ||
       word.toLowerCase().startsWith("der ") ||
       word.toLowerCase().startsWith("die ");
-  }
-
-  private static ArrayList<String> generateArticleOptions(String word) {
-    ArrayList<String> options = new ArrayList<>();
-    options.add("Das " + word.substring(4));
-    options.add("Der " + word.substring(4));
-    options.add("Die " + word.substring(4));
-    return options;
-  }
-
-  private static ArrayList<String> generateSimpleOptions(int questionId) {
-    ArrayList<String> options = new ArrayList<>();
-    int index = 1;
-    int answerIndex = Utils.rndInRange(1, 3);
-    if (index == answerIndex) {
-      options.add(dict.get(questionId)[0]);
-    }
-    while (index < 3) {
-      int optionId = Utils.rndInRange(0, dict.size() - 1);
-      if (optionId != questionId) {
-        options.add(dict.get(optionId)[0]);
-        index++;
-        if (index == answerIndex) {
-          options.add(dict.get(questionId)[0]);
-        }
-      }
-    }
-    return options;
   }
 
   private static void sendFightInstruction(Client client) {
@@ -596,7 +549,11 @@ public class Main {
                    addPotions(client, new ArrayList<String>()));
   }
 
-  private static void handleHit(Client client, Client opponent, boolean success) {
+  private static void handleHit(Client client, Client opponent, String response) {
+    boolean success = response.equals(dict.get(client.challenge[0])[0]);
+    if (success) {
+      client.fightQuestions.put(client.challenge[0], client.challenge[1] + 1);
+    }
     makeHit(client, opponent, success);
     // Finish fight if needed
     Client winner = null;
@@ -613,11 +570,7 @@ public class Main {
       loser.hp = 0;
       finishFight(winner, loser);
     } else {
-      int clientDif = 0;
-      if (success) {
-        clientDif = 1;
-      }
-      sendChallenge(client, clientDif);
+      sendChallenge(client);
     }
   }
 
@@ -693,12 +646,11 @@ public class Main {
   }
 
   private static int getDamage(Client client) {
-    // TODO(lenny): lvl30 has 100% chance to give crit?!
-    int critRnd = Utils.rndInRange(0, 30);
-    if (client.challenge[1] > 0) {
-      return client.getMaxDamage() + Utils.rndInRange(1, client.getMaxDamage());
+    int result = 0;
+    for (int i = 0; i < client.challenge[1]; i++) {
+      result += Utils.rndInRange(1, client.getMaxDamage());
     }
-    return Utils.rndInRange(1, client.getMaxDamage());
+    return result;
   }
 
   private static void levelUpIfNeeded(Client client) {
@@ -710,7 +662,7 @@ public class Main {
     }
   }
 
-  private static void setFightingStatus(Client client, Client opponent, int first) {
+  private static void prepareToFight(Client client, Client opponent, int first) {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
     client.lastFightActivitySince = curTime;
@@ -718,12 +670,78 @@ public class Main {
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
     if (first == 0) {
-      setFightingStatus(opponent, client, 1);
+      prepareToFight(opponent, client, 1);
+    }
+    pickQuestionsForFight(client);
+  }
+
+  private static void pickQuestionsForFight(Client client) {
+    int questionsNum = 5; // TODO: dehardcode
+    Set<Integer> questions = new HashSet<>();
+    while (questions.size() < 5) {
+      questions.add(Utils.rndInRange(0, dict.size() - 1));
+    }
+    client.fightQuestions.clear();
+    for (int questionId : questions) {
+      client.fightQuestions.put(questionId, 0); 
     }
   }
 
-  static void setFightingStatus(Client client, Client opponent) {
-    setFightingStatus(client, opponent, 0);
+  private static void sendChallenge(Client client) {
+    int questionId = client.challenge[0];
+    while (questionId != client.challenge[0]) {
+      int questionId = Utils.getRnd(client.fightQuestions
+                                          .keySet()
+                                          .toArray(new Integer[] {}));
+    }
+    String[] question = dict.get(questionId);
+    int difficulty = client.fightQuestions.get(questionId);
+    client.challenge[0] = questionId;
+    client.challenge[1] = difficulty;
+    ArrayList<String> options = null;
+    if (difficulty > 0 && hasArticle(question[0])) {
+      options = generateArticleOptions(question[0]);
+    } else {
+      options = generateSimpleOptions(questionId);
+    }
+    addPotions(client, options);
+    Messenger.send(client.chatId,
+        "Please translate to German the word: " + question[1],
+        options.toArray(new String[0])); 
+  }
+
+  private static ArrayList<String> generateSimpleOptions(int questionId) {
+    ArrayList<String> options = new ArrayList<>();
+    int index = 1;
+    int answerIndex = Utils.rndInRange(1, 3);
+    if (index == answerIndex) {
+      options.add(dict.get(questionId)[0]);
+    }
+    while (index < 3) {
+      int optionId = Utils.rndInRange(0, dict.size() - 1);
+      if (optionId != questionId) {
+        options.add(dict.get(optionId)[0]);
+        index++;
+        if (index == answerIndex) {
+          options.add(dict.get(questionId)[0]);
+        }
+      }
+    }
+    return options;
+  }
+
+  private static ArrayList<String> generateArticleOptions(String word) {
+    ArrayList<String> options = new ArrayList<>();
+    options.add("Das " + word.substring(4));
+    options.add("Der " + word.substring(4));
+    options.add("Die " + word.substring(4));
+    return options;
+  }
+
+
+
+  static void prepareToFight(Client client, Client opponent) {
+    prepareToFight(client, opponent, 0);
   }
 
   static int nextExp(Client client) {
