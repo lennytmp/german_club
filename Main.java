@@ -647,7 +647,7 @@ public class Main {
 
   private static int getDamage(Client client) {
     int result = 0;
-    for (int i = 0; i < client.challenge[1]; i++) {
+    for (int i = 0; i <= client.challenge[1]; i++) {
       result += Utils.rndInRange(1, client.getMaxDamage());
     }
     return result;
@@ -689,10 +689,10 @@ public class Main {
 
   private static void sendChallenge(Client client) {
     int questionId = client.challenge[0];
-    while (questionId != client.challenge[0]) {
-      int questionId = Utils.getRnd(client.fightQuestions
-                                          .keySet()
-                                          .toArray(new Integer[] {}));
+    while (questionId == client.challenge[0]) {
+      questionId = Utils.getRnd(client.fightQuestions
+                                      .keySet()
+                                      .toArray(new Integer[] {}));
     }
     String[] question = dict.get(questionId);
     int difficulty = client.fightQuestions.get(questionId);
