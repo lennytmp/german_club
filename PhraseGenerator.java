@@ -82,8 +82,8 @@ class PhraseGenerator {
   static String incorrectTranslationToOffender(Client offender,
                                                Client victim,
                                                String[] challengeWord) {
-   return "Correct translation is: `" + challengeWord[0] +
-          "`. You caused no damage." +
+   return "Correct translation for `" + challengeWord[1] +
+           "` is: `" + challengeWord[0] + "`. You caused no damage." +
           " [" + victim.hp + "/" + victim.getMaxHp() + "]";
   }
 
@@ -106,8 +106,7 @@ class PhraseGenerator {
                                              Client victim,
                                              int damage,
                                              String[] challengeWord) {
-    String  tmp = "You have correctly translated the word `" +
-                  challengeWord[0] + "`! ";
+    String  tmp = "Correct! ";
     if (damage > offender.getMaxDamage()) {
       tmp += " Critical hit! ";
     }

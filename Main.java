@@ -53,6 +53,7 @@ public class Main {
           }
         }
         // Background/async operations for each client
+        Messenger.sendSheduledMessages();
         updateCurTime();
         restoreHpIfNeeded(Storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(Storage.getClientsByChatIds(readyToFightChats));
@@ -122,8 +123,8 @@ public class Main {
       setFightingStatus(client, bot);
       Storage.saveClients(bot, client);
 
-      msg(client, "You're now fighting with " + bot.username + ".");
-      msg(client, getClientStats(bot));
+      Messenger.send(client.chatId, "You're now fighting with " + bot.username + ".");
+      Messenger.send(client.chatId, getClientStats(bot));
       sendFightInstruction(client);
       sendChallenge(client, 0);
     }
@@ -139,7 +140,7 @@ public class Main {
       client.hp++;
       client.lastRestore = curTime;
       if (client.hp == client.getMaxHp()) {
-        msg(client, "You are now fully recovered.");
+        Messenger.send(client.chatId, "You are now fully recovered.");
         injuredChats.remove(client.chatId);
       }
       Storage.saveClient(client);
@@ -156,7 +157,7 @@ public class Main {
       client.timeoutWarningSent = true;
       Storage.saveClient(client);
 
-      msg(client, "You have 5 seconds to make a decision.");
+      Messenger.send(client.chatId, "You have 5 seconds to make a decision.");
     }
   }
 
@@ -169,8 +170,8 @@ public class Main {
         continue;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      msg(client, "Timeout!");
-      msg(opponent, "Timeout!");
+      Messenger.send(client.chatId, "Timeout!");
+      Messenger.send(opponent.chatId, "Timeout!");
       finishFight(opponent, client);
       Storage.saveClients(opponent, client);
     }
@@ -199,7 +200,7 @@ public class Main {
     Storage.saveClient(client);
 
     if (newClient) {
-      msg(client, "Welcome to the German Club!", mainButtons);
+      Messenger.send(client.chatId, "Welcome to the German Club!", mainButtons);
       sendToActiveUsers(PhraseGenerator.getJoinedTheFightClub(
           client.username));
     }
@@ -211,7 +212,7 @@ public class Main {
     }
 
     if (txt.equals("wiseman") || txt.equals("/wiseman")) {
-      msg(client, PhraseGenerator.getWisdom(client).get(client.lang));
+      Messenger.send(client.chatId, PhraseGenerator.getWisdom(client).get(client.lang));
       return;
     }
 
@@ -222,12 +223,12 @@ public class Main {
 
     if (txt.startsWith("/username ")) {
       if (client.status != Client.Status.IDLE) {
-        msg(client, "You can change your name only when you're not fighting.");
+        Messenger.send(client.chatId, "You can change your name only when you're not fighting.");
         return;
       }
       String newName = txt.substring(10, txt.length());
       if (!newName.matches("[A-z0-9]*")) {
-        msg(client, "Incorrect name, please make sure it has " +
+        Messenger.send(client.chatId, "Incorrect name, please make sure it has " +
           "english characters and numbers only.");
         return;
       }
@@ -238,7 +239,7 @@ public class Main {
     if (txt.startsWith("improve ")) {
       String what = txt.substring(8, txt.length());
       if (client.levelPoints < 1) {
-        msg(client, "You have no level points available. You will have some "
+        Messenger.send(client.chatId, "You have no level points available. You will have some "
           + "when you level up.", mainButtons);
         return;
       }
@@ -248,11 +249,11 @@ public class Main {
 
     if (txt.equals("fight") || txt.equals("/fight")) {
       if (client.status == Client.Status.FIGHTING) {
-        msg(client, "You're already fighiting with somebody.");
+        Messenger.send(client.chatId, "You're already fighiting with somebody.");
         return;
       }
       if (client.status == Client.Status.READY_TO_FIGHT) {
-        msg(client, "You're already searching for a victim.");
+        Messenger.send(client.chatId, "You're already searching for a victim.");
         return;
       }
       if (readyToFightChats.size() == 0) {
@@ -266,7 +267,7 @@ public class Main {
 
     if (txt.equals("/healing potion") || txt.startsWith("healing potion [")) {
       if (!client.hasItem(Game.Item.HPOTION)) {
-        msg(client, "You don't have any potions.");
+        Messenger.send(client.chatId, "You don't have any potions.");
         return;
       }
       consumePotion(client);
@@ -276,7 +277,7 @@ public class Main {
     if (txt.equals("/gp42")) {
       client.giveItem(Game.Item.HPOTION);
       Storage.saveClient(client);
-      msg(client, "Now you have " + client.getItemNum(Game.Item.HPOTION) + " potions.");
+      Messenger.send(client.chatId, "Now you have " + client.getItemNum(Game.Item.HPOTION) + " potions.");
       return;
     }
 
@@ -285,8 +286,8 @@ public class Main {
         return;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      msg(client, "Retreat42!");
-      msg(opponent, "Retreat42!");
+      Messenger.send(client.chatId, "Retreat42!");
+      Messenger.send(opponent.chatId, "Retreat42!");
       finishFight(opponent, client);
       Storage.saveClients(opponent, client);
       return;
@@ -297,8 +298,8 @@ public class Main {
         return;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      msg(client, "Kill42 activated!");
-      msg(opponent, "Kill42 activated!");
+      Messenger.send(client.chatId, "Kill42 activated!");
+      Messenger.send(opponent.chatId, "Kill42 activated!");
       finishFight(client, opponent);
       Storage.saveClients(opponent, client);
       return;
@@ -307,7 +308,7 @@ public class Main {
     if (txt.equals("/reset42")) {
       Client cleanClient = new Client(client.chatId, client.username);
       Storage.saveClient(cleanClient);
-      msg(cleanClient, "Reset42");
+      Messenger.send(cleanClient.chatId, "Reset42");
       return;
     }
 
@@ -318,7 +319,7 @@ public class Main {
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       handleHit(client, opponent, txt.equals(dict.get(client.challenge[0])[0]));
       Storage.saveClients(opponent, client);
-      if (opponent.chatId < 0) {
+      if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
         activateBot(opponent);
       }
       return;
@@ -329,14 +330,14 @@ public class Main {
       int numListeners = sendToActiveUsers(
         PhraseGenerator.getLangMap(message)) - 1;
       if (numListeners == 0) {
-        msg(client, "You were not heard by anyone :(");
+        Messenger.send(client.chatId, "You were not heard by anyone :(");
       }
       return;
     }
 
 
     // TODO: Add help page link here
-    msg(client, "Use buttons below to make valid actions.");
+    Messenger.send(client.chatId, "Use buttons below to make valid actions.");
   }
 
   // returns number of people who heard you
@@ -347,7 +348,7 @@ public class Main {
     for (int recepientChatId : activeChats) {
       Client recepient = Storage.getClientByChatId(recepientChatId);
       if (recepient.lastActivity > curTime - CHAT_TIMEOUT) {
-        msg(recepient, message.get(recepient.lang));
+        Messenger.send(recepient.chatId, message.get(recepient.lang));
         numListeners++;
       } else {
         passive.add(recepientChatId);
@@ -360,14 +361,14 @@ public class Main {
   }
 
   private static void showProfile(Client client) {
-    msg(client, getClientStats(client));
+    Messenger.send(client.chatId, getClientStats(client));
     if (client.levelPoints > 0) {
-      msg(client, "You have " + client.levelPoints + " unassigned "
+      Messenger.send(client.chatId, "You have " + client.levelPoints + " unassigned "
         + "level points.", levelPointsButtons);
     }
-    msg(client, getInventoryDescription(client));
+    Messenger.send(client.chatId, getInventoryDescription(client));
     if (!client.nameChangeHintSent) {
-      msg(client, "You can change your name with the following command \n"
+      Messenger.send(client.chatId, "You can change your name with the following command \n"
         + "`/username newname`.");
       client.nameChangeHintSent = true;
     }
@@ -404,7 +405,7 @@ public class Main {
 
   private static void changeUserName(Client client, String newName) {
     client.username = newName;
-    msg(client, "Your name is now " + newName + ".");
+    Messenger.send(client.chatId, "Your name is now " + newName + ".");
     Storage.saveClient(client);
   }
 
@@ -428,11 +429,11 @@ public class Main {
       newValue = ++client.luck;
     }
     if (newValue == 0) {
-      msg(client, "Don't know how to improve " + skill + ".");
+      Messenger.send(client.chatId, "Don't know how to improve " + skill + ".");
       return;
     }
     client.levelPoints--;
-    msg(client, "You have increased your " + skill + ", it is now "
+    Messenger.send(client.chatId, "You have increased your " + skill + ", it is now "
       + newValue + ". You have " + client.levelPoints
       + " more level points.", mainButtons);
     Storage.saveClient(client);
@@ -450,10 +451,10 @@ public class Main {
   private static void startFightReal(Client client, Client opponent) {
     setFightingStatus(client, opponent);
     Storage.saveClients(client, opponent);
-    msg(client, "You're now fighting with " + opponent.username + ".");
-    msg(opponent, "You're now fighting with " + client.username + ".");
-    msg(client, getClientStats(opponent));
-    msg(opponent, getClientStats(client));
+    Messenger.send(client.chatId, "You're now fighting with " + opponent.username + ".");
+    Messenger.send(opponent.chatId, "You're now fighting with " + client.username + ".");
+    Messenger.send(client.chatId, getClientStats(opponent));
+    Messenger.send(opponent.chatId, getClientStats(client));
     sendFightInstruction(client);
     sendFightInstruction(opponent);
     int clientDif = 0;
@@ -476,14 +477,20 @@ public class Main {
     } else {
       options = generateSimpleOptions(questionId);
     }
+    addPotions(client, options);
+    Messenger.send(client.chatId,
+        "Please translate to German the word: " + question[1],
+        options.toArray(new String[0])); 
+  }
+
+  private static ArrayList<String> addPotions(Client client,
+                                              ArrayList<String> options) {
     Storage.saveClient(client);
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     if (numPotions > 0) {
       options.add("healing potion [" + numPotions + "]");
     }
-    msg(client,
-        "Please translate to German the word: " + question[1],
-        options.toArray(new String[0])); 
+    return options;
   }
 
   private static boolean hasArticle(String word) {
@@ -522,7 +529,7 @@ public class Main {
 
   private static void sendFightInstruction(Client client) {
     if (client.fightsWon == 0) {
-      msg(client, "You need to pick the correct translation to damage the opponent.");
+      Messenger.send(client.chatId, "You need to pick the correct translation to damage the opponent.");
     }
   }
 
@@ -538,12 +545,12 @@ public class Main {
         client.getItemNum(Game.Item.HPOTION) + " left. " +
         "[" + client.hp + "/" + client.getMaxHp() + "]";
     if (client.status == Client.Status.FIGHTING) {
-      msg(client, clientMsg);
+      Messenger.send(client.chatId, clientMsg);
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      msg(opponent, "\uD83C\uDF76 " + client.username + " have consumed a healing potion " +
+      Messenger.send(opponent.chatId, "\uD83C\uDF76 " + client.username + " have consumed a healing potion " +
       "[" + client.hp + "/" + client.getMaxHp() + "]");
     } else {
-      msg(client, clientMsg);
+      Messenger.send(client.chatId, clientMsg);
     }
   }
 
@@ -560,44 +567,37 @@ public class Main {
     return null;
   }
 
-  private static void msg(Client client, String message) {
-    msg(client, message, new String[] {});
-  }
-
-  private static void msg(Client client, String message, String[] replies) {
-    if (client.chatId < 0) {
-      return;
-    }
-    TelegramApi.say(client.chatId, message, replies);
-  }
-
-  private static void makeAHit(Client client, Client victim, boolean success) {
+  private static void makeHit(Client client, Client victim, boolean success) {
     String clientPrefix = "\uD83D\uDDE1 ";
     String victimPrefix = "\uD83D\uDEE1 ";
     String[] challengeWord = dict.get(client.challenge[0]);
     if (!success) {
-      msg(victim, victimPrefix + 
+      Messenger.send(victim.chatId, victimPrefix + 
         PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
-      msg(client, clientPrefix +
-        PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord));
+      Messenger.send(client.chatId,
+                      clientPrefix +
+                        PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord),
+                     addPotions(client, new ArrayList<String>()));
       return;
     }
     int clientHits = getDamage(client);
     victim.hp = Math.max(victim.hp - clientHits, 0);
-    msg(victim, victimPrefix + 
+    Messenger.send(victim.chatId, victimPrefix + 
         PhraseGenerator.correctTranslationToVictim(client,
                                                    victim,
                                                    clientHits,
                                                    challengeWord));
-    msg(client, clientPrefix +
-      PhraseGenerator.correctTranslationToOffender(client,
-                                                   victim,
-                                                   clientHits,
-                                                   challengeWord));
+    Messenger.send(client.chatId,
+                   clientPrefix +
+                   PhraseGenerator.correctTranslationToOffender(client,
+                                                                victim,
+                                                                clientHits,
+                                                                challengeWord),
+                   addPotions(client, new ArrayList<String>()));
   }
 
   private static void handleHit(Client client, Client opponent, boolean success) {
-    makeAHit(client, opponent, success);
+    makeHit(client, opponent, success);
     // Finish fight if needed
     Client winner = null;
     Client loser = null;
@@ -634,36 +634,36 @@ public class Main {
     winner.timeoutWarningSent = false;
     loser.timeoutWarningSent = false;
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
-    msg(winner, "You gained " + expGained + " experience.");
+    Messenger.send(winner.chatId, "You gained " + expGained + " experience.");
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
-      msg(winner, "You found 1 healing potion!");
+      Messenger.send(winner.chatId, "You found 1 healing potion!");
     } else {
       // logic for looting bots is here
       int rnd = Utils.rndInRange(1,6);
       if (rnd == 1) {
         winner.giveItem(Game.Item.HPOTION);
-        msg(winner, "You found 1 healing potion!");
+        Messenger.send(winner.chatId, "You found 1 healing potion!");
       } else if (rnd < 4) {
         Game.Item found = Game.ITEM_VALUES[Utils.getRndKeyWithWeight(
             loser.inventory)];
         winner.giveItem(found);
-        msg(winner, "You found 1 " + found.singular +  "!");
+        Messenger.send(winner.chatId, "You found 1 " + found.singular +  "!");
       }
     }
     if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
-      msg(winner, "Fight is finished. Your health will recover in "
+      Messenger.send(winner.chatId, "Fight is finished. Your health will recover in "
         + 3*(winner.getMaxHp() - winner.hp) + " seconds.", mainButtons);
       injuredChats.add(winner.chatId);
     } else {
-      msg(winner, "Fight is finished.", mainButtons);
+      Messenger.send(winner.chatId, "Fight is finished.", mainButtons);
     }
     if (loser.hp < loser.getMaxHp() && loser.chatId > 0) {
-      msg(loser, "Fight is finished. Your health will recover in "
+      Messenger.send(loser.chatId, "Fight is finished. Your health will recover in "
         + 3*(loser.getMaxHp() - loser.hp) + " seconds.", mainButtons);
       injuredChats.add(loser.chatId);
     } else {
-      msg(loser, "Fight is finished.", mainButtons);
+      Messenger.send(loser.chatId, "Fight is finished.", mainButtons);
     }
     levelUpIfNeeded(winner);
     levelUpIfNeeded(loser);
@@ -704,7 +704,7 @@ public class Main {
     if (client.exp >= nextExp(client)) {
       client.level++;
       client.levelPoints++;
-      msg(client, "You have achieved level " + client.level + "!\n",
+      Messenger.send(client.chatId, "You have achieved level " + client.level + "!\n",
         levelPointsButtons);
     }
   }
