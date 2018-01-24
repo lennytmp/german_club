@@ -21,7 +21,8 @@ public class Main {
   private static final String[] levelPointsButtons = {
     "improve strength", "improve vitality", "improve luck"
   };
-  private static final int CHAT_TIMEOUT = 1800;
+  private static final int CHAT_TIMEOUT = 600;
+  private static final int FIGHT_TIMEOUT = 60;
 
   private static Set<Integer> activeChats = new HashSet<>();
   private static Set<Integer> injuredChats = new HashSet<>();
@@ -125,7 +126,6 @@ public class Main {
 
       Messenger.send(client.chatId, "You're now fighting with " + bot.username + ".");
       Messenger.send(client.chatId, getClientStats(bot));
-      sendFightInstruction(client);
       sendChallenge(client);
     }
   }
@@ -151,7 +151,7 @@ public class Main {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
           || client.timeoutWarningSent
-          || client.lastFightActivitySince > curTime - 30) {
+          || client.lastFightActivitySince > curTime - FIGHT_TIMEOUT) {
           continue;
       }
       client.timeoutWarningSent = true;
@@ -460,8 +460,6 @@ public class Main {
     Messenger.send(opponent.chatId, "You're now fighting with " + client.username + ".");
     Messenger.send(client.chatId, getClientStats(opponent));
     Messenger.send(opponent.chatId, getClientStats(client));
-    sendFightInstruction(client);
-    sendFightInstruction(opponent);
     sendChallenge(client);
     sendChallenge(opponent);
   }
@@ -479,12 +477,6 @@ public class Main {
     return word.toLowerCase().startsWith("das ") ||
       word.toLowerCase().startsWith("der ") ||
       word.toLowerCase().startsWith("die ");
-  }
-
-  private static void sendFightInstruction(Client client) {
-    if (client.fightsWon == 0) {
-      Messenger.send(client.chatId, "You need to pick the correct translation to damage the opponent.");
-    }
   }
 
   private static void consumePotion(Client client) {
@@ -726,7 +718,7 @@ public class Main {
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1] + ". Hint: `" +
           new String(Utils.shuffleCharArray(
-              question[0].toLowerCase().toCharArray()))+ ")`",
+              question[0].toLowerCase().toCharArray()))+ "`",
           options.toArray(new String[] {})); 
       return;
     } else {
