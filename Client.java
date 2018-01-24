@@ -96,7 +96,7 @@ class Client {
   }
 
   public int getMaxDamage() {
-    return Main.HP_UNIT + strength - 3;
+    return strength;
   }
 
   public void giveItem(Game.Item item) {

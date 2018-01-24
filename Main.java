@@ -21,7 +21,7 @@ public class Main {
   private static final String[] levelPointsButtons = {
     "improve strength", "improve vitality", "improve luck"
   };
-  private static final int CHAT_TIMEOUT = 600;
+  private static final int CHAT_TIMEOUT = 1800;
 
   private static Set<Integer> activeChats = new HashSet<>();
   private static Set<Integer> injuredChats = new HashSet<>();
@@ -410,7 +410,9 @@ public class Main {
   }
 
   private static void activateBot(Client bot) {
-    boolean success = (bot.challenge[1] + 1)*Utils.rndInRange(1, 10) < 9; 
+    int[] prob = new int[] {97, 60, 50, 30, 20};
+    int difficulty = Math.min(bot.challenge[1], prob.length - 1);
+    boolean success = Utils.rndInRange(1, 100) < prob[difficulty];
     String response = "";
     if (success) {
       response = dict.get(bot.challenge[0])[0];
@@ -464,8 +466,7 @@ public class Main {
     sendChallenge(opponent);
   }
 
-  private static ArrayList<String> addPotions(Client client,
-                                              ArrayList<String> options) {
+  private static List<String> addPotions(Client client, List<String> options) {
     Storage.saveClient(client);
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     if (numPotions > 0) {
@@ -549,8 +550,20 @@ public class Main {
                    addPotions(client, new ArrayList<String>()));
   }
 
+  private static String normalizeGerman(String str) {
+    return str.toLowerCase()
+              .replace("ä", "a")
+              .replace("ö", "o")
+              .replace("ü", "u")
+              .replace("ß", "s");
+  }
+
+  private static boolean isAnswerCorrect(String response, String answer) {
+    return normalizeGerman(response).equals(normalizeGerman(answer));
+  }
+
   private static void handleHit(Client client, Client opponent, String response) {
-    boolean success = response.equals(dict.get(client.challenge[0])[0]);
+    boolean success = isAnswerCorrect(response, dict.get(client.challenge[0])[0]);
     if (success) {
       client.fightQuestions.put(client.challenge[0], client.challenge[1] + 1);
     }
@@ -698,12 +711,28 @@ public class Main {
     int difficulty = client.fightQuestions.get(questionId);
     client.challenge[0] = questionId;
     client.challenge[1] = difficulty;
-    ArrayList<String> options = null;
-    if (difficulty > 0 && hasArticle(question[0])) {
+    List<String> options = new ArrayList<>();
+
+    if (difficulty == 1 && hasArticle(question[0])) {
       options = generateArticleOptions(question[0]);
+    } else if (difficulty > 2) {
+      addPotions(client, options);
+      Messenger.send(client.chatId,
+          "Please translate to German the word: " + question[1],
+          options.toArray(new String[] {})); 
+      return;
+    } else if (difficulty > 0) {
+      addPotions(client, options);
+      Messenger.send(client.chatId,
+          "Please translate to German the word: " + question[1] + ". Hint: `" +
+          new String(Utils.shuffleCharArray(
+              question[0].toLowerCase().toCharArray()))+ ")`",
+          options.toArray(new String[] {})); 
+      return;
     } else {
       options = generateSimpleOptions(questionId);
     }
+
     addPotions(client, options);
     Messenger.send(client.chatId,
         "Please translate to German the word: " + question[1],
@@ -732,13 +761,11 @@ public class Main {
 
   private static ArrayList<String> generateArticleOptions(String word) {
     ArrayList<String> options = new ArrayList<>();
-    options.add("Das " + word.substring(4));
-    options.add("Der " + word.substring(4));
-    options.add("Die " + word.substring(4));
+    options.add("das " + word.substring(4));
+    options.add("der " + word.substring(4));
+    options.add("die " + word.substring(4));
     return options;
   }
-
-
 
   static void prepareToFight(Client client, Client opponent) {
     prepareToFight(client, opponent, 0);

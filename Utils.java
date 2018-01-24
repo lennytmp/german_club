@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -50,6 +51,21 @@ class Utils {
       }
     }
     return list.get(rndInRange(0, list.size() -1));
+  }
+
+  // borrowed from https://stackoverflow.com/questions/1519736/random-shuffling-of-an-array
+  static char[] shuffleCharArray(char[] array) {
+    int index;
+    char temp;
+    Random random = new Random();
+    for (int i = array.length - 1; i > 0; i--)
+    {
+        index = random.nextInt(i + 1);
+        temp = array[index];
+        array[index] = array[i];
+        array[i] = temp;
+    }
+    return array;
   }
 }
 
