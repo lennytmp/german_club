@@ -684,7 +684,8 @@ public class Main {
     int questionsNum = client.level + 1;
     Set<Integer> questions = new HashSet<>();
     while (questions.size() < 5) {
-      questions.add(Utils.rndInRange(0, dict.size() - 1));
+      int wordNum = client.level * 20;
+      questions.add(Utils.rndInRange(0, wordNum));
     }
     client.fightQuestions.clear();
     for (int questionId : questions) {
