@@ -681,7 +681,7 @@ public class Main {
   }
 
   private static void pickQuestionsForFight(Client client) {
-    int questionsNum = 5; // TODO: dehardcode
+    int questionsNum = client.level + 1;
     Set<Integer> questions = new HashSet<>();
     while (questions.size() < 5) {
       questions.add(Utils.rndInRange(0, dict.size() - 1));
