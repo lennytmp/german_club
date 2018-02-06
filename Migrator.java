@@ -1,9 +1,9 @@
-package ChatBot;
+package FightLang;
 
 class Migrator {
   public static void main(String[] args) {
     if (args.length < 1) {
-      System.out.println("Usage: ChatBot.jar path/to/db");
+      System.out.println("Usage: FightLang.jar path/to/db");
       System.exit(0);
     }
     Logger.setDbPath(args[0]);

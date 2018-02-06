@@ -1,4 +1,4 @@
-package ChatBot;
+package FightLang;
 
 import java.util.ArrayList;
 import java.util.List;

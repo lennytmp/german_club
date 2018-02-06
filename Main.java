@@ -1,4 +1,4 @@
-package ChatBot;
+package FightLang;
 
 import java.lang.InterruptedException;
 import java.lang.Thread;
@@ -74,7 +74,7 @@ public class Main {
 
   private static void initialize(String[] args) {
     if (args.length < 1) {
-      System.out.println("Usage: ChatBot.jar path/to/db");
+      System.out.println("Usage: FightLang.jar path/to/db");
       System.exit(0);
     }
     Logger.setDbPath(args[0]);

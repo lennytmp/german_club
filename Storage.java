@@ -1,4 +1,4 @@
-package ChatBot;
+package FightLang;
 
 import com.google.gson.Gson;
 

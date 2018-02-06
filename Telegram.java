@@ -1,4 +1,4 @@
-package ChatBot;
+package FightLang;
 
 class Telegram {
   class GetUpdatesResult {

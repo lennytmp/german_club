@@ -1,4 +1,4 @@
-package ChatBot;
+package FightLang;
 
 class Game {
   static final BotConfig[] BOT_TYPES = {
