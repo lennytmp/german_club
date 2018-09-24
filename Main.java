@@ -410,7 +410,7 @@ public class Main {
   }
 
   private static void activateBot(Client bot) {
-    int[] prob = new int[] {97, 60, 50, 30, 20};
+    int[] prob = new int[] {97, 90, 85, 80, 75};
     int difficulty = Math.min(bot.challenge[1], prob.length - 1);
     boolean success = Utils.rndInRange(1, 100) < prob[difficulty];
     String response = "";
@@ -684,7 +684,7 @@ public class Main {
     int questionsNum = client.level + 1;
     Set<Integer> questions = new HashSet<>();
     while (questions.size() < 5) {
-      int wordNum = client.level * 20;
+      int wordNum = client.level * 115;
       questions.add(Utils.rndInRange(0, wordNum));
     }
     client.fightQuestions.clear();
