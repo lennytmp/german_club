@@ -312,6 +312,11 @@ public class Main {
       return;
     }
 
+    if (txt.equals("/version")) {
+      Messenger.send(client.chatId, "Version: 0.01");
+      return;
+    }
+
     if (client.status == Client.Status.FIGHTING &&
         !txt.startsWith("/")) {
       client.lastFightActivitySince = curTime;
@@ -652,8 +657,16 @@ public class Main {
 
   private static int getDamage(Client client) {
     int result = 0;
+    int maxDamage = client.getMaxDamage();
     for (int i = 0; i <= client.challenge[1]; i++) {
-      result += Utils.rndInRange(1, client.getMaxDamage());
+      result += Utils.rndInRange(1, maxDamage);
+      if (result > maxDamage) {
+        result = maxDamage;
+        break;
+      }
+    }
+    if (Utils.rndInRange(1, 100) < client.luck) {
+      result *= 2;
     }
     return result;
   }
