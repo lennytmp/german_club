@@ -87,6 +87,8 @@ class Messenger {
                     msg,
                     options,
                     removeOptionsIfNeeded);
+    int curTime = (int)(System.currentTimeMillis() / 1000L);
+    lastTimeSent.put(chatId, curTime);
   }
 
   public static void send(int chatId, String msg, String[] options) {
