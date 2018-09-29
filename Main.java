@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Set;
 
 public class Main {
-  public static final int HP_UNIT = 5;
   public static boolean isProd = false;
 
   private static final String[] mainButtons = {"fight", "profile"};
@@ -485,7 +484,7 @@ public class Main {
   }
 
   private static void consumePotion(Client client) {
-    client.hp += HP_UNIT;
+    client.hp += 5;
     if (client.hp > client.getMaxHp()) {
       client.hp = client.getMaxHp();
     }
@@ -664,14 +663,8 @@ public class Main {
   private static int getDamage(Client client) {
     int result = 0;
     int maxDamage = client.getMaxDamage();
-    for (int i = 0; i <= client.challenge[1]; i++) {
-      result += Utils.rndInRange(1, maxDamage);
-      if (result > maxDamage) {
-        result = maxDamage;
-        break;
-      }
-    }
-    if (Utils.rndInRange(1, 100) < client.luck) {
+    result = Utils.rndInRange(1, maxDamage);
+    if (Utils.rndInRange(1, 100) < client.luck*client.luck) {
       result *= 2;
     }
     return result;

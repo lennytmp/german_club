@@ -92,7 +92,7 @@ class Client {
   }
 
   public int getMaxHp() {
-    return 9 * Main.HP_UNIT + (vitality - 3) * Main.HP_UNIT;
+    return 9 * 5 + (vitality - 3) * 9;
   }
 
   public int getMaxDamage() {
