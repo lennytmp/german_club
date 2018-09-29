@@ -313,7 +313,7 @@ public class Main {
     }
 
     if (txt.equals("/version")) {
-      Messenger.send(client.chatId, "Version: 0.01");
+      Messenger.send(client.chatId, "Version: 0.02");
       return;
     }
 
@@ -538,13 +538,15 @@ public class Main {
                                                    victim,
                                                    clientHits,
                                                    challengeWord));
-    Messenger.send(client.chatId,
-                   clientPrefix +
-                   PhraseGenerator.correctTranslationToOffender(client,
-                                                                victim,
-                                                                clientHits,
-                                                                challengeWord),
-                   addPotions(client, new ArrayList<String>()));
+    // We want to send feedback to the use immidiately skipping the queue.
+    Messenger.sendNow(client.chatId,
+                      clientPrefix +
+                      PhraseGenerator.correctTranslationToOffender(client,
+                                                                   victim,
+                                                                   clientHits,
+                                                                   challengeWord),
+                      addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
+                      false);
   }
 
   private static String normalizeGerman(String str) {

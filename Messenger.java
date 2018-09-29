@@ -76,6 +76,19 @@ class Messenger {
     queue.add(new Message(chatId, msg, options, removeOptionsIfNeeded));
   }
 
+  public static void sendNow(int chatId,
+                          String msg,
+                          String[] options,
+                          boolean removeOptionsIfNeeded) {
+    if (chatId < 0) {
+      return;
+    }
+    TelegramApi.say(chatId,
+                    msg,
+                    options,
+                    removeOptionsIfNeeded);
+  }
+
   public static void send(int chatId, String msg, String[] options) {
     send(chatId, msg, options, true);
   }
