@@ -34,7 +34,7 @@ class Logger {
   private static final String EXT = ".db";
   private static final String BACKUP_FILE = ".backup";
   private static final String CONFIG_FILE = "config.json";
-  private static final String DICT_FILE = "dict.tsv";
+  private static final String DICT_FILE = "data/dict.tsv";
   private static PrintWriter logsWriter;
 
   public static void initialize() {
