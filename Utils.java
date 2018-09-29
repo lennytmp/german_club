@@ -17,8 +17,8 @@ class Utils {
   }
 
   static int rndInRange(int min, int max) {
-    int range = (max - min) + 1;
-    return (int)(Math.random() * range) + min;
+    Random random = new Random();
+    return random.nextInt((max - min) + 1) + min;
   }
 
   static int rndInRangeWeighted(int[] arr) {
