@@ -525,10 +525,12 @@ public class Main {
     if (!success) {
       Messenger.send(victim.chatId, victimPrefix + 
         PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
-      Messenger.send(client.chatId,
+      // We want to send feedback to the use immidiately skipping the queue.
+      Messenger.sendNow(client.chatId,
                       clientPrefix +
                         PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord),
-                     addPotions(client, new ArrayList<String>()));
+                     addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
+                     true);
       return;
     }
     int clientHits = getDamage(client);
@@ -546,7 +548,7 @@ public class Main {
                                                                    clientHits,
                                                                    challengeWord),
                       addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
-                      false);
+                      true);
   }
 
   private static String normalizeGerman(String str) {
@@ -599,7 +601,9 @@ public class Main {
     winner.timeoutWarningSent = false;
     loser.timeoutWarningSent = false;
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
-    Messenger.send(winner.chatId, "You gained " + expGained + " experience.");
+    int winnerExpUntilPromo = nextExp(winner) - winner.exp;
+    Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
+      winnerExpUntilPromo + " experience left until level up.");
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
       Messenger.send(winner.chatId, "You found 1 healing potion!");
