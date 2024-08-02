@@ -16,6 +16,11 @@ class Utils {
     return m.group(1);
   }
 
+  static boolean roll(int success_percent) {
+    int a = rndInRange(1, 100);
+    return a <= success_percent;
+  }
+
   static int rndInRange(int min, int max) {
     Random random = new Random();
     return random.nextInt((max - min) + 1) + min;

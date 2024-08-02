@@ -16,7 +16,7 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] mainButtons = { "fight", "profile" };
+  private static final String[] mainButtons = { "fight", "profile", "wiseman", "task"};
   private static final String[] levelPointsButtons = {
       "improve strength", "improve vitality", "improve luck"
   };
@@ -273,10 +273,15 @@ public class Main {
       return;
     }
 
-    if (txt.equals("/gp42")) {
-      client.giveItem(Game.Item.HPOTION);
+    if (txt.equals("task")) {
+      if (!Utils.roll(30)) {
+        Messenger.send(client.chatId, "You took a stroll in the woods, but haven't found anything useful.");
+        return;
+      }
+      Game.Item found = Utils.getRnd(Game.ITEM_VALUES);
+      client.giveItem(found);
       Storage.saveClient(client);
-      Messenger.send(client.chatId, "Now you have " + client.getItemNum(Game.Item.HPOTION) + " potions.");
+      Messenger.send(client.chatId, "You found 1 " + found.singular + "!");
       return;
     }
 
@@ -364,15 +369,15 @@ public class Main {
   }
 
   private static void showProfile(Client client) {
-    Messenger.send(client.chatId, getClientStats(client));
+    Messenger.send(client.chatId, getClientStats(client), mainButtons);
     if (client.levelPoints > 0) {
       Messenger.send(client.chatId, "You have " + client.levelPoints + " unassigned "
           + "level points.", levelPointsButtons);
     }
-    Messenger.send(client.chatId, getInventoryDescription(client));
+    Messenger.send(client.chatId, getInventoryDescription(client), mainButtons);
     if (!client.nameChangeHintSent) {
       Messenger.send(client.chatId, "You can change your name with the following command \n"
-          + "`/username newname`.");
+          + "`/username newname`.", mainButtons);
       client.nameChangeHintSent = true;
     }
     Storage.saveClient(client);
