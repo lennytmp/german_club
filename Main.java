@@ -16,9 +16,9 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] mainButtons = {"fight", "profile"};
+  private static final String[] mainButtons = { "fight", "profile" };
   private static final String[] levelPointsButtons = {
-    "improve strength", "improve vitality", "improve luck"
+      "improve strength", "improve vitality", "improve luck"
   };
   private static final int CHAT_TIMEOUT = 600;
   private static final int FIGHT_TIMEOUT = 60;
@@ -151,7 +151,7 @@ public class Main {
       if (client.status != Client.Status.FIGHTING
           || client.timeoutWarningSent
           || client.lastFightActivitySince > curTime - FIGHT_TIMEOUT) {
-          continue;
+        continue;
       }
       client.timeoutWarningSent = true;
       Storage.saveClient(client);
@@ -177,7 +177,7 @@ public class Main {
   }
 
   private static void updateCurTime() {
-    curTime = (int)(System.currentTimeMillis() / 1000L);
+    curTime = (int) (System.currentTimeMillis() / 1000L);
   }
 
   private static void handleUpdate(Telegram.Update upd) {
@@ -228,7 +228,7 @@ public class Main {
       String newName = txt.substring(10, txt.length());
       if (!newName.matches("[A-z0-9]*")) {
         Messenger.send(client.chatId, "Incorrect name, please make sure it has " +
-          "english characters and numbers only.");
+            "english characters and numbers only.");
         return;
       }
       changeUserName(client, newName);
@@ -239,7 +239,7 @@ public class Main {
       String what = txt.substring(8, txt.length());
       if (client.levelPoints < 1) {
         Messenger.send(client.chatId, "You have no level points available. You will have some "
-          + "when you level up.", mainButtons);
+            + "when you level up.", mainButtons);
         return;
       }
       improveSkill(client, what);
@@ -332,13 +332,12 @@ public class Main {
     if (!txt.startsWith("/")) {
       String message = "\uD83D\uDCE2 " + client.username + ": " + txt;
       int numListeners = sendToActiveUsers(
-        PhraseGenerator.getLangMap(message)) - 1;
+          PhraseGenerator.getLangMap(message)) - 1;
       if (numListeners == 0) {
         Messenger.send(client.chatId, "You were not heard by anyone :(");
       }
       return;
     }
-
 
     // TODO: Add help page link here
     Messenger.send(client.chatId, "Use buttons below to make valid actions.");
@@ -368,43 +367,38 @@ public class Main {
     Messenger.send(client.chatId, getClientStats(client));
     if (client.levelPoints > 0) {
       Messenger.send(client.chatId, "You have " + client.levelPoints + " unassigned "
-        + "level points.", levelPointsButtons);
+          + "level points.", levelPointsButtons);
     }
     Messenger.send(client.chatId, getInventoryDescription(client));
     if (!client.nameChangeHintSent) {
       Messenger.send(client.chatId, "You can change your name with the following command \n"
-        + "`/username newname`.");
+          + "`/username newname`.");
       client.nameChangeHintSent = true;
     }
     Storage.saveClient(client);
   }
 
   private static String getInventoryDescription(Client client) {
-      StringBuilder result = new StringBuilder("You have:\n");
-      int numValues = 0;
-      for (Map.Entry<Integer, Integer> item : client.inventory.entrySet()) {
-        numValues += item.getValue();
-        if (item.getValue() <= 0) {
-          continue;
-        }
-        result.append(item.getValue());
-        result.append(" ");
-        if (item.getValue() == 1) {
-          result.append(Game.ITEM_VALUES[item.getKey()].singular);
-        } else if (item.getValue() > 1) {
-          result.append(Game.ITEM_VALUES[item.getKey()].plural);
-        }
-        result.append(".\n");
+    StringBuilder result = new StringBuilder("You have:\n");
+    int numValues = 0;
+    for (Map.Entry<Integer, Integer> item : client.inventory.entrySet()) {
+      numValues += item.getValue();
+      if (item.getValue() <= 0) {
+        continue;
       }
-      if (numValues == 0) {
-        return "You don't have any items.";
+      result.append(item.getValue());
+      result.append(" ");
+      if (item.getValue() == 1) {
+        result.append(Game.ITEM_VALUES[item.getKey()].singular);
+      } else if (item.getValue() > 1) {
+        result.append(Game.ITEM_VALUES[item.getKey()].plural);
       }
-      return result.toString();
-  }
-
-  private static void setLanguage(Client client, String lang) {
-    client.lang = lang;
-    Storage.saveClient(client);
+      result.append(".\n");
+    }
+    if (numValues == 0) {
+      return "You don't have any items.";
+    }
+    return result.toString();
   }
 
   private static void changeUserName(Client client, String newName) {
@@ -414,7 +408,7 @@ public class Main {
   }
 
   private static void activateBot(Client bot) {
-    int[] prob = new int[] {97, 90, 85, 80, 75};
+    int[] prob = new int[] { 97, 90, 85, 80, 75 };
     int difficulty = Math.min(bot.challenge[1], prob.length - 1);
     boolean success = Utils.rndInRange(1, 100) < prob[difficulty];
     String response = "";
@@ -443,8 +437,8 @@ public class Main {
     }
     client.levelPoints--;
     Messenger.send(client.chatId, "You have increased your " + skill + ", it is now "
-      + newValue + ". You have " + client.levelPoints
-      + " more level points.", mainButtons);
+        + newValue + ". You have " + client.levelPoints
+        + " more level points.", mainButtons);
     Storage.saveClient(client);
   }
 
@@ -479,8 +473,8 @@ public class Main {
 
   private static boolean hasArticle(String word) {
     return word.toLowerCase().startsWith("das ") ||
-      word.toLowerCase().startsWith("der ") ||
-      word.toLowerCase().startsWith("die ");
+        word.toLowerCase().startsWith("der ") ||
+        word.toLowerCase().startsWith("die ");
   }
 
   private static void consumePotion(Client client) {
@@ -498,23 +492,10 @@ public class Main {
       Messenger.send(client.chatId, clientMsg);
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       Messenger.send(opponent.chatId, "\uD83C\uDF76 " + client.username + " have consumed a healing potion " +
-      "[" + client.hp + "/" + client.getMaxHp() + "]");
+          "[" + client.hp + "/" + client.getMaxHp() + "]");
     } else {
       Messenger.send(client.chatId, clientMsg);
     }
-  }
-
-  private static Client.BodyPart getBodyPartFromString(String str) {
-    if (str.equals("head")) {
-      return Client.BodyPart.HEAD;
-    }
-    if (str.equals("torso") || str.equals("body")) {
-      return Client.BodyPart.TORSO;
-    }
-    if (str.equals("legs")) {
-      return Client.BodyPart.LEGS;
-    }
-    return null;
   }
 
   private static void makeHit(Client client, Client victim, boolean success) {
@@ -522,40 +503,40 @@ public class Main {
     String victimPrefix = "\uD83D\uDEE1 ";
     String[] challengeWord = dict.get(client.challenge[0]);
     if (!success) {
-      Messenger.send(victim.chatId, victimPrefix + 
-        PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
+      Messenger.send(victim.chatId, victimPrefix +
+          PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
       // We want to send feedback to the use immidiately skipping the queue.
       Messenger.sendNow(client.chatId,
-                      clientPrefix +
-                        PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord),
-                     addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
-                     true);
+          clientPrefix +
+              PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord),
+          addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
+          true);
       return;
     }
     int clientHits = getDamage(client);
     victim.hp = Math.max(victim.hp - clientHits, 0);
-    Messenger.send(victim.chatId, victimPrefix + 
+    Messenger.send(victim.chatId, victimPrefix +
         PhraseGenerator.correctTranslationToVictim(client,
-                                                   victim,
-                                                   clientHits,
-                                                   challengeWord));
+            victim,
+            clientHits,
+            challengeWord));
     // We want to send feedback to the use immidiately skipping the queue.
     Messenger.sendNow(client.chatId,
-                      clientPrefix +
-                      PhraseGenerator.correctTranslationToOffender(client,
-                                                                   victim,
-                                                                   clientHits,
-                                                                   challengeWord),
-                      addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
-                      true);
+        clientPrefix +
+            PhraseGenerator.correctTranslationToOffender(client,
+                victim,
+                clientHits,
+                challengeWord),
+        addPotions(client, new ArrayList<String>()).toArray(new String[] {}),
+        true);
   }
 
   private static String normalizeGerman(String str) {
     return str.toLowerCase()
-              .replace("ä", "a")
-              .replace("ö", "o")
-              .replace("ü", "u")
-              .replace("ß", "s");
+        .replace("ä", "a")
+        .replace("ö", "o")
+        .replace("ü", "u")
+        .replace("ß", "s");
   }
 
   private static boolean isAnswerCorrect(String response, String answer) {
@@ -602,13 +583,13 @@ public class Main {
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
     int winnerExpUntilPromo = nextExp(winner) - winner.exp;
     Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
-      winnerExpUntilPromo + " experience left until level up.");
+        winnerExpUntilPromo + " experience left until level up.");
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
       Messenger.send(winner.chatId, "You found 1 healing potion!");
     } else {
       // logic for looting bots is here
-      int rnd = Utils.rndInRange(1,6);
+      int rnd = Utils.rndInRange(1, 6);
       if (rnd == 1) {
         winner.giveItem(Game.Item.HPOTION);
         Messenger.send(winner.chatId, "You found 1 healing potion!");
@@ -616,19 +597,19 @@ public class Main {
         Game.Item found = Game.ITEM_VALUES[Utils.getRndKeyWithWeight(
             loser.inventory)];
         winner.giveItem(found);
-        Messenger.send(winner.chatId, "You found 1 " + found.singular +  "!");
+        Messenger.send(winner.chatId, "You found 1 " + found.singular + "!");
       }
     }
     if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
       Messenger.send(winner.chatId, "Fight is finished. Your health will recover in "
-        + 3*(winner.getMaxHp() - winner.hp) + " seconds.", mainButtons);
+          + 3 * (winner.getMaxHp() - winner.hp) + " seconds.", mainButtons);
       injuredChats.add(winner.chatId);
     } else {
       Messenger.send(winner.chatId, "Fight is finished.", mainButtons);
     }
     if (loser.hp < loser.getMaxHp() && loser.chatId > 0) {
       Messenger.send(loser.chatId, "Fight is finished. Your health will recover in "
-        + 3*(loser.getMaxHp() - loser.hp) + " seconds.", mainButtons);
+          + 3 * (loser.getMaxHp() - loser.hp) + " seconds.", mainButtons);
       Messenger.flush(loser.chatId);
       injuredChats.add(loser.chatId);
     } else {
@@ -644,18 +625,18 @@ public class Main {
 
   private static String getClientStats(Client client) {
     String result = "*" + client.username + "*\n"
-      + "Level: " + client.level + "\n"
-      + "Health: " + client.hp + " (out of " + client.getMaxHp() + ")\n"
-      + "Damage: 1 - " + client.getMaxDamage() + "\n"
-      + "Strength: " + client.strength  + "\n"
-      + "Vitality: " + client.vitality + "\n"
-      + "Luck: " + client.luck;
+        + "Level: " + client.level + "\n"
+        + "Health: " + client.hp + " (out of " + client.getMaxHp() + ")\n"
+        + "Damage: 1 - " + client.getMaxDamage() + "\n"
+        + "Strength: " + client.strength + "\n"
+        + "Vitality: " + client.vitality + "\n"
+        + "Luck: " + client.luck;
     if (client.chatId > 0) {
       result += "\n"
-        + "Experience: " + client.exp + " "
-        + "(" + nextExp(client) + " needed to level up)\n"
-        + "Fights won: " + client.fightsWon + " "
-        + "(out of " + client.totalFights + ")\n";
+          + "Experience: " + client.exp + " "
+          + "(" + nextExp(client) + " needed to level up)\n"
+          + "Fights won: " + client.fightsWon + " "
+          + "(out of " + client.totalFights + ")\n";
     }
     return result;
   }
@@ -664,7 +645,7 @@ public class Main {
     int result = 0;
     int maxDamage = client.getMaxDamage();
     result = Utils.rndInRange(1, maxDamage);
-    if (Utils.rndInRange(1, 100) < client.luck*client.luck) {
+    if (Utils.rndInRange(1, 100) < client.luck * client.luck) {
       result *= 2;
     }
     return result;
@@ -675,7 +656,7 @@ public class Main {
       client.level++;
       client.levelPoints++;
       Messenger.send(client.chatId, "You have achieved level " + client.level + "!\n",
-        levelPointsButtons);
+          levelPointsButtons);
     }
   }
 
@@ -701,7 +682,7 @@ public class Main {
     }
     client.fightQuestions.clear();
     for (int questionId : questions) {
-      client.fightQuestions.put(questionId, 0); 
+      client.fightQuestions.put(questionId, 0);
     }
   }
 
@@ -709,8 +690,8 @@ public class Main {
     int questionId = client.challenge[0];
     while (questionId == client.challenge[0]) {
       questionId = Utils.getRnd(client.fightQuestions
-                                      .keySet()
-                                      .toArray(new Integer[] {}));
+          .keySet()
+          .toArray(new Integer[] {}));
     }
     String[] question = dict.get(questionId);
     int difficulty = client.fightQuestions.get(questionId);
@@ -721,16 +702,17 @@ public class Main {
       addPotions(client, options);
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1],
-          options.toArray(new String[] {})); 
+          options.toArray(new String[] {}));
       return;
     }
     if (difficulty == 0) {
       addPotions(client, options);
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1] + ". Hint: `" +
-          new String(Utils.shuffleCharArray(
-              question[0].toLowerCase().toCharArray()))+ "`",
-          options.toArray(new String[] {})); 
+              new String(Utils.shuffleCharArray(
+                  question[0].toLowerCase().toCharArray()))
+              + "`",
+          options.toArray(new String[] {}));
       return;
     }
 
@@ -743,7 +725,7 @@ public class Main {
     addPotions(client, options);
     Messenger.send(client.chatId,
         "Please translate to German the word: " + question[1],
-        options.toArray(new String[0])); 
+        options.toArray(new String[0]));
   }
 
   private static ArrayList<String> generateSimpleOptions(int questionId) {
@@ -782,9 +764,8 @@ public class Main {
     int levelDelta = 30;
     int result = 0;
     for (int i = 0; i < client.level; i++) {
-      result = result + levelDelta * (int)Math.pow(2, i);
+      result = result + levelDelta * (int) Math.pow(2, i);
     }
     return result;
   }
 }
-
