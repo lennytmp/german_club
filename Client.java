@@ -7,8 +7,13 @@ import java.util.LinkedList;
 
 class Client {
   // TODO: Status and body port should move to Game
-  enum Status {FIGHTING, IDLE, READY_TO_FIGHT};
-  enum BodyPart {HEAD, TORSO, LEGS};
+  enum Status {
+    FIGHTING, IDLE, READY_TO_FIGHT
+  };
+
+  enum BodyPart {
+    HEAD, TORSO, LEGS
+  };
 
   String username;
   // TODO(lenny): add unkown language by default and ask players to provide one.
@@ -44,12 +49,8 @@ class Client {
   int levelPoints = 0;
 
   int hp;
+  // Enum ID to the quantity of that item.
   Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
-
-  // Called for all versions of clients saved in storage.
-  Client() {
-    Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
-  }
 
   Client(int chatId, String username) {
     this.chatId = chatId;
@@ -70,7 +71,7 @@ class Client {
       if (Utils.rndInRange(0, opponent.totalFights) > opponent.fightsWon) {
         k *= -1;
       }
-      level = Math.max(opponent.level + k*Utils.rndInRange(0, 4), 1);
+      level = Math.max(opponent.level + k * Utils.rndInRange(0, 4), 1);
     }
     BotConfig bc = pickBotType();
     this.username = bc.name;
@@ -92,7 +93,7 @@ class Client {
   }
 
   public int getMaxHp() {
-    return vitality*2 + 5;
+    return vitality * 2 + 5;
   }
 
   public int getMaxDamage() {
@@ -123,7 +124,7 @@ class Client {
   public int getItemNum(Game.Item item) {
     Integer curHave = inventory.get(item.ordinal());
     curHave = curHave == null ? 0 : curHave;
-    return curHave.intValue(); 
+    return curHave.intValue();
   }
 
   private BotConfig pickBotType() {
@@ -136,4 +137,3 @@ class Client {
     return Utils.getRnd(eligible.toArray(new BotConfig[0]));
   }
 }
-
