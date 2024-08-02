@@ -288,6 +288,7 @@ public class Main {
     if (txt.equals("brew")) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
+        Storage.saveClient(client);
         Messenger.send(client.chatId, "After lot's of work, you have a new healing potion.");
         sendInventoryDescription(client);
       }
