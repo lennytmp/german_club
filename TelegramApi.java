@@ -9,6 +9,8 @@ import java.net.HttpRetryException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.ProtocolException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 
@@ -24,7 +26,7 @@ import com.google.gson.JsonDeserializationContext;
 
 class TelegramApi {
   static String token;
-  private static final String URL = "https://api.telegram.org/bot";
+  private static final String BASE_URL = "https://api.telegram.org/bot";
   private final String method;
   private final String params;
   HttpURLConnection connection;
@@ -164,8 +166,9 @@ class TelegramApi {
   }
 
   private HttpURLConnection getConnection()
-      throws MalformedURLException, IOException, ProtocolException {
-    URL url = new URL(URL + token + "/" + method);
+      throws MalformedURLException, IOException, ProtocolException, URISyntaxException {
+    URI uri = new URI(BASE_URL + token + "/" + method);
+    URL url = uri.toURL();
     connection = (HttpURLConnection) url.openConnection();
     connection.setRequestMethod("POST");
     connection.setRequestProperty("Content-Type",
