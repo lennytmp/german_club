@@ -11,7 +11,7 @@ class Client {
   enum BodyPart {HEAD, TORSO, LEGS};
 
   String username;
-  //TODO(lenny): add unkown language by default and ask players to provide one.
+  // TODO(lenny): add unkown language by default and ask players to provide one.
   String lang = "en";
   int chatId = 0;
   boolean nameChangeHintSent = false;
@@ -92,7 +92,7 @@ class Client {
   }
 
   public int getMaxHp() {
-    return 9 * 5 + (vitality - 3) * 9;
+    return vitality*2 + 1;
   }
 
   public int getMaxDamage() {

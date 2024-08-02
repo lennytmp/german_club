@@ -693,9 +693,9 @@ public class Main {
   }
 
   private static void pickQuestionsForFight(Client client) {
-    int questionsNum = client.level + 1;
+    int questionsNum = Math.max(5, client.level + 1);
     Set<Integer> questions = new HashSet<>();
-    while (questions.size() < 5) {
+    while (questions.size() < questionsNum) {
       int wordNum = client.level * 115;
       questions.add(Utils.rndInRange(0, wordNum));
     }
@@ -717,16 +717,14 @@ public class Main {
     client.challenge[0] = questionId;
     client.challenge[1] = difficulty;
     List<String> options = new ArrayList<>();
-
-    if (difficulty == 1 && hasArticle(question[0])) {
-      options = generateArticleOptions(question[0]);
-    } else if (difficulty > 2) {
+    if (difficulty > 2) {
       addPotions(client, options);
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1],
           options.toArray(new String[] {})); 
       return;
-    } else if (difficulty > 0) {
+    }
+    if (difficulty == 0) {
       addPotions(client, options);
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1] + ". Hint: `" +
@@ -734,6 +732,10 @@ public class Main {
               question[0].toLowerCase().toCharArray()))+ "`",
           options.toArray(new String[] {})); 
       return;
+    }
+
+    if (difficulty == 1 && hasArticle(question[0])) {
+      options = generateArticleOptions(question[0]);
     } else {
       options = generateSimpleOptions(questionId);
     }

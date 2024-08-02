@@ -10,7 +10,7 @@ class Messenger {
   static Map<Integer, Integer> lastTimeSent = new HashMap<>();
   // TODO: save queue to disk to be resilient to task failurs
   static List<Message> queue = new LinkedList<>();
-  static int DELAY = 2; // seconds
+  static int DELAY = 1; // seconds
 
   private static class Message {
     int chatId;
