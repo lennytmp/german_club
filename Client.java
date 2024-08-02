@@ -92,7 +92,7 @@ class Client {
   }
 
   public int getMaxHp() {
-    return vitality*2 + 1;
+    return vitality*2 + 5;
   }
 
   public int getMaxDamage() {
