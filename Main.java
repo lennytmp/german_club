@@ -530,7 +530,7 @@ public class Main {
     if (!success) {
       Messenger.send(victim.chatId, victimPrefix +
           PhraseGenerator.incorrectTranslationToVictim(client, victim, challengeWord));
-      // We want to send feedback to the use immidiately skipping the queue.
+      // We want to send feedback to the user immidiately skipping the queue.
       Messenger.sendNow(client.chatId,
           clientPrefix +
               PhraseGenerator.incorrectTranslationToOffender(client, victim, challengeWord),
@@ -730,7 +730,7 @@ public class Main {
           options.toArray(new String[] {}));
       return;
     }
-    if (difficulty == 0) {
+    if (difficulty == 1) {
       addPotions(client, options);
       Messenger.send(client.chatId,
           "Please translate to German the word: " + question[1] + ". Hint: `" +
@@ -740,8 +740,7 @@ public class Main {
           options.toArray(new String[] {}));
       return;
     }
-
-    if (difficulty == 1 && hasArticle(question[0])) {
+    if (hasArticle(question[0])) {
       options = generateArticleOptions(question[0]);
     } else {
       options = generateSimpleOptions(questionId);
