@@ -41,7 +41,8 @@ class Messenger {
                           msg.removeOptionsIfNeeded);
           lastTimeSent.put(msg.chatId, curTime);
         } else {
-          TelegramApi.sendTypingEvent(msg.chatId);
+          // TODO: Don't send them every time, otherwise we get errors.
+          // TelegramApi.sendTypingEvent(msg.chatId);
           newQueue.add(msg);
         }
       }

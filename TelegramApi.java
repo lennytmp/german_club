@@ -78,9 +78,13 @@ class TelegramApi {
   }
 
   public static void sendTypingEvent(int chatId) {
-    String params = "chat_id=" + chatId + "&action=typing";
-    TelegramApi req = new TelegramApi("sendChatAction", params);
-    req.execute();
+    try {
+      String params = "chat_id=" + chatId + "&action=typing";
+      TelegramApi req = new TelegramApi("sendChatAction", params);
+      req.execute();
+    }  catch (Exception e) {
+      Logger.logException(e);
+    }
   }
 
   public static Telegram.Update[] getUpdates(int offset) {
@@ -124,7 +128,7 @@ class TelegramApi {
           retries++;
           Logger.log("HTTP 429 received. Retrying attempt " + retries);
           try {
-            Thread.sleep((long) Math.pow(2, retries) * 1000); // Exponential backoff
+            Thread.sleep((long) Math.pow(2, retries) * 1000*1000); // Exponential backoff
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
           }

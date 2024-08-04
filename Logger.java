@@ -34,7 +34,6 @@ class Logger {
   private static final String EXT = ".db";
   private static final String BACKUP_FILE = ".backup";
   private static final String CONFIG_FILE = "config.json";
-  private static final String DICT_FILE = "data/dict.tsv";
   private static PrintWriter logsWriter;
 
   public static void initialize() {
@@ -42,23 +41,6 @@ class Logger {
       restoreClientsFromBackup();
       removeClientsBackup();
     }
-  }
-
-  static ArrayList<String[]> getDictionary() {
-    ArrayList<String[]> dict = new ArrayList<String[]>();
-    try (BufferedReader br = new BufferedReader(new FileReader(DICT_FILE))) {
-      String line = "";
-      while ((line = br.readLine()) != null) {
-        String[] entry = line.split("\t");
-        if (entry.length != 2) {
-          throw new Exception(String.format("Invalid line in dict: %s", line));
-        }
-        dict.add(entry);
-      }
-    } catch (Exception e) {
-      Logger.logException(e);
-    }
-    return dict;
   }
 
   static void logException(Exception e) {

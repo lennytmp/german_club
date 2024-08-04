@@ -71,30 +71,10 @@ class PhraseGenerator {
     return result;
   }
 
-  static String incorrectTranslationToVictim(Client offender,
-                                             Client victim,
-                                             String[] challengeWord) {
-    return offender.username + " incorrectly translated the word `" +
-           challengeWord[0] + "`. No damage to you!"
-           + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
-  }
-
-  static String incorrectTranslationToOffender(Client offender,
-                                               Client victim,
-                                               String[] challengeWord) {
-   return "Correct translation for `" + challengeWord[1] +
-           "` is: `" + challengeWord[0] + "`. You caused no damage." +
-          " [" + victim.hp + "/" + victim.getMaxHp() + "]";
-  }
-
-  static String correctTranslationToVictim(Client offender,
-                                           Client victim,
-                                           int damage,
-                                           String[] challengeWord) {
+  static String attackToVictim(Client offender, Client victim, int damage) {
     // Don't think about StringBuilder, it's a lie.
     // https://stackoverflow.com/questions/4965513/stringbuilder-vs-string-considering-replace 
-    String  tmp = offender.username + " correctly translated the word `" +
-                  challengeWord[0] + "`! ";
+    String  tmp = "";
     if (damage > offender.getMaxDamage()) {
       tmp += " Critical hit! ";
     }
@@ -102,18 +82,14 @@ class PhraseGenerator {
     return tmp;
   }
 
-  static String correctTranslationToOffender(Client offender,
-                                             Client victim,
-                                             int damage,
-                                             String[] challengeWord) {
-    String  tmp = "Correct! ";
+  static String attackToOffender(Client offender, Client victim, int damage) {
+    String  tmp = "";
     if (damage > offender.getMaxDamage()) {
       tmp += " Critical hit! ";
     }
     tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
     return tmp;
   }
-
 
   static Map<String, String> getSayingPhrase(Client teller, String msg, Client listener) {
     Map<String, String> result = new HashMap<>();
