@@ -36,6 +36,8 @@ class Client {
   int readyToFightSince = 0;
   int lastFightActivitySince = 0;
   int lastActivity = 0;
+  private int successToday = 0;
+  private int lastDailyCleanup = 0;
   boolean timeoutWarningSent = false;
 
   int totalFights = 0;
@@ -90,6 +92,29 @@ class Client {
       giveItem(item);
     }
     hp = getMaxHp();
+  }
+
+  public int getSuccessToday() {
+    return successToday;
+  }
+
+  public void setSuccessToday(int val) {
+    successToday = val;
+    Storage.saveClient(this);
+  }
+
+  public void incSuccessToday() {
+    successToday++;
+    Storage.saveClient(this);
+  }
+
+  public int getLastDailyCleanup() {
+    return lastDailyCleanup;
+  }
+
+  public void setLastDailyCleanup(int val) {
+    lastDailyCleanup = val;
+    Storage.saveClient(this);
   }
 
   public int getMaxHp() {

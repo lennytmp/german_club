@@ -30,7 +30,7 @@ public class Main {
   private static Set<Integer> readyToFightChats = new HashSet<>();
   private static Set<Integer> fightingChats = new HashSet<>();
 
-  private static int curTime;
+  private static int curTimeSeconds;
 
   public static void main(String[] args)
       throws InterruptedException, Exception {
@@ -56,6 +56,7 @@ public class Main {
         // Background/async operations for each client
         Messenger.sendSheduledMessages();
         updateCurTime();
+        cleanupDailySuccess();
         restoreHpIfNeeded(Storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(Storage.getClientsByChatIds(readyToFightChats));
         Client[] fightingClients = Storage.getClientsByChatIds(fightingChats);
@@ -68,8 +69,23 @@ public class Main {
           throw e;
         }
       }
-      Thread.sleep(500); // 2s
+      Thread.sleep(500);
     }
+  }
+
+  private static void cleanupDailySuccess() {
+    // Only reset stats at 4am in GMT+0 (roughly)
+    if (curTimeSeconds / 60 / 60 % 24 != 4) {
+      return;
+    }
+    Storage.forEachClient(new ClientDo() {
+      public void run(Client client) {
+        if (client.getLastDailyCleanup() + 24*60*60 < curTimeSeconds) {
+          client.setSuccessToday(0);
+          client.setLastDailyCleanup(curTimeSeconds);
+        }
+      }
+    });
   }
 
   private static void initialize(String[] args) {
@@ -97,7 +113,7 @@ public class Main {
         if (client.chatId < 0) {
           return; // bots have no async logic as of now
         }
-        if (client.lastActivity > curTime - CHAT_TIMEOUT) {
+        if (client.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
           activeChats.add(client.chatId);
         }
         if (client.hp < client.getMaxHp()) {
@@ -116,7 +132,7 @@ public class Main {
   private static void assignBotsIfTimeout(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.READY_TO_FIGHT
-          || client.readyToFightSince > curTime - 10) {
+          || client.readyToFightSince > curTimeSeconds - 10) {
         return;
       }
       Client bot = new Client(-client.chatId, client);
@@ -133,11 +149,11 @@ public class Main {
     for (Client client : clients) {
       if (client.status != Client.Status.IDLE
           || client.hp == client.getMaxHp()
-          || client.lastRestore > curTime - 3) {
+          || client.lastRestore > curTimeSeconds - 3) {
         continue;
       }
       client.hp++;
-      client.lastRestore = curTime;
+      client.lastRestore = curTimeSeconds;
       if (client.hp == client.getMaxHp()) {
         Messenger.send(client.chatId, "You are now fully recovered.");
         injuredChats.remove(client.chatId);
@@ -150,7 +166,7 @@ public class Main {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
           || client.timeoutWarningSent
-          || client.lastFightActivitySince > curTime - FIGHT_TIMEOUT) {
+          || client.lastFightActivitySince > curTimeSeconds - FIGHT_TIMEOUT) {
         continue;
       }
       client.timeoutWarningSent = true;
@@ -165,7 +181,7 @@ public class Main {
       if (client.status != Client.Status.FIGHTING
           || client.chatId < 0
           || !client.timeoutWarningSent
-          || client.lastFightActivitySince > curTime - 50) {
+          || client.lastFightActivitySince > curTimeSeconds - 50) {
         continue;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
@@ -177,7 +193,7 @@ public class Main {
   }
 
   private static void updateCurTime() {
-    curTime = (int) (System.currentTimeMillis() / 1000L);
+    curTimeSeconds = (int) (System.currentTimeMillis() / 1000L);
   }
 
   private static void handleUpdate(Telegram.Update upd) {
@@ -194,7 +210,7 @@ public class Main {
       }
       client = new Client(chatId, username);
     }
-    client.lastActivity = curTime;
+    client.lastActivity = curTimeSeconds;
     activeChats.add(chatId);
     Storage.saveClient(client);
 
@@ -274,6 +290,8 @@ public class Main {
     }
 
     if (txt.equals("task")) {
+      client.incSuccessToday();
+      Storage.saveClient(client);
       if (!Utils.roll(30)) {
         Messenger.send(client.chatId, "You took a stroll in the woods, but haven't found anything useful.");
         return;
@@ -288,6 +306,7 @@ public class Main {
     if (txt.equals("brew")) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
+        client.incSuccessToday();
         Storage.saveClient(client);
         Messenger.send(client.chatId, "After lot's of work, you have a new healing potion.");
         sendInventoryDescription(client);
@@ -333,10 +352,14 @@ public class Main {
 
     if (client.status == Client.Status.FIGHTING &&
         (txt.equals(TASK_FAIL) || txt.equals(TASK_SUCCESS))) {
-      client.lastFightActivitySince = curTime;
+      boolean isSuccess = txt.equals(TASK_SUCCESS);
+      if (isSuccess) {
+        client.incSuccessToday();
+      }
+      client.lastFightActivitySince = curTimeSeconds;
       client.timeoutWarningSent = false;
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      handleHitTask(client, opponent, txt.equals(TASK_SUCCESS));
+      handleHitTask(client, opponent, isSuccess);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
         activateBotTask(opponent);
@@ -365,7 +388,7 @@ public class Main {
     List<Integer> passive = new LinkedList<>();
     for (int recepientChatId : activeChats) {
       Client recepient = Storage.getClientByChatId(recepientChatId);
-      if (recepient.lastActivity > curTime - CHAT_TIMEOUT) {
+      if (recepient.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
         Messenger.send(recepient.chatId, message.get(recepient.lang));
         numListeners++;
       } else {
@@ -433,7 +456,7 @@ public class Main {
   }
 
   private static void activateBotTask(Client bot) {
-    bot.lastFightActivitySince = curTime;
+    bot.lastFightActivitySince = curTimeSeconds;
     bot.timeoutWarningSent = false;
     Client opponent = Storage.getClientByChatId(bot.fightingChatId);
     boolean isSuccess = Utils.roll(50);
@@ -464,7 +487,7 @@ public class Main {
   private static void setReadyToFight(Client client) {
     // TODO: set ready to fight and save to index
     client.status = Client.Status.READY_TO_FIGHT;
-    client.readyToFightSince = curTime;
+    client.readyToFightSince = curTimeSeconds;
     Storage.saveClient(client);
     readyToFightChats.add(client.chatId);
     sendToActiveUsers(PhraseGenerator.getReadyToFightPhrase(client));
@@ -619,6 +642,7 @@ public class Main {
           + "(" + client.nextExp() + " needed to level up)\n"
           + "Fights won: " + client.fightsWon + " "
           + "(out of " + client.totalFights + ")\n";
+      result += "Success today: " + client.getSuccessToday() + "\n";
     }
     return result;
   }
@@ -645,7 +669,7 @@ public class Main {
   private static void prepareToFight(Client client, Client opponent, int first) {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
-    client.lastFightActivitySince = curTime;
+    client.lastFightActivitySince = curTimeSeconds;
     client.timeoutWarningSent = false;
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
