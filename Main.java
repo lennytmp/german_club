@@ -616,13 +616,13 @@ public class Main {
     loser.loseInvetory();
     String message;
     if (loser.hp < loser.getMaxHp()) {
-        message = "Du wurdest im Kampf besiegt, und " + (lost.isEmpty() ? "" : lost + " wurden gestohlen. ") +
+        message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen. ") +
                   "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) + 
                   " Sekunden regenerieren.";
         Messenger.flush(loser.chatId);
         injuredChats.add(loser.chatId);
     } else {
-        message = "Du wurdest im Kampf besiegt, " + (lost.isEmpty() ? "" : "und " + lost + " wurden gestohlen.");
+        message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen.");
     }
     
     Messenger.send(loser.chatId, message, MAIN_BUTTONS);
