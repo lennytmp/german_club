@@ -138,12 +138,11 @@ class Client {
   }
 
   public int nextExp() {
-    int levelDelta = 30;
-    int result = 0;
-    for (int i = 0; i < level; i++) {
-      result = result + levelDelta * (int) Math.pow(2, i);
-    }
-    return result;
+    return level*10*10;
+  }
+
+  public int expForKillingMe() {
+    return level*10;
   }
 
   private BotConfig pickBotType() {

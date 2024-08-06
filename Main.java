@@ -558,7 +558,7 @@ public class Main {
     winner.fightsWon++;
     winner.totalFights++;
     loser.totalFights++;
-    int expGained = getExperience(loser);
+    int expGained = loser.expForKillingMe();
     winner.exp += expGained;
     winner.status = Client.Status.IDLE;
     loser.status = Client.Status.IDLE;
@@ -603,10 +603,6 @@ public class Main {
     }
     levelUpIfNeeded(winner);
     levelUpIfNeeded(loser);
-  }
-
-  private static int getExperience(Client loser) {
-    return 10 * loser.level;
   }
 
   private static String getClientStats(Client client) {
