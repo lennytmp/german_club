@@ -185,31 +185,37 @@ class Client {
   }
 
   public String getInventoryDescription(String separator) {
-    if (inventory.isEmpty()) {
-      return "";
-    }
-
     StringBuilder result = new StringBuilder();
-    boolean firstItem = true; // Flag to handle separator
+    boolean firstItem = true;
+    boolean hasItems = false;
 
     for (Map.Entry<Integer, Integer> item : inventory.entrySet()) {
       int quantity = item.getValue();
-      if (quantity <= 0) {
-        continue;
-      }
 
-      if (!firstItem) {
-        result.append(separator);
-      }
-      firstItem = false;
+      // Only process items with a positive quantity
+      if (quantity > 0) {
+        hasItems = true;
 
-      result.append(quantity);
-      result.append(" ");
-      if (quantity == 1) {
-        result.append(Game.ITEM_VALUES[item.getKey()].singular);
-      } else {
-        result.append(Game.ITEM_VALUES[item.getKey()].plural);
+        // Append the separator before the item if it's not the first item
+        if (!firstItem) {
+          result.append(separator);
+        }
+        firstItem = false;
+
+        // Append the item details to the result
+        result.append(quantity);
+        result.append(" ");
+        if (quantity == 1) {
+          result.append(Game.ITEM_VALUES[item.getKey()].singular);
+        } else {
+          result.append(Game.ITEM_VALUES[item.getKey()].plural);
+        }
       }
+    }
+
+    // Return an empty string if no items with positive quantity were found
+    if (!hasItems) {
+      return "";
     }
 
     return result.toString();

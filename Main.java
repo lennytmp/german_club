@@ -609,21 +609,24 @@ public class Main {
     if (loser.chatId < 0) {
       return;
     }
-    loser.loseInvetory();
-    if (loser.hp < loser.getMaxHp()) {
-      if (lost != "") {
-        Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt, und " + lost + " wurden gestohlen. Deine Gesundheit wird sich in "
-          + 3 * (loser.getMaxHp() - loser.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
-      } else {
-        Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt. Deine Gesundheit wird sich in "
-          + 3 * (loser.getMaxHp() - loser.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
-      }
-      Messenger.flush(loser.chatId);
-      injuredChats.add(loser.chatId);
-    } else {
-      Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt, und " + lost + " wurden gestohlen.", MAIN_BUTTONS);
-    }
+    handleLoserDefeat(loser, lost);
   }
+
+  private static void handleLoserDefeat(Client loser, String lost) {
+    loser.loseInvetory();
+    String message;
+    if (loser.hp < loser.getMaxHp()) {
+        message = "Du wurdest im Kampf besiegt, und " + (lost.isEmpty() ? "" : lost + " wurden gestohlen. ") +
+                  "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) + 
+                  " Sekunden regenerieren.";
+        Messenger.flush(loser.chatId);
+        injuredChats.add(loser.chatId);
+    } else {
+        message = "Du wurdest im Kampf besiegt, " + (lost.isEmpty() ? "" : "und " + lost + " wurden gestohlen.");
+    }
+    
+    Messenger.send(loser.chatId, message, MAIN_BUTTONS);
+}
 
   private static String getClientStats(Client client) {
     String result = "*" + client.username + "*\n"
