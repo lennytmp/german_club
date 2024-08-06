@@ -289,7 +289,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("task")) {
+    if (txt.equals("task") && client.status != Client.Status.FIGHTING) {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
@@ -303,7 +303,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("brew")) {
+    if (txt.equals("brew") && client.status != Client.Status.FIGHTING) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
         client.incSuccessToday();
@@ -416,31 +416,14 @@ public class Main {
     sendInventoryDescription(client);
   }
 
-  private static String getInventoryDescription(Client client) {
-    StringBuilder result = new StringBuilder("You have:\n");
-    int numValues = 0;
-    for (Map.Entry<Integer, Integer> item : client.inventory.entrySet()) {
-      numValues += item.getValue();
-      if (item.getValue() <= 0) {
-        continue;
-      }
-      result.append(item.getValue());
-      result.append(" ");
-      if (item.getValue() == 1) {
-        result.append(Game.ITEM_VALUES[item.getKey()].singular);
-      } else if (item.getValue() > 1) {
-        result.append(Game.ITEM_VALUES[item.getKey()].plural);
-      }
-      result.append(".\n");
-    }
-    if (numValues == 0) {
-      return "You don't have any items.";
-    }
-    return result.toString();
-  }
-
   private static void sendInventoryDescription(Client client) {
-    Messenger.send(client.chatId, getInventoryDescription(client), MAIN_BUTTONS);
+    String inventoryDesc = client.getInventoryDescription("\n");
+    if (inventoryDesc != "") {
+      inventoryDesc = "Du hast:\n" + inventoryDesc + "\n";
+    } else {
+      inventoryDesc = "Du hast keine Gegenstände.";
+    }
+    Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
     if (Game.canBrewPotion(client.inventory)) {
       String[] buttons = new String[MAIN_BUTTONS.length + 1];
       System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
@@ -577,24 +560,30 @@ public class Main {
     }
   }
 
-  private static void finishFight(Client winner, Client loser) {
+  private static void updateFightStats(Client winner, Client loser) {
     winner.fightsWon++;
     winner.totalFights++;
     loser.totalFights++;
-    int expGained = loser.expForKillingMe();
-    winner.exp += expGained;
     winner.status = Client.Status.IDLE;
     loser.status = Client.Status.IDLE;
     fightingChats.remove(winner.chatId);
     fightingChats.remove(loser.chatId);
     winner.timeoutWarningSent = false;
     loser.timeoutWarningSent = false;
+}
+
+  private static void finishFight(Client winner, Client loser) {
+    updateFightStats(winner, loser);
+    int expGained = loser.expForKillingMe();
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
     int winnerExpUntilPromo = winner.nextExp() - winner.exp;
     Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
         winnerExpUntilPromo + " experience left until level up.");
+    String lost = "";
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
+      lost = loser.getInventoryDescription(", ");
+      loser.loseInvetory();
       Messenger.send(winner.chatId, "You found 1 healing potion!");
     } else {
       // logic for looting bots is here
@@ -610,22 +599,30 @@ public class Main {
       }
     }
     if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
-      Messenger.send(winner.chatId, "Fight is finished. Your health will recover in "
-          + 3 * (winner.getMaxHp() - winner.hp) + " seconds.", MAIN_BUTTONS);
+      Messenger.send(winner.chatId, "Du hast gewonnen! Deine Gesundheit wird sich in "
+          + 3 * (winner.getMaxHp() - winner.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
       injuredChats.add(winner.chatId);
     } else {
-      Messenger.send(winner.chatId, "Fight is finished.", MAIN_BUTTONS);
+      Messenger.send(winner.chatId, "Du hast gewonnen!", MAIN_BUTTONS);
     }
-    if (loser.hp < loser.getMaxHp() && loser.chatId > 0) {
-      Messenger.send(loser.chatId, "Fight is finished. Your health will recover in "
-          + 3 * (loser.getMaxHp() - loser.hp) + " seconds.", MAIN_BUTTONS);
+    levelUpIfNeeded(winner);
+    if (loser.chatId < 0) {
+      return;
+    }
+    loser.loseInvetory();
+    if (loser.hp < loser.getMaxHp()) {
+      if (lost != "") {
+        Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt, und " + lost + " wurden gestohlen. Deine Gesundheit wird sich in "
+          + 3 * (loser.getMaxHp() - loser.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
+      } else {
+        Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt. Deine Gesundheit wird sich in "
+          + 3 * (loser.getMaxHp() - loser.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
+      }
       Messenger.flush(loser.chatId);
       injuredChats.add(loser.chatId);
     } else {
-      Messenger.send(loser.chatId, "Fight is finished.", MAIN_BUTTONS);
+      Messenger.send(loser.chatId, "Du wurdest im Kampf besiegt, und " + lost + " wurden gestohlen.", MAIN_BUTTONS);
     }
-    levelUpIfNeeded(winner);
-    levelUpIfNeeded(loser);
   }
 
   private static String getClientStats(Client client) {

@@ -94,6 +94,10 @@ class Client {
     hp = getMaxHp();
   }
 
+  public void loseInvetory() {
+    inventory = new HashMap<>(Game.ITEM_VALUES.length);
+  }
+
   public int getSuccessToday() {
     return successToday;
   }
@@ -163,11 +167,11 @@ class Client {
   }
 
   public int nextExp() {
-    return level*10*10;
+    return level * 10 * 10;
   }
 
   public int expForKillingMe() {
-    return level*10;
+    return level * 10;
   }
 
   private BotConfig pickBotType() {
@@ -178,5 +182,36 @@ class Client {
       }
     }
     return Utils.getRnd(eligible.toArray(new BotConfig[0]));
+  }
+
+  public String getInventoryDescription(String separator) {
+    if (inventory.isEmpty()) {
+      return "";
+    }
+
+    StringBuilder result = new StringBuilder();
+    boolean firstItem = true; // Flag to handle separator
+
+    for (Map.Entry<Integer, Integer> item : inventory.entrySet()) {
+      int quantity = item.getValue();
+      if (quantity <= 0) {
+        continue;
+      }
+
+      if (!firstItem) {
+        result.append(separator);
+      }
+      firstItem = false;
+
+      result.append(quantity);
+      result.append(" ");
+      if (quantity == 1) {
+        result.append(Game.ITEM_VALUES[item.getKey()].singular);
+      } else {
+        result.append(Game.ITEM_VALUES[item.getKey()].plural);
+      }
+    }
+
+    return result.toString();
   }
 }
