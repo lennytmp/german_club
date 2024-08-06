@@ -127,6 +127,25 @@ class Client {
     return curHave.intValue();
   }
 
+  // Returns true if promoted.
+  public boolean levelUpIfNeeded() {
+    if (exp < nextExp()) {
+      return false;
+    }
+    level++;
+    levelPoints++;
+    return true;
+  }
+
+  public int nextExp() {
+    int levelDelta = 30;
+    int result = 0;
+    for (int i = 0; i < level; i++) {
+      result = result + levelDelta * (int) Math.pow(2, i);
+    }
+    return result;
+  }
+
   private BotConfig pickBotType() {
     List<BotConfig> eligible = new LinkedList<>();
     for (BotConfig bc : Game.BOT_TYPES) {

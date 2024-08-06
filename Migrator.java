@@ -28,7 +28,7 @@ class Migrator {
     if (client.level == 0) {
       client.level = 1;
     }
-    int neededExp = Main.nextExp(client);
+    int neededExp = client.nextExp();
     if (client.exp >= neededExp) {
       System.out.println(client.username + " "
         + "was " + client.exp + " "

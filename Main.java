@@ -16,8 +16,8 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] mainButtons = { "fight", "profile", "wiseman", "task" };
-  private static final String[] levelPointsButtons = {
+  private static final String[] MAIN_BUTTONS = { "fight", "profile", "wiseman", "task" };
+  private static final String[] LEVEL_POINT_BUTTONS = {
       "improve strength", "improve vitality", "improve luck"
   };
   private static final int CHAT_TIMEOUT = 600;
@@ -199,7 +199,7 @@ public class Main {
     Storage.saveClient(client);
 
     if (newClient) {
-      Messenger.send(client.chatId, "Welcome to the German Club!", mainButtons);
+      Messenger.send(client.chatId, "Welcome to the German Club!", MAIN_BUTTONS);
       sendToActiveUsers(PhraseGenerator.getJoinedTheFightClub(
           client.username));
     }
@@ -239,7 +239,7 @@ public class Main {
       String what = txt.substring(8, txt.length());
       if (client.levelPoints < 1) {
         Messenger.send(client.chatId, "You have no level points available. You will have some "
-            + "when you level up.", mainButtons);
+            + "when you level up.", MAIN_BUTTONS);
         return;
       }
       improveSkill(client, what);
@@ -379,16 +379,16 @@ public class Main {
   }
 
   private static void showProfile(Client client) {
-    Messenger.send(client.chatId, getClientStats(client), mainButtons);
+    Messenger.send(client.chatId, getClientStats(client), MAIN_BUTTONS);
     if (!client.nameChangeHintSent) {
       Messenger.send(client.chatId, "You can change your name with the following command \n"
-          + "`/username newname`.", mainButtons);
+          + "`/username newname`.", MAIN_BUTTONS);
       client.nameChangeHintSent = true;
       Storage.saveClient(client);
     }
     if (client.levelPoints > 0) {
       Messenger.send(client.chatId, "You have " + client.levelPoints + " unassigned "
-          + "level points.", levelPointsButtons);
+          + "level points.", LEVEL_POINT_BUTTONS);
     }
     sendInventoryDescription(client);
   }
@@ -417,11 +417,11 @@ public class Main {
   }
 
   private static void sendInventoryDescription(Client client) {
-    Messenger.send(client.chatId, getInventoryDescription(client), mainButtons);
+    Messenger.send(client.chatId, getInventoryDescription(client), MAIN_BUTTONS);
     if (Game.canBrewPotion(client.inventory)) {
-      String[] buttons = new String[mainButtons.length + 1];
-      System.arraycopy(mainButtons, 0, buttons, 0, mainButtons.length);
-      buttons[mainButtons.length] = "brew";
+      String[] buttons = new String[MAIN_BUTTONS.length + 1];
+      System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
+      buttons[MAIN_BUTTONS.length] = "brew";
       Messenger.send(client.chatId, "You have all the ingredients to brew a healing potion", buttons);
     }
   }
@@ -457,7 +457,7 @@ public class Main {
     client.levelPoints--;
     Messenger.send(client.chatId, "You have increased your " + skill + ", it is now "
         + newValue + ". You have " + client.levelPoints
-        + " more level points.", mainButtons);
+        + " more level points.", MAIN_BUTTONS);
     Storage.saveClient(client);
   }
 
@@ -567,7 +567,7 @@ public class Main {
     winner.timeoutWarningSent = false;
     loser.timeoutWarningSent = false;
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
-    int winnerExpUntilPromo = nextExp(winner) - winner.exp;
+    int winnerExpUntilPromo = winner.nextExp() - winner.exp;
     Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
         winnerExpUntilPromo + " experience left until level up.");
     if (loser.chatId > 0) {
@@ -588,18 +588,18 @@ public class Main {
     }
     if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
       Messenger.send(winner.chatId, "Fight is finished. Your health will recover in "
-          + 3 * (winner.getMaxHp() - winner.hp) + " seconds.", mainButtons);
+          + 3 * (winner.getMaxHp() - winner.hp) + " seconds.", MAIN_BUTTONS);
       injuredChats.add(winner.chatId);
     } else {
-      Messenger.send(winner.chatId, "Fight is finished.", mainButtons);
+      Messenger.send(winner.chatId, "Fight is finished.", MAIN_BUTTONS);
     }
     if (loser.hp < loser.getMaxHp() && loser.chatId > 0) {
       Messenger.send(loser.chatId, "Fight is finished. Your health will recover in "
-          + 3 * (loser.getMaxHp() - loser.hp) + " seconds.", mainButtons);
+          + 3 * (loser.getMaxHp() - loser.hp) + " seconds.", MAIN_BUTTONS);
       Messenger.flush(loser.chatId);
       injuredChats.add(loser.chatId);
     } else {
-      Messenger.send(loser.chatId, "Fight is finished.", mainButtons);
+      Messenger.send(loser.chatId, "Fight is finished.", MAIN_BUTTONS);
     }
     levelUpIfNeeded(winner);
     levelUpIfNeeded(loser);
@@ -620,7 +620,7 @@ public class Main {
     if (client.chatId > 0) {
       result += "\n"
           + "Experience: " + client.exp + " "
-          + "(" + nextExp(client) + " needed to level up)\n"
+          + "(" + client.nextExp() + " needed to level up)\n"
           + "Fights won: " + client.fightsWon + " "
           + "(out of " + client.totalFights + ")\n";
     }
@@ -640,11 +640,9 @@ public class Main {
   }
 
   private static void levelUpIfNeeded(Client client) {
-    if (client.exp >= nextExp(client)) {
-      client.level++;
-      client.levelPoints++;
+    if (client.levelUpIfNeeded()) {
       Messenger.send(client.chatId, "You have achieved level " + client.level + "!\n",
-          levelPointsButtons);
+          LEVEL_POINT_BUTTONS);
     }
   }
 
@@ -662,14 +660,5 @@ public class Main {
 
   static void prepareToFight(Client client, Client opponent) {
     prepareToFight(client, opponent, 0);
-  }
-
-  static int nextExp(Client client) {
-    int levelDelta = 30;
-    int result = 0;
-    for (int i = 0; i < client.level; i++) {
-      result = result + levelDelta * (int) Math.pow(2, i);
-    }
-    return result;
   }
 }
