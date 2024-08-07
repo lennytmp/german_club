@@ -453,6 +453,7 @@ public class Main {
       newValue = ++client.strength;
     } else if (skill.equals("vitality")) {
       newValue = ++client.vitality;
+      client.hp = client.getMaxHp();
     } else if (skill.equals("luck")) {
       newValue = ++client.luck;
     }
