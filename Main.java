@@ -575,6 +575,7 @@ public class Main {
   private static void finishFight(Client winner, Client loser) {
     updateFightStats(winner, loser);
     int expGained = loser.expForKillingMe();
+    winner.exp += expGained;
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
     int winnerExpUntilPromo = winner.nextExp() - winner.exp;
     Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
