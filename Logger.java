@@ -52,7 +52,6 @@ class Logger {
       out.println(stackTrace);
       if (!Main.isProd) {
         System.out.println(stackTrace);
-        System.exit(1);
       }
       log(stackTrace);
       String[] cmd = {
