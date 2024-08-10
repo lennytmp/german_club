@@ -167,7 +167,11 @@ class Client {
   }
 
   public int nextExp() {
-    return level * 10 * 10;
+    int exp = 30;
+    for (int i = 2; i < level + 1; i++) {
+      exp += i * 10 * 10;
+    }
+    return exp;
   }
 
   public int expForKillingMe() {
