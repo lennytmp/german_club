@@ -2,7 +2,12 @@ package FightLang;
 
 public class ClientTest {
     public static void main(String[] args) {
-        testNextExpLevel();
+        boolean allTestsPassed = true;
+        allTestsPassed &= testNextExpLevel();
+        if (!allTestsPassed) {
+            System.exit(1); 
+        }
+        System.out.println();
     }
 
     // A simple assertEquals function to compare expected and actual values
@@ -15,7 +20,7 @@ public class ClientTest {
         return false;
     }
 
-    public static void testNextExpLevel() {
+    public static boolean testNextExpLevel() {
         Client c =  new Client(0, "test");
         c.level = 1;
         boolean allTestsPassed = true;
@@ -24,8 +29,6 @@ public class ClientTest {
         allTestsPassed &= assertEquals(230, c.nextExp(), "Expected experience for level 2 should be 230.");
         c.level = 3;
         allTestsPassed &= assertEquals(530, c.nextExp(), "Expected experience for level 2 should be 530.");
-        if (!allTestsPassed) {
-            System.exit(1); 
-        }
+        return allTestsPassed;
     }
 }
