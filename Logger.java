@@ -69,7 +69,7 @@ class Logger {
 
   static String getConfigText() {
     String result = readOneLineFile(CONFIG_FILE);
-    if (result == null || result == "") {
+    if (result == null || result.isEmpty()) {
       Logger.log("Could not read config file with API keys");
       System.exit(4);
     }
@@ -136,7 +136,7 @@ class Logger {
 
   static Integer getIntVar(String name) {
     String value = readOneLineFile(varsPath + name + EXT, true);
-    if (value == null || value == "") {
+    if (value == null || value.isEmpty()) {
       return null;
     }
     return Integer.parseInt(value);
@@ -230,9 +230,10 @@ class Logger {
 
   private static PrintWriter getLogsWriter() {
     if (logsWriter == null) {
-      try (BufferedWriter bw = new BufferedWriter(
-              new FileWriter(logsFile + EXT, true))) {
-      logsWriter = new PrintWriter(bw, true);
+      try {
+        logsWriter = new PrintWriter(new BufferedWriter(
+            new FileWriter(logsFile + EXT, true)
+        ), true);
       } catch (Exception e) {
         Logger.logException(e);
         System.exit(3);
