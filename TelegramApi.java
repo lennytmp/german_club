@@ -92,7 +92,7 @@ class TelegramApi {
         "getUpdates",
         "offset=" + offset);
     String resp = req.execute();
-    if (resp == "") {
+    if (resp.isEmpty()) {
       return new Telegram.Update[0];
     }
     Telegram.GetUpdatesResult updates = g.fromJson(resp, Telegram.GetUpdatesResult.class);
@@ -128,7 +128,10 @@ class TelegramApi {
           retries++;
           Logger.log("HTTP 429 received. Retrying attempt " + retries);
           try {
-            Thread.sleep((long) Math.pow(2, retries) * 1000*1000); // Exponential backoff
+            long baseDelayMs = (long) Math.pow(2, retries) * 500L; // 500ms, 1s, 2s, 4s, 8s
+            long jitterMs = (long) (Math.random() * 250L);
+            long sleepMs = Math.min(10_000L, baseDelayMs + jitterMs); // Cap at 10s
+            Thread.sleep(sleepMs);
           } catch (InterruptedException ie) {
             Thread.currentThread().interrupt();
           }

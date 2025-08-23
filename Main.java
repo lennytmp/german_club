@@ -418,10 +418,10 @@ public class Main {
 
   private static void sendInventoryDescription(Client client) {
     String inventoryDesc = client.getInventoryDescription("\n");
-    if (inventoryDesc != "") {
+    if (!inventoryDesc.isEmpty()) {
       inventoryDesc = "Du hast:\n" + inventoryDesc + "\n";
     } else {
-      inventoryDesc = "Du hast keine Gegenstände.";
+      inventoryDesc = "Du hast nichts.";
     }
     Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
     if (Game.canBrewPotion(client.inventory)) {
