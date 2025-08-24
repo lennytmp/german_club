@@ -610,8 +610,7 @@ public class Main {
     String lost = "";
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
-      lost = loser.getInventoryDescription(", ");
-      loser.loseInvetory();
+      lost = loser.loseRandomItems();
       Messenger.send(winner.chatId, "You found 1 healing potion!");
     } else {
       // logic for looting bots is here
@@ -641,7 +640,6 @@ public class Main {
   }
 
   private static void handleLoserDefeat(Client loser, String lost) {
-    loser.loseInvetory();
     String message;
     if (loser.hp < loser.getMaxHp()) {
       message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen. ") +

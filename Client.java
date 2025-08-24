@@ -98,6 +98,74 @@ class Client {
     inventory = new HashMap<>(Game.ITEM_VALUES.length);
   }
 
+  // Removes 1-3 random item units from the inventory (weighted by counts) and
+  // returns a human-readable description of what was lost, e.g., "2 potions, 1 fang".
+  public String loseRandomItems() {
+    if (inventory.isEmpty()) {
+      return "";
+    }
+
+    // Build a weighted list of item indices according to their counts
+    java.util.List<Integer> weighted = new java.util.ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int itemIndex = entry.getKey();
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      for (int i = 0; i < count; i++) {
+        weighted.add(itemIndex);
+      }
+    }
+
+    if (weighted.isEmpty()) {
+      return "";
+    }
+
+    int numToLose = Utils.rndInRange(1, 3);
+    java.util.Map<Integer, Integer> lostCounts = new java.util.HashMap<>();
+    for (int i = 0; i < numToLose && !weighted.isEmpty(); i++) {
+      int pickIdx = Utils.rndInRange(0, weighted.size() - 1);
+      int itemIndex = weighted.remove(pickIdx);
+      // Decrement from inventory
+      Integer have = inventory.get(itemIndex);
+      if (have != null && have > 0) {
+        int newCount = have - 1;
+        if (newCount == 0) {
+          inventory.remove(itemIndex);
+        } else {
+          inventory.put(itemIndex, newCount);
+        }
+        // Track what was lost
+        lostCounts.put(itemIndex, lostCounts.getOrDefault(itemIndex, 0) + 1);
+      }
+
+      // Also remove one instance of this itemIndex from the weighted list to reflect reduced count
+      // (We already removed the picked index; nothing else needed here.)
+    }
+
+    // Build description string for lost items
+    if (lostCounts.isEmpty()) {
+      return "";
+    }
+
+    StringBuilder desc = new StringBuilder();
+    boolean first = true;
+    for (Map.Entry<Integer, Integer> e : lostCounts.entrySet()) {
+      if (!first) {
+        desc.append(", ");
+      }
+      first = false;
+      int count = e.getValue();
+      int idx = e.getKey();
+      desc.append(count).append(" ");
+      if (count == 1) {
+        desc.append(Game.ITEM_VALUES[idx].singular);
+      } else {
+        desc.append(Game.ITEM_VALUES[idx].plural);
+      }
+    }
+
+    return desc.toString();
+  }
+
   public int getSuccessToday() {
     return successToday;
   }
