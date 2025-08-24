@@ -16,7 +16,7 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] MAIN_BUTTONS = { "fight", "profile", "wiseman", "task" };
+  private static final String[] MAIN_BUTTONS = { "fight", "profile", "task" };
   private static final String[] LEVEL_POINT_BUTTONS = {
       "improve strength", "improve vitality", "improve luck"
   };
@@ -241,10 +241,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("wiseman") || txt.equals("/wiseman")) {
-      Messenger.send(client.chatId, PhraseGenerator.getWisdom(client).get(client.lang));
-      return;
-    }
+    
 
     if (txt.equals("profile") || txt.equals("/profile")) {
       showProfile(client);
@@ -308,11 +305,17 @@ public class Main {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
-        String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
-        if (notFound == "") {
-          notFound = "Du hast einen Spaziergang im Wald gemacht, aber nichts Nützliches gefunden.";
+        // Nothing found: with 50% chance send wiseman message, otherwise send the generated message
+        boolean sendWisdom = Utils.roll(50);
+        if (sendWisdom) {
+          Messenger.send(client.chatId, PhraseGenerator.getWisdom(client).get(client.lang));
+        } else {
+          String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
+          if (notFound == "") {
+            notFound = "Du hast einen Spaziergang im Wald gemacht, aber nichts Nützliches gefunden.";
+          }
+          Messenger.send(client.chatId, notFound);
         }
-        Messenger.send(client.chatId, notFound);
         return;
       }
       Game.Item found = Utils.getRnd(new Game.Item[] { Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE });
