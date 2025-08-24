@@ -26,7 +26,11 @@ public class Main {
   private static final int FIGHT_TIMEOUT = 60;
   private static final String TASK_FAIL = "Fail";
   private static final String TASK_SUCCESS = "Success";
-  private static final String NOT_FOUND_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel suchte der Held nach etwas Nützlichem.  Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen Grund ausdenken, warum ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
+  private static final String NOT_FOUND_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel suchte der Held nach etwas Nützlichem. "
+      +
+      "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen "
+      +
+      "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich ƒgesucht habe.";
 
   private static Set<Integer> activeChats = new HashSet<>();
   private static Set<Integer> injuredChats = new HashSet<>();
@@ -83,7 +87,7 @@ public class Main {
     }
     Storage.forEachClient(new ClientDo() {
       public void run(Client client) {
-        if (client.getLastDailyCleanup() + 24*60*60 < curTimeSeconds) {
+        if (client.getLastDailyCleanup() + 24 * 60 * 60 < curTimeSeconds) {
           client.setSuccessToday(0);
           client.setLastDailyCleanup(curTimeSeconds);
         }
@@ -547,7 +551,7 @@ public class Main {
             PhraseGenerator.attackToOffender(client,
                 victim,
                 clientHits),
-        addPotions(client, new String[] {TASK_FAIL, TASK_SUCCESS}),
+        addPotions(client, new String[] { TASK_FAIL, TASK_SUCCESS }),
         true);
   }
 
@@ -580,7 +584,7 @@ public class Main {
     fightingChats.remove(loser.chatId);
     winner.timeoutWarningSent = false;
     loser.timeoutWarningSent = false;
-}
+  }
 
   private static void finishFight(Client winner, Client loser) {
     updateFightStats(winner, loser);
@@ -627,17 +631,17 @@ public class Main {
     loser.loseInvetory();
     String message;
     if (loser.hp < loser.getMaxHp()) {
-        message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen. ") +
-                  "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) + 
-                  " Sekunden regenerieren.";
-        Messenger.flush(loser.chatId);
-        injuredChats.add(loser.chatId);
+      message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen. ") +
+          "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) +
+          " Sekunden regenerieren.";
+      Messenger.flush(loser.chatId);
+      injuredChats.add(loser.chatId);
     } else {
-        message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen.");
+      message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen.");
     }
-    
+
     Messenger.send(loser.chatId, message, MAIN_BUTTONS);
-}
+  }
 
   private static String getClientStats(Client client) {
     String result = "*" + client.username + "*\n"
