@@ -1,6 +1,6 @@
 #!/bin/bash
 mkdir -p build/classes
-javac *.java -d "build/classes" -classpath "lib/gson-2.6.2.jar"
+javac *.java -d "build/classes" -classpath "lib/gson-2.8.6.jar"
 
 #!/bin/bash
 if [ "$(uname)" == "Darwin" ]; then
@@ -13,4 +13,4 @@ elif [ "$(expr substr $(uname -s) 1 9)" == "CYGWIN_NT" ]; then
     JAVA_PATH_SEP=";"
 fi
 
-java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.6.2.jar" -ea FightLang.ClientTest
+java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.ClientTest

@@ -13,6 +13,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import FightLang.Gemini;
+
 public class Main {
   public static boolean isProd = false;
 
@@ -24,6 +26,7 @@ public class Main {
   private static final int FIGHT_TIMEOUT = 60;
   private static final String TASK_FAIL = "Fail";
   private static final String TASK_SUCCESS = "Success";
+  private static final String NOT_FOUND_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel suchte der Held nach etwas Nützlichem.  Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen Grund ausdenken, warum ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
 
   private static Set<Integer> activeChats = new HashSet<>();
   private static Set<Integer> injuredChats = new HashSet<>();
@@ -96,6 +99,8 @@ public class Main {
     Logger.setDbPath(args[0]);
     Logger.initialize();
     TelegramApi.initialize();
+    Logger.log("test");
+    Gemini.initialize();
     Phrases.initialize();
 
     if (args.length > 1 && args[1].equals("PROD")) {
@@ -293,7 +298,11 @@ public class Main {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
-        Messenger.send(client.chatId, "You took a stroll in the woods, but haven't found anything useful.");
+        String notFound = Gemini.AskGemini(NOT_FOUND_PROMPT);
+        if (notFound == "") {
+          notFound = "You took a stroll in the woods, but haven't found anything useful.";
+        }
+        Messenger.send(client.chatId, notFound);
         return;
       }
       Game.Item found = Utils.getRnd(new Game.Item[] { Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE });

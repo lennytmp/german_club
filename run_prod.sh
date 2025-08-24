@@ -10,7 +10,7 @@ then
 	mkdir -p "db/clients"
 	mkdir -p "db/vars"
 
-	java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.6.2.jar" FightLang.Main db PROD 2>&1 > ~/fightlang_bot_stdout.log
+	java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" FightLang.Main db PROD 2>&1 > ~/fightlang_bot_stdout.log
 
 	echo "Respawning FightLang process..." | /usr/sbin/sendmail lennytmp@gmail.com
 fi

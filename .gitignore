@@ -5,3 +5,5 @@ build/
 /db
 .swn
 config.json
+.DS_Store
+/lib/.DS_Store
