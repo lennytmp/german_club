@@ -1,6 +1,9 @@
 TODO:
 - If you delete conversation, buttons disappear
 - Bots can attack first
+- Shop
+  - Add a button "Marketplace". When the player hits it, they meet a random trader, the trader has a randomized inventory.
+    The player gets the description of that inventory.
 - Crafting
   - Define which mobs drop what
   - Make a characteristic (Crafting) which influences chance to get a potion
