@@ -94,9 +94,7 @@ class Client {
     hp = getMaxHp();
   }
 
-  public void loseInvetory() {
-    inventory = new HashMap<>(Game.ITEM_VALUES.length);
-  }
+  
 
   // Removes 1-3 random item units from the inventory (weighted by counts) and
   // returns a human-readable description of what was lost, e.g., "2 potions, 1 fang".
@@ -137,8 +135,7 @@ class Client {
         lostCounts.put(itemIndex, lostCounts.getOrDefault(itemIndex, 0) + 1);
       }
 
-      // Also remove one instance of this itemIndex from the weighted list to reflect reduced count
-      // (We already removed the picked index; nothing else needed here.)
+      
     }
 
     // Build description string for lost items
