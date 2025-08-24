@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 class PhraseGenerator {
-  static String[] languages = {"en", "ru"};
+  static String[] languages = {"en", "ru", "de"};
 
   static Map<String, String> getJoinedTheFightClub(String username) {
     Map<String, String> result = new HashMap<>();

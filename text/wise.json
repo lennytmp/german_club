@@ -6,6 +6,12 @@
       "The wiseman is looking at you with contempt:",
       "The wizard wasn't in a good mood today, he shouts at you:"
     ],
+    "de": [
+      "Der weise Mann ignoriert dich eine Stunde lang, dann stöhnt er plötzlich:",
+      "Als du dich der Hütte des Weisen nähertest, war sie leer. Du fandst eine hinterlassene Notiz:",
+      "Der Weise blickt dich verächtlich an:",
+      "Der Zauberer ist heute schlechter Laune und fährt dich an:"
+    ],
     "ru": [
       "Старец игноирует тебя в течение часа, как вдруг говорит:",
       "Когда ты подошел к дому старца, он был пуст. Ты нашел записку:",
@@ -23,6 +29,16 @@
       "Have you ever thought what luck really is? Some consider that a lucky person acts first, others think that a lucky person is more likely to make a perfect painful hit.",
       "The Gods? There are two of them I heard, one has a very long beard and another one is very smart. Well, Gods are always smart, arent't they?",
       "Have you ever seen a healing potion? They are very rare when fighting regular folks. I've heard one can acquire them for sure after winning a real opponent. Rumor has it, those who have found them were able to beat far more superior enemies."
+    ],
+    "de": [
+      "Es gibt eine uralte Geschichte über einen Mann … Er trug einen sehr törichten Namen. Eines Tages tippte er `/username Gott` und wurde zu einem Gott.",
+      "Es heißt: Es gab zwei Kämpfer, geschickt und klug, doch sie wussten nicht, wie sie miteinander sprechen sollten. Einst schrieb einer von ihnen mitten im Gefecht eine Nachricht – sie ging nur an den Gegner. Und so begannen die Kämpfer, miteinander zu reden.",
+      "Hörst du manchmal die Stimmen? Ich höre sie, alle hören sie. Die Götter sagten mir einst, man vernimmt sie nur, wenn man in den letzten Minuten aktiv war. Gehst du weg, verstummen die Stimmen ebenfalls.",
+      "Es war einmal ein Kämpfer von unglaublicher Stärke. Man sagt, er konnte jeden Gegner mit einem einzigen Schlag bezwingen.",
+      "Nur wenige erinnern sich noch, doch einst lebte ein großer Krieger. Tausende versuchten, ihn zu töten, doch niemand schaffte es. Sein Geheimnis, so sagt man, lag in seiner erstaunlichen Zähigkeit.",
+      "Hast du je darüber nachgedacht, was Glück wirklich ist? Manche sagen, ein Glückspilz handelt zuerst, andere glauben, er trifft mit größerer Wahrscheinlichkeit einen perfekten, schmerzhaften Schlag.",
+      "Die Götter? Ich hörte, es gibt zwei: Der eine trägt einen sehr langen Bart, der andere ist sehr klug. Nun, Götter sind immer klug, nicht wahr?",
+      "Hast du je einen Heiltrank gesehen? Unter gewöhnlichen Leuten im Kampf sind sie sehr selten. Man munkelt, man könne ihn sicher erhalten, wenn man einen echten Gegner besiegt. Und wer ihn besitzt, so sagt die Kunde, kann weit überlegene Feinde bezwingen."
     ],
     "ru": [
       "Я поведаю тебя историю о девушке... У нее было очень глупое имя. Однажды она написала `/username Богиня` и стала Богиней.",
