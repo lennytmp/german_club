@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import FightLang.Gemini;
-
 public class Main {
   public static boolean isProd = false;
 
@@ -26,12 +24,20 @@ public class Main {
   private static final int FIGHT_TIMEOUT = 60;
   private static final String TASK_FAIL = "Fail";
   private static final String TASK_SUCCESS = "Success";
-  private static final String NOT_FOUND_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel suchte der Held nach etwas Nützlichem. "
+  private static final String GAME_DESCRIPTION_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
+    "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
+    "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
+    "Fleisch, Knochen, Crack, Flasche, Münze.";
+  private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. "
       +
       "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen "
       +
       "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich ƒgesucht habe.";
-
+  private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %sgefunden. Du musst es kurz beschreiben. " +
+    "Zum Beispiel: „Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
+    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.“" + 
+    "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
+    "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
   private static Set<Integer> activeChats = new HashSet<>();
   private static Set<Integer> injuredChats = new HashSet<>();
   private static Set<Integer> readyToFightChats = new HashSet<>();
@@ -302,9 +308,9 @@ public class Main {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
-        String notFound = Gemini.AskGemini(NOT_FOUND_PROMPT);
+        String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
         if (notFound == "") {
-          notFound = "You took a stroll in the woods, but haven't found anything useful.";
+          notFound = "Du hast einen Spaziergang im Wald gemacht, aber nichts Nützliches gefunden.";
         }
         Messenger.send(client.chatId, notFound);
         return;
@@ -312,7 +318,11 @@ public class Main {
       Game.Item found = Utils.getRnd(new Game.Item[] { Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE });
       client.giveItem(found);
       Storage.saveClient(client);
-      Messenger.send(client.chatId, "You found 1 " + found.singular + "!");
+      String foundMsg = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + String.format(SOMETHING_FOUND_PROMPT, found.singular) ); 
+      if (foundMsg == "") {
+        foundMsg = String.format("Du hast 1 %s gefunden!", found.singular);
+      }
+      Messenger.send(client.chatId, foundMsg);
       return;
     }
 

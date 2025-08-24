@@ -79,13 +79,13 @@ class Game {
   enum Item {
     // TODO: when an item is added to the list - clients needs to be updated with a
     // larger array.
-    COIN("coin", "coins"), BOTTLE("bottle", "bottles"),
-    CRACK("gr of crack", "gr of crack"), BONE("bone", "bones"),
-    FLESH("piece of flesh", "pieces of flesh"), SOUL_STONE("soul stone", "soul stones"),
-    BANDAGE("bandage", "bandages"), WAX("gr of wax", "gr of wax"),
-    FANG("fang", "fangs"), CLAW("claw", "claws"), ASH("gr of ash", "gr of ash"),
-    PAPER("sheet of paper", "sheets of paper"), SILVER("silver piece", "silver pieces"),
-    GOLD("golden piece", "golden pieces"), HPOTION("healing potion", "healing potions");
+    COIN("Münze", "coins"), BOTTLE("Flasche", "Flaschen"),
+    CRACK("Gramm Crack", "Gramm Crack"), BONE("Knochen", "Knochen"),
+    FLESH("Fleischstück", "Fleischstücke"), SOUL_STONE("Seelenstein", "Seelensteine"),
+    BANDAGE("Bandage", "Bandagen"), WAX("Gramm Wachs", "Gramm Wachs"),
+    FANG("Reißzahn", "Reißzähne"), CLAW("Klaue", "Klauen"), ASH("Gramm Asche", "Gramm Asche"),
+    PAPER("Blatt Papier", "Blätter Papier"), SILVER("Silberstück", "Silberstücke"),
+    GOLD("Goldstück", "Goldstücke"), HPOTION("Heiltrank", "Heiltränke");
 
     String singular, plural;
 
