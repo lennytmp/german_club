@@ -9,31 +9,23 @@ import java.util.Map;
 
 class Phrases {
   class CombatTexts {
-    Map<String, String[]> adjective;
-    Map<String, String[]> blocked;
-    Map<String, String[]> but;
-    Map<String, String[]> lookingForOpponent;
-    Map<String, String[]> missed;
-    Map<String, String[]> said;
-    Map<String, String[]> wasDoingSomething;
-    Map<String, String[]> wasTrying;
-    Map<String, String[]> when;
-    Map<String, String[]> wisdomIntro;
-    Map<String, String[]> wisdoms;
-    Map<String, String[]> won;
+    String[] adjective;
+    String[] lookingForOpponent;
+    String[] wasDoingSomething;
+    String[] when;
+    String[] won;
 
-    Map<String, String[][]> hit;
-    Map<String, String[][]> toHit;
+    String[][] hit;
   }
 
   class WiseTexts {
-    Map<String, String[]> wisdomIntro;
-    Map<String, String[]> wisdoms;
+    String[] wisdomIntro;
+    String[] wisdoms;
   }
 
 
   class Misc {
-    Map<String, String> joinedTheFightClub;
+    String joinedTheFightClub;
   }
 
   static WiseTexts wiseTexts;

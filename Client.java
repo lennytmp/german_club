@@ -16,8 +16,6 @@ class Client {
   };
 
   String username;
-  // TODO(lenny): add unkown language by default and ask players to provide one.
-  String lang = "en";
   int chatId = 0;
   boolean nameChangeHintSent = false;
   Status status = Client.Status.IDLE;
