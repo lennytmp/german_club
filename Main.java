@@ -308,7 +308,7 @@ public class Main {
         // Nothing found: with 50% chance send wiseman message, otherwise send the generated message
         boolean sendWisdom = Utils.roll(50);
         if (sendWisdom) {
-          Messenger.send(client.chatId, PhraseGenerator.getWisdom(client).get(client.lang));
+          Messenger.send(client.chatId, PhraseGenerator.getWisdom(client));
         } else {
           String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
           if (notFound == "") {
@@ -395,8 +395,7 @@ public class Main {
 
     if (!txt.startsWith("/")) {
       String message = "\uD83D\uDCE2 " + client.username + ": " + txt;
-      int numListeners = sendToActiveUsers(
-          PhraseGenerator.getLangMap(message)) - 1;
+      int numListeners = sendToActiveUsers(message) - 1;
       if (numListeners == 0) {
         Messenger.send(client.chatId, "You were not heard by anyone :(");
       }
@@ -408,14 +407,14 @@ public class Main {
   }
 
   // returns number of people who heard you
-  private static int sendToActiveUsers(Map<String, String> message) {
+  private static int sendToActiveUsers(String message) {
     // If changed - also change the other function with the same name.
     int numListeners = 0;
     List<Integer> passive = new LinkedList<>();
     for (int recepientChatId : activeChats) {
       Client recepient = Storage.getClientByChatId(recepientChatId);
       if (recepient.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
-        Messenger.send(recepient.chatId, message.get(recepient.lang));
+        Messenger.send(recepient.chatId, message);
         numListeners++;
       } else {
         passive.add(recepientChatId);

@@ -1,383 +1,180 @@
 {
-  "adjective": {
-    "en": [
-      "furious",
-      "dangerous",
-      "rabid",
-      "mad",
-      "wild",
-      "frenzied",
-      "impudent",
-      "insolent",
-      "shameless",
-      "bold",
-      "insidious",
-      "treacherous",
-      "cunning",
-      "sly",
-      "crafty",
-      "naughty",
-      "wicked",
-      "rude",
-      "nasty",
-      "timid",
-      "shy"
+  "adjective": [
+    "furious",
+    "dangerous",
+    "rabid",
+    "mad",
+    "wild",
+    "frenzied",
+    "impudent",
+    "insolent",
+    "shameless",
+    "bold",
+    "insidious",
+    "treacherous",
+    "cunning",
+    "sly",
+    "crafty",
+    "naughty",
+    "wicked",
+    "rude",
+    "nasty",
+    "timid",
+    "shy"
+  ],
+  "blocked": [
+    "skillfully blocked the hit",
+    "masterfully avoided the blow",
+    "stepped back to avoid the hit",
+    "quickly dodged",
+    "rapidly darted away",
+    "cautiously rushed away",
+    "anticipated it and was able to get away with no damage",
+    "forsaw it and managed to end up without a scratch"
+  ],
+  "but": [
+    "but",
+    "when",
+    "when suddenly",
+    "just as",
+    "whereas",
+    "meanwhile",
+    "and that's when"
+  ],
+  "hit": [
+    [
+      "has thoughtfully smashed his face",
+      "slammed his nose with the heel",
+      "caressed his cheek",
+      "bluntly bit his nose",
+      "desparately punched his eyebrow",
+      "stroked his eye",
+      "made a quick punch in his throat",
+      "poked a finger in his mouth",
+      "punched his forehead with all the dope",
+      "slapped him from all nonsense",
+      "poked a finger in his eye"
     ],
-    "ru": [
-      "бешеный",
-      "опасный",
-      "злой",
-      "психованный",
-      "дикий",
-      "взбешенный",
-      "дерзкий",
-      "наглый",
-      "бесстыжий",
-      "смелый",
-      "разъяренный",
-      "вероломный",
-      "коварный",
-      "хитрый",
-      "ловкий",
-      "озорной",
-      "безнравственный",
-      "грубый",
-      "гадкий",
-      "робкий",
-      "стеснительный"
-    ]
-  },
-  "blocked": {
-    "en": [
-      "skillfully blocked the hit",
-      "masterfully avoided the blow",
-      "stepped back to avoid the hit",
-      "quickly dodged",
-      "rapidly darted away",
-      "cautiously rushed away",
-      "anticipated it and was able to get away with no damage",
-      "forsaw it and managed to end up without a scratch"
+    [
+      "quickly hit in the pit of his stomach",
+      "made a double somersault and hit his chest",
+      "shamelessly pinched his nipples",
+      "cunningly poked a finger in his navel",
+      "made a thourough punch in his back",
+      "neatly made a punch in his heart"
     ],
-    "ru": [
-      "искусно заблокировал удар",
-      "мастерски избежал атаки",
-      "отступил чтобы избежать трагедии",
-      "быстро улонился",
-      "стремтельно увернулся",
-      "аккуратно извернулся",
-      "предвидел атаку и смог избежеть урона",
-      "ожидал атаку и смог отделаться царапиной"
+    [
+      "subtly made a hit in the legs",
+      "heartlessly broke his knee",
+      "grossly bit opponent's <censored>",
+      "gently caressed his toe",
+      "unthinkingly stepped on his foot",
+      "cowardly damaged his <censored>",
+      "rudely bit his ankle",
+      "shamelessly scratched his shin",
+      "jauntily poked a finger in his <censored>"
     ]
-  },
-  "but": {
-    "en": [
-      "but",
-      "when",
-      "when suddenly",
-      "just as",
-      "whereas",
-      "meanwhile",
-      "and that's when"
+  ],
+  "lookingForOpponent": [
+    "is looking for an opponent",
+    "wants to fight",
+    "wants to participate in a combat",
+    "is searching for a victim",
+    "is ready to fight"
+  ],
+  "missed": [
+    "awkwardly missed",
+    "lubberly slipped and wasn't able to hit",
+    "got distracted and fell asleep",
+    "uncouthly sprained the ankle and missed"
+  ],
+  "said": [
+    "misteriously whispered to",
+    "mumbled to",
+    "whispered to",
+    "smiling wildly told",
+    "made a grin and told",
+    "said shyly to"
+  ],
+  "toHit": [
+    [
+      "to punch the opponent in the face",
+      "to smash the opponent's face",
+      "to slam the enemy's nose with his heel",
+      "to caress opponent's cheek",
+      "to punch the competitor's eyebrow",
+      "to stroke the enemy's eye",
+      "to bite competitor's nose",
+      "to make a quick punch in the rival's throat",
+      "to poke a finger in the opponent's mouth",
+      "to punch the competitor's forehead",
+      "to slap the enemy",
+      "to poke a finger in the rival's eye"
     ],
-    "ru": [
-      "но",
-      "как вдруг",
-      "когда",
-      "в то время как",
-      "но тут"
-    ]
-  },
-  "hit": {
-    "en": [
-      [
-        "has thoughtfully smashed his face",
-        "slammed his nose with the heel",
-        "caressed his cheek",
-        "bluntly bit his nose",
-        "desparately punched his eyebrow",
-        "stroked his eye",
-        "made a quick punch in his throat",
-        "poked a finger in his mouth",
-        "punched his forehead with all the dope",
-        "slapped him from all nonsense",
-        "poked a finger in his eye"
-      ],
-      [
-        "quickly hit in the pit of his stomach",
-        "made a double somersault and hit his chest",
-        "shamelessly pinched his nipples",
-        "cunningly poked a finger in his navel",
-        "made a thourough punch in his back",
-        "neatly made a punch in his heart"
-      ],
-      [
-        "subtly made a hit in the legs",
-        "heartlessly broke his knee",
-        "grossly bit opponent's <censored>",
-        "gently caressed his toe",
-        "unthinkingly stepped on his foot",
-        "cowardly damaged his <censored>",
-        "rudely bit his ankle",
-        "shamelessly scratched his shin",
-        "jauntily poked a finger in his <censored>"
-      ]
+    [
+      "to hit in the pit of the opponent's stomach",
+      "to hit the chest of the enemy",
+      "to pinch the opponent's nipples",
+      "to poke a finger in the navel of the enemy",
+      "to make a punch in the competitor's back"
     ],
-    "ru": [
-      [
-        "вдумчиво вмазал ему по лицу",
-        "стукнул в его нос пяткой",
-        "погладил его по щеке",
-        "резко укусил его за нос",
-        "непрезойдено треснул ему в бровь",
-        "влепил ему в глаз",
-        "вцепился в горло противника",
-        "засунул палец врагу в рот",
-        "вмазал ему по лбу со всей дури",
-        "сделал сильную пощечину",
-        "ткнул пальцем в глаз"
-      ],
-      [
-        "быстро щелкнул его поддых",
-        "сделал двойное сальто и ударил противника в грудь",
-        "бесстыже ущипнул врага за соски",
-        "коварно ткнул пальцем в пупок",
-        "основательно вдарил противнику по спине",
-        "искусно провел удар в сердце"
-      ],
-      [
-        "незамето вломил ему по ногам",
-        "бессердечно сломал ему колено",
-        "вульгарно вмазал ему по <цензура>",
-        "нежно провел ему по пальцу на ноге",
-        "бездумно наступил противнику на ногу",
-        "трусливо вцепился противнику в <цензура>",
-        "грубо ударил ему по голени",
-        "бесстыже укусил его за голень",
-        "весело засунул палец в <цензура> врага"
-      ]
+    [
+      "to make a hit in the opponent's legs",
+      "to brake the enemy's knee",
+      "to wound the rival's toe",
+      "to hit opponent's <censored>",
+      "to step on the competitor's foot",
+      "to damage the opponent's <censored>",
+      "to rudely bit the rival's ankle",
+      "to scratch the enemy's shin"
     ]
-  },
-  "lookingForOpponent": {
-    "en": [
-      "is looking for an opponent",
-      "wants to fight",
-      "wants to participate in a combat",
-      "is searching for a victim",
-      "is ready to fight"
-    ],
-    "ru": [
-      "ищет противника",
-      "хочет подраться",
-      "хочет пооучавстовать в драке",
-      "испытывает зуд в кулахак",
-      "разыскивает жертву",
-      "готов к бою"
-    ]
-  },
-  "missed": {
-    "en": [
-      "awkwardly missed",
-      "lubberly slipped and wasn't able to hit",
-      "got distracted and fell asleep",
-      "uncouthly sprained the ankle and missed"
-    ],
-    "ru": [
-      "неуклюже промахнулся",
-      "глупо промазал",
-      "неумело подскользнулся и не смог нанести удар",
-      "отвлекся и уснул",
-      "подвернул лодыжку и промазал"
-    ]
-  },
-  "said": {
-    "en": [
-      "misteriously whispered to",
-      "mumbled to",
-      "whispered to",
-      "smiling wildly told",
-      "made a grin and told",
-      "said shyly to"
-    ],
-    "ru": [
-      "таинственно прошептал",
-      "промямлил",
-      "прошептал",
-      "широко улыбаясь сообщил",
-      "ухмыльнулся и сказал",
-      "смеренно пролепетал"
-    ]
-  },
-  "toHit": {
-    "en": [
-      [
-        "to punch the opponent in the face",
-        "to smash the opponent's face",
-        "to slam the enemy's nose with his heel",
-        "to caress opponent's cheek",
-        "to punch the competitor's eyebrow",
-        "to stroke the enemy's eye",
-        "to bite competitor's nose",
-        "to make a quick punch in the rival's throat",
-        "to poke a finger in the opponent's mouth",
-        "to punch the competitor's forehead",
-        "to slap the enemy",
-        "to poke a finger in the rival's eye"
-      ],
-      [ 
-        "to hit in the pit of the opponent's stomach",
-        "to hit the chest of the enemy",
-        "to pinch the opponent's nipples",
-        "to poke a finger in the navel of the enemy",
-        "to make a punch in the competitor's back"
-      ],
-      [
-        "to make a hit in the opponent's legs",
-        "to brake the enemy's knee",
-        "to wound the rival's toe",
-        "to hit opponent's <censored>",
-        "to step on the competitor's foot",
-        "to damage the opponent's <censored>",
-        "to rudely bit the rival's ankle",
-        "to scratch the enemy's shin"
-      ]
-    ],
-    "ru": [
-      [
-        "вдумчиво вмазать ему по лицу",
-        "стукнуть в его нос пяткой",
-        "погладить его по щеке",
-        "резко укусить его за нос",
-        "непрезойдено треснуть ему в бровь",
-        "влепить ему в глаз",
-        "вцепиться в горло противника",
-        "засунуть палец врагу в рот",
-        "вмазать ему по лбу со всей дури",
-        "сделать сильную пощечину",
-        "ткнуть пальцем в глаз"
-      ],
-      [
-        "быстро щелкнуть его поддых",
-        "сделать двойное сальто и ударить противника в грудь",
-        "бесстыже ущипнуть врага за соски",
-        "коварно ткнуть пальцем в пупок",
-        "основательно вдарить противники по спине",
-        "искусно провести удар в сердце"
-      ],
-      [
-        "незамето вломить ему по ногам",
-        "бессердечно сломать ему колено",
-        "вульгарно вмазать ему по <цензура>",
-        "нежно провести ему по пальцу на ноге",
-        "бездумно наступить противнику на ногу",
-        "трусливо вцепиться противнику в <цензура>",
-        "грубо ударить ему по голени",
-        "бесстыже укусить его за голень",
-        "весело засунуть палец в <цензура> врага"
-      ]
-    ]
-  },
-  "wasDoingSomething": {
-    "en": [
-      "blinked",
-      "chocked",
-      "closed his eyes",
-      "saw a pretty person far away",
-      "shed a tear",
-      "sneezed",
-      "was coughing",
-      "was feeling dizzy",
-      "was feeling tired",
-      "was having a silly smile",
-      "was hesitating",
-      "was itching his <censored>",
-      "was itching his navel",
-      "was picking his teeth",
-      "was scratching his back",
-      "was staring at the ceiling",
-      "was thinking about justice in the world",
-      "was too self confident",
-      "was trying to get rid of a fly",
-      "was trying to make a hit",
-      "was waiting for a hit"
-    ],
-    "ru": [
-      "моргнул",
-      "подавился",
-      "закрыл глаза",
-      "где-то в далеке увидел симпатичную особь противоположного пола",
-      "всплакнул",
-      "чихнул",
-      "откашлялся",
-      "испытал головкуржение",
-      "утомился",
-      "глупо улыбался",
-      "сомневался",
-      "чесал свои <цензура>",
-      "чесал пупок",
-      "ковырялся в зубах",
-      "почесывал спину",
-      "пялился в потолок",
-      "задумался о справделивости во всем мире",
-      "был слишком самоуверен",
-      "отмахивался от мухи",
-      "пытался нанести удар",
-      "ждал атаку"
-    ]
-  },
-  "wasTrying": {
-    "en": [
-      "was trying",
-      "attempted",
-      "made an effort",
-      "strived",
-      "decided",
-      "struggled",
-      "did his best"
-    ],
-    "ru": [
-      "пытался",
-      "старался",
-      "решил",
-      "делал все возможное чтобы",
-      "изо всех стил старался",
-      "пробовал",
-      "норовил"
-    ]
-  },
-  "when": {
-    "en": [
-      "and at the same time",
-      "and that's when",
-      "just as",
-      "meanwhile",
-      "when out of nowhere",
-      "when suddenly",
-      "when",
-      "whereas"
-    ],
-    "ru": [
-      "и тогда",
-      "и тогда вдруг",
-      "и тут вдруг",
-      "и тут",
-      "в то время как",
-      "и в это же время",
-      "когда вдруг",
-      "как вдруг"
-    ]
-  },
-  "won": {
-    "en": [
-      "has won against",
-      "has defeated",
-      "has beaten",
-      "has overcome"
-    ],
-    "ru": [
-      "победил",
-      "одержал победу",
-      "побил",
-      "одолел"
-    ]
-  }
+  ],
+  "wasDoingSomething": [
+    "blinked",
+    "chocked",
+    "closed his eyes",
+    "saw a pretty person far away",
+    "shed a tear",
+    "sneezed",
+    "was coughing",
+    "was feeling dizzy",
+    "was feeling tired",
+    "was having a silly smile",
+    "was hesitating",
+    "was itching his <censored>",
+    "was itching his navel",
+    "was picking his teeth",
+    "was scratching his back",
+    "was staring at the ceiling",
+    "was thinking about justice in the world",
+    "was too self confident",
+    "was trying to get rid of a fly",
+    "was trying to make a hit",
+    "was waiting for a hit"
+  ],
+  "wasTrying": [
+    "was trying",
+    "attempted",
+    "made an effort",
+    "strived",
+    "decided",
+    "struggled",
+    "did his best"
+  ],
+  "when": [
+    "and at the same time",
+    "and that's when",
+    "just as",
+    "meanwhile",
+    "when out of nowhere",
+    "when suddenly",
+    "when",
+    "whereas"
+  ],
+  "won": [
+    "has won against",
+    "has defeated",
+    "has beaten",
+    "has overcome"
+  ]
 }
