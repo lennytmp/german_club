@@ -22,25 +22,8 @@
     "timid",
     "shy"
   ],
-  "blocked": [
-    "skillfully blocked the hit",
-    "masterfully avoided the blow",
-    "stepped back to avoid the hit",
-    "quickly dodged",
-    "rapidly darted away",
-    "cautiously rushed away",
-    "anticipated it and was able to get away with no damage",
-    "forsaw it and managed to end up without a scratch"
-  ],
-  "but": [
-    "but",
-    "when",
-    "when suddenly",
-    "just as",
-    "whereas",
-    "meanwhile",
-    "and that's when"
-  ],
+  
+  
   "hit": [
     [
       "has thoughtfully smashed his face",
@@ -82,53 +65,9 @@
     "is searching for a victim",
     "is ready to fight"
   ],
-  "missed": [
-    "awkwardly missed",
-    "lubberly slipped and wasn't able to hit",
-    "got distracted and fell asleep",
-    "uncouthly sprained the ankle and missed"
-  ],
-  "said": [
-    "misteriously whispered to",
-    "mumbled to",
-    "whispered to",
-    "smiling wildly told",
-    "made a grin and told",
-    "said shyly to"
-  ],
-  "toHit": [
-    [
-      "to punch the opponent in the face",
-      "to smash the opponent's face",
-      "to slam the enemy's nose with his heel",
-      "to caress opponent's cheek",
-      "to punch the competitor's eyebrow",
-      "to stroke the enemy's eye",
-      "to bite competitor's nose",
-      "to make a quick punch in the rival's throat",
-      "to poke a finger in the opponent's mouth",
-      "to punch the competitor's forehead",
-      "to slap the enemy",
-      "to poke a finger in the rival's eye"
-    ],
-    [
-      "to hit in the pit of the opponent's stomach",
-      "to hit the chest of the enemy",
-      "to pinch the opponent's nipples",
-      "to poke a finger in the navel of the enemy",
-      "to make a punch in the competitor's back"
-    ],
-    [
-      "to make a hit in the opponent's legs",
-      "to brake the enemy's knee",
-      "to wound the rival's toe",
-      "to hit opponent's <censored>",
-      "to step on the competitor's foot",
-      "to damage the opponent's <censored>",
-      "to rudely bit the rival's ankle",
-      "to scratch the enemy's shin"
-    ]
-  ],
+  
+  
+  
   "wasDoingSomething": [
     "blinked",
     "chocked",
@@ -152,15 +91,7 @@
     "was trying to make a hit",
     "was waiting for a hit"
   ],
-  "wasTrying": [
-    "was trying",
-    "attempted",
-    "made an effort",
-    "strived",
-    "decided",
-    "struggled",
-    "did his best"
-  ],
+  
   "when": [
     "and at the same time",
     "and that's when",

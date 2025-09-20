@@ -10,18 +10,12 @@ import java.util.Map;
 class Phrases {
   class CombatTexts {
     String[] adjective;
-    String[] blocked;
-    String[] but;
     String[] lookingForOpponent;
-    String[] missed;
-    String[] said;
     String[] wasDoingSomething;
-    String[] wasTrying;
     String[] when;
     String[] won;
 
     String[][] hit;
-    String[][] toHit;
   }
 
   class WiseTexts {
