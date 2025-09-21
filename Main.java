@@ -152,7 +152,15 @@ public class Main {
 
       Messenger.send(client.chatId, "Du kämpfst jetzt mit " + bot.username + ".");
       Messenger.send(client.chatId, getClientStats(bot));
-      askTaskStatus(client);
+      
+      // Determine turn order and ask the first player to act
+      boolean clientGoesFirst = determineTurnOrder(client, bot);
+      if (clientGoesFirst) {
+        askTaskStatus(client);
+      } else {
+        // Bot goes first - activate bot immediately
+        activateBotTask(bot, client);
+      }
     }
   }
 
@@ -188,7 +196,7 @@ public class Main {
       handleHitTask(client, opponent, false);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
-        activateBotTask(opponent);
+        activateBotTask(opponent, client);
       }
     }
   }
@@ -399,7 +407,7 @@ public class Main {
       handleHitTask(client, opponent, isSuccess);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
-        activateBotTask(opponent);
+        activateBotTask(opponent, client);
       }
       return;
     }
@@ -616,9 +624,8 @@ public class Main {
     Storage.saveClient(client);
   }
 
-  private static void activateBotTask(Client bot) {
+  private static void activateBotTask(Client bot, Client opponent) {
     bot.lastFightActivitySince = curTimeSeconds;
-    Client opponent = Storage.getClientByChatId(bot.fightingChatId);
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
     Storage.saveClients(opponent, bot);
@@ -661,12 +668,18 @@ public class Main {
     Messenger.send(opponent.chatId, "Du kämpfst jetzt mit " + client.username + ".");
     Messenger.send(client.chatId, getClientStats(opponent));
     Messenger.send(opponent.chatId, getClientStats(client));
-    askTaskStatus(opponent);
-    askTaskStatus(client);
+    
+    // Determine turn order and ask the first player to act
+    boolean clientGoesFirst = determineTurnOrder(client, opponent);
+    if (clientGoesFirst) {
+      askTaskStatus(client);
+    } else {
+      askTaskStatus(opponent);
+    }
   }
 
   private static void askTaskStatus(Client client) {
-    Messenger.send(client.chatId, "Versuche eine Übung zu lösen und berichte Rückmeldung",
+    Messenger.send(client.chatId, "Du bist an der Reihe!",
         addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
@@ -706,17 +719,28 @@ public class Main {
     String victimPrefix = "\uD83D\uDEE1 ";
     int clientHits = getDamageTask(client, isSuccess);
     victim.hp = Math.max(victim.hp - clientHits, 0);
-    Messenger.send(victim.chatId, victimPrefix +
-        PhraseGenerator.attackToVictim(client,
-            victim,
-            clientHits));
+    
+    // Send damage message to victim with response buttons (if still fighting)
+    if (victim.status == Client.Status.FIGHTING && victim.hp > 0) {
+      Messenger.send(victim.chatId, victimPrefix +
+          PhraseGenerator.attackToVictim(client,
+              victim,
+              clientHits),
+          addPotions(victim, new String[] { TASK_SUCCESS }));
+    } else {
+      // If victim is dead or not fighting, just send the damage message
+      Messenger.send(victim.chatId, victimPrefix +
+          PhraseGenerator.attackToVictim(client,
+              victim,
+              clientHits));
+    }
+    
+    // Send confirmation to attacker (no buttons needed - they just acted)
     Messenger.send(client.chatId,
         clientPrefix +
             PhraseGenerator.attackToOffender(client,
                 victim,
-                clientHits),
-        addPotions(client, new String[] { TASK_SUCCESS }),
-        true);
+                clientHits));
   }
 
   private static void handleHitTask(Client client, Client opponent, boolean isSuccess) {
@@ -841,31 +865,29 @@ public class Main {
     }
   }
 
-  private static void prepareToFight(Client client, Client opponent, int first) {
+  private static void setupClientForFight(Client client, Client opponent) {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
     client.lastFightActivitySince = curTimeSeconds;
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
-    if (first == 0) {
-      prepareToFight(opponent, client, 1);
-    }
   }
 
   // Determines who goes first based on luck values
-  // Returns 0 if client goes first, 1 if opponent goes first
-  private static int determineTurnOrder(Client client, Client opponent) {
+  // Returns true if client goes first, false if opponent goes first
+  private static boolean determineTurnOrder(Client client, Client opponent) {
     int totalLuck = client.luck + opponent.luck;
     int randomValue = Utils.rndInRange(1, totalLuck);
     
     // If random value is <= opponent's luck, opponent goes first
     // Otherwise, client goes first
-    return (randomValue <= opponent.luck) ? 1 : 0;
+    return randomValue > opponent.luck;
   }
 
   static void prepareToFight(Client client, Client opponent) {
-    int turnOrder = determineTurnOrder(client, opponent);
-    prepareToFight(client, opponent, turnOrder);
+    // Set both clients to FIGHTING status regardless of turn order
+    setupClientForFight(client, opponent);
+    setupClientForFight(opponent, client);
   }
 
   // Trading system methods

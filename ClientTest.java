@@ -12,6 +12,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
+        allTestsPassed &= testPrepareToFight();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -371,6 +372,45 @@ public class ClientTest {
         }
         allTestsPassed &= assertEquals(2, totalItemsAfterTrade,
             "Client should have 2 items after trade (started with 2, traded 1 for 1)");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testPrepareToFight() {
+        boolean allTestsPassed = true;
+        
+        // Verify that prepareToFight sets both clients to FIGHTING status
+        Client player = new Client(100, "TestPlayer");
+        Client bot = new Client(-100, player);
+        
+        // Initial state - both should be IDLE
+        allTestsPassed &= assertEquals(1, player.status == Client.Status.IDLE ? 1 : 0,
+            "Player should start in IDLE status");
+        allTestsPassed &= assertEquals(1, bot.status == Client.Status.IDLE ? 1 : 0,
+            "Bot should start in IDLE status");
+        
+        // Call prepareToFight
+        try {
+            java.lang.reflect.Method method = Main.class.getDeclaredMethod("prepareToFight", Client.class, Client.class);
+            method.setAccessible(true);
+            method.invoke(null, player, bot);
+            
+            // Both should now be in FIGHTING status
+            allTestsPassed &= assertEquals(1, player.status == Client.Status.FIGHTING ? 1 : 0,
+                "Player should be in FIGHTING status after prepareToFight");
+            allTestsPassed &= assertEquals(1, bot.status == Client.Status.FIGHTING ? 1 : 0,
+                "Bot should be in FIGHTING status after prepareToFight");
+            
+            // Check fight relationships are correct
+            allTestsPassed &= assertEquals(bot.chatId, player.fightingChatId,
+                "Player should be fighting the bot");
+            allTestsPassed &= assertEquals(player.chatId, bot.fightingChatId,
+                "Bot should be fighting the player");
+            
+        } catch (Exception e) {
+            System.out.println("Error in testPrepareToFight: " + e.getMessage());
+            return false;
+        }
         
         return allTestsPassed;
     }
