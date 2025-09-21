@@ -1,0 +1,51 @@
+# Cursor Rules for Java Project
+
+## Build and Test Validation
+
+### Use build.sh for validation
+- Before making any code changes that could affect compilation or tests, run `./build.sh` to validate the current state
+- After making code changes, always run `./build.sh` to ensure:
+  1. The code compiles successfully
+  2. All tests pass
+  3. The build completes without errors
+
+### Build Script Requirements
+- The `build.sh` script handles both compilation and test execution
+- It compiles Java files to `build/classes` directory
+- It runs the test suite using `ClientTest` class
+- Exit code 0 indicates success, non-zero indicates failure
+
+### Validation Process
+1. **Before Changes**: Run `./build.sh` to establish baseline
+2. **After Changes**: Run `./build.sh` to validate changes
+3. **Error Handling**: If build fails, fix compilation errors before proceeding
+4. **Test Failures**: If tests fail, address test failures before considering changes complete
+
+### Code Quality Standards
+- All Java files must compile without warnings when possible
+- All existing tests must continue to pass
+- New functionality should include appropriate tests
+- Use assertions (`-ea` flag is enabled) for runtime validation
+
+### Dependencies
+- Project uses Gson 2.8.6 library (`lib/gson-2.8.6.jar`)
+- Classpath includes both compiled classes and external libraries
+- Cross-platform compatibility maintained for Windows, macOS, and Linux
+
+### Usage Examples
+```bash
+# Validate before starting work
+./build.sh
+
+# Validate after making changes
+./build.sh
+
+# Check exit code programmatically
+./build.sh && echo "Build successful" || echo "Build failed"
+```
+
+## Additional Guidelines
+- Always test changes locally using `build.sh` before committing
+- If `build.sh` fails, investigate and fix issues immediately
+- Maintain the build script's cross-platform compatibility
+- Keep the test suite comprehensive and up-to-date
