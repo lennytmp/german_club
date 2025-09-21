@@ -540,8 +540,35 @@ public class Main {
     if (canBrew) {
       client.incSuccessToday();
       Storage.saveClient(client);
-      Messenger.send(client.chatId, successMessage);
-      sendInventoryDescription(client);
+      sendBrewingSuccessWithInventory(client, successMessage);
+    }
+  }
+
+  private static void sendBrewingSuccessWithInventory(Client client, String successMessage) {
+    String inventoryDesc = client.getInventoryDescription("\n");
+    StringBuilder combinedMessage = new StringBuilder(successMessage);
+    
+    if (!inventoryDesc.isEmpty()) {
+      combinedMessage.append("\n\nDu hast jetzt:\n").append(inventoryDesc);
+    } else {
+      combinedMessage.append("\n\nDu hast nichts mehr.");
+    }
+    
+    String[] brewableOptions = Game.getBrewableOptions(client.inventory);
+    if (brewableOptions.length > 0) {
+      String[] buttons = new String[MAIN_BUTTONS.length + brewableOptions.length];
+      System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
+      System.arraycopy(brewableOptions, 0, buttons, MAIN_BUTTONS.length, brewableOptions.length);
+      
+      combinedMessage.append("\n\nDu kannst brauen:");
+      for (String option : brewableOptions) {
+        String potionName = option.replace(" brauen", "");
+        combinedMessage.append("\n- ").append(potionName);
+      }
+      
+      Messenger.send(client.chatId, combinedMessage.toString(), buttons);
+    } else {
+      Messenger.send(client.chatId, combinedMessage.toString(), MAIN_BUTTONS);
     }
   }
 
