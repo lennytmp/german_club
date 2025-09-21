@@ -73,8 +73,7 @@ public class Main {
         restoreHpIfNeeded(Storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(Storage.getClientsByChatIds(readyToFightChats));
         Client[] fightingClients = Storage.getClientsByChatIds(fightingChats);
-        sendTimoutWarningsIfNeeded(fightingClients);
-        stopFightsTimeoutIfNeeded(fightingClients);
+        handleFightTimeouts(fightingClients);
       } catch (Exception e) {
         if (isProd) {
           Logger.logException(e);
@@ -177,33 +176,23 @@ public class Main {
     }
   }
 
-  private static void sendTimoutWarningsIfNeeded(Client[] clients) {
-    for (Client client : clients) {
-      if (client.status != Client.Status.FIGHTING
-          || client.timeoutWarningSent
-          || client.lastFightActivitySince > curTimeSeconds - FIGHT_TIMEOUT) {
-        continue;
-      }
-      client.timeoutWarningSent = true;
-      Storage.saveClient(client);
 
-      Messenger.send(client.chatId, "You have 5 seconds to make a decision.");
-    }
-  }
-
-  private static void stopFightsTimeoutIfNeeded(Client[] clients) {
+  private static void handleFightTimeouts(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
           || client.chatId < 0
-          || !client.timeoutWarningSent
-          || client.lastFightActivitySince > curTimeSeconds - 50) {
+          || client.lastFightActivitySince > curTimeSeconds - (FIGHT_TIMEOUT + 5)) {
         continue;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Messenger.send(client.chatId, "Timeout!");
-      Messenger.send(opponent.chatId, "Timeout!");
-      finishFight(opponent, client);
+      // Reset activity since we're handling the timeout
+      client.lastFightActivitySince = curTimeSeconds;
+      // Timeout acts the same as pressing "Fail" - handle as failed task
+      handleHitTask(client, opponent, false);
       Storage.saveClients(opponent, client);
+      if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
+        activateBotTask(opponent);
+      }
     }
   }
 
@@ -383,7 +372,6 @@ public class Main {
         client.incSuccessToday();
       }
       client.lastFightActivitySince = curTimeSeconds;
-      client.timeoutWarningSent = false;
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       handleHitTask(client, opponent, isSuccess);
       Storage.saveClients(opponent, client);
@@ -465,7 +453,6 @@ public class Main {
 
   private static void activateBotTask(Client bot) {
     bot.lastFightActivitySince = curTimeSeconds;
-    bot.timeoutWarningSent = false;
     Client opponent = Storage.getClientByChatId(bot.fightingChatId);
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
@@ -515,7 +502,7 @@ public class Main {
 
   private static void askTaskStatus(Client client) {
     Messenger.send(client.chatId, "Attempt at solving an exercise and report feedback",
-        new String[] { TASK_FAIL, TASK_SUCCESS });
+        addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
   private static String[] addPotions(Client client, String[] options) {
@@ -563,7 +550,7 @@ public class Main {
             PhraseGenerator.attackToOffender(client,
                 victim,
                 clientHits),
-        addPotions(client, new String[] { TASK_FAIL, TASK_SUCCESS }),
+        addPotions(client, new String[] { TASK_SUCCESS }),
         true);
   }
 
@@ -594,8 +581,6 @@ public class Main {
     loser.status = Client.Status.IDLE;
     fightingChats.remove(winner.chatId);
     fightingChats.remove(loser.chatId);
-    winner.timeoutWarningSent = false;
-    loser.timeoutWarningSent = false;
   }
 
   private static void finishFight(Client winner, Client loser) {
@@ -695,7 +680,6 @@ public class Main {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
     client.lastFightActivitySince = curTimeSeconds;
-    client.timeoutWarningSent = false;
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
     if (first == 0) {
