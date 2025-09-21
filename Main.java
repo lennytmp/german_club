@@ -840,21 +840,21 @@ public class Main {
     }
   }
 
-  private static void prepareToFight(Client client, Client opponent, int first) {
+  private static void setupClientForFight(Client client, Client opponent) {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
     client.lastFightActivitySince = curTimeSeconds;
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
+  }
+
+  private static void prepareToFight(Client client, Client opponent, int first) {
+    setupClientForFight(client, opponent);
     if (first == 0) {
       prepareToFight(opponent, client, 1);
     } else {
       // Ensure opponent is also set to FIGHTING status when client goes second
-      opponent.status = Client.Status.FIGHTING;
-      opponent.fightingChatId = client.chatId;
-      opponent.lastFightActivitySince = curTimeSeconds;
-      readyToFightChats.remove(opponent.chatId);
-      fightingChats.add(opponent.chatId);
+      setupClientForFight(opponent, client);
     }
   }
 
