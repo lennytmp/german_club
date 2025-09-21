@@ -28,14 +28,12 @@ public class Main {
     "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
     "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
     "Fleisch, Knochen, Crack, Flasche, Münze.";
-  private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. "
-      +
-      "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden." Du kannst dir einen "
-      +
+  private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. " +
+      "Du musst etwas sagen wie: \\u201eDu hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\\u201c Du kannst dir einen " +
       "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
   private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %s gefunden. Du musst es kurz beschreiben. " +
-    "Zum Beispiel: „Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
-    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt."" + 
+    "Zum Beispiel: \\u201eDu bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
+    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\\u201c " + 
     "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
     "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
   private static Set<Integer> activeChats = new HashSet<>();
