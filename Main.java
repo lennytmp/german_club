@@ -322,12 +322,34 @@ public class Main {
       return;
     }
 
-    if (txt.equals("Brauen") && client.status != Client.Status.FIGHTING) {
+    if ((txt.equals("Heiltrank brauen") || txt.equals("Brauen")) && client.status != Client.Status.FIGHTING) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
         client.incSuccessToday();
         Storage.saveClient(client);
         Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Heiltrank.");
+        sendInventoryDescription(client);
+      }
+      return;
+    }
+
+    if (txt.equals("Stärketrank brauen") && client.status != Client.Status.FIGHTING) {
+      if (Game.canBrewStrengthPotion(client.inventory)) {
+        client.inventory = Game.brewStrengthPotion(client.inventory);
+        client.incSuccessToday();
+        Storage.saveClient(client);
+        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Stärketrank.");
+        sendInventoryDescription(client);
+      }
+      return;
+    }
+
+    if (txt.equals("Glückstrank brauen") && client.status != Client.Status.FIGHTING) {
+      if (Game.canBrewLuckPotion(client.inventory)) {
+        client.inventory = Game.brewLuckPotion(client.inventory);
+        client.incSuccessToday();
+        Storage.saveClient(client);
+        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Glückstrank.");
         sendInventoryDescription(client);
       }
       return;
@@ -447,25 +469,31 @@ public class Main {
     }
     
     // Add brewing message if possible
-    if (Game.canBrewPotion(client.inventory)) {
-      profileMessage.append("\n\nDu hast alle Zutaten, um einen Heiltrank zu brauen");
+    String[] brewableOptions = Game.getBrewableOptions(client.inventory);
+    if (brewableOptions.length > 0) {
+      profileMessage.append("\n\nDu kannst brauen:");
+      for (String option : brewableOptions) {
+        String potionName = option.replace(" brauen", "");
+        profileMessage.append("\n- ").append(potionName);
+      }
     }
     
     // Determine which buttons to show
     String[] buttons = MAIN_BUTTONS;
-    if (client.levelPoints > 0 && Game.canBrewPotion(client.inventory)) {
+    
+    if (client.levelPoints > 0 && brewableOptions.length > 0) {
       // Both level points and brewing available
-      buttons = new String[LEVEL_POINT_BUTTONS.length + 1];
+      buttons = new String[LEVEL_POINT_BUTTONS.length + brewableOptions.length];
       System.arraycopy(LEVEL_POINT_BUTTONS, 0, buttons, 0, LEVEL_POINT_BUTTONS.length);
-      buttons[LEVEL_POINT_BUTTONS.length] = "Brauen";
+      System.arraycopy(brewableOptions, 0, buttons, LEVEL_POINT_BUTTONS.length, brewableOptions.length);
     } else if (client.levelPoints > 0) {
       // Only level points available
       buttons = LEVEL_POINT_BUTTONS;
-    } else if (Game.canBrewPotion(client.inventory)) {
+    } else if (brewableOptions.length > 0) {
       // Only brewing available
-      buttons = new String[MAIN_BUTTONS.length + 1];
+      buttons = new String[MAIN_BUTTONS.length + brewableOptions.length];
       System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
-      buttons[MAIN_BUTTONS.length] = "Brauen";
+      System.arraycopy(brewableOptions, 0, buttons, MAIN_BUTTONS.length, brewableOptions.length);
     }
     
     // Send single combined message
@@ -479,12 +507,23 @@ public class Main {
     } else {
       inventoryDesc = "Du hast nichts.";
     }
-    Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
-    if (Game.canBrewPotion(client.inventory)) {
-      String[] buttons = new String[MAIN_BUTTONS.length + 1];
+    
+    String[] brewableOptions = Game.getBrewableOptions(client.inventory);
+    if (brewableOptions.length > 0) {
+      String[] buttons = new String[MAIN_BUTTONS.length + brewableOptions.length];
       System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
-      buttons[MAIN_BUTTONS.length] = "Brauen";
-      Messenger.send(client.chatId, "Du hast alle Zutaten, um einen Heiltrank zu brauen", buttons);
+      System.arraycopy(brewableOptions, 0, buttons, MAIN_BUTTONS.length, brewableOptions.length);
+      
+      StringBuilder brewingMsg = new StringBuilder("Du kannst brauen:");
+      for (String option : brewableOptions) {
+        String potionName = option.replace(" brauen", "");
+        brewingMsg.append("\n- ").append(potionName);
+      }
+      
+      Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
+      Messenger.send(client.chatId, brewingMsg.toString(), buttons);
+    } else {
+      Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
     }
   }
 

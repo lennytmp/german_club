@@ -186,6 +186,28 @@ class Game {
   public static Map<Integer, Integer> brewLuckPotion(Map<Integer, Integer> inventory) {
     return brewPotionWithRecipe(inventory, LUCK_POTION_RECIPE, Item.LPOTION);
   }
+
+  // Method to get all brewable potions with their names
+  public static String[] getBrewableOptions(Map<Integer, Integer> inventory) {
+    java.util.List<String> brewableOptions = new java.util.ArrayList<>();
+    
+    if (canBrewPotion(inventory)) {
+      brewableOptions.add("Heiltrank brauen");
+    }
+    if (canBrewStrengthPotion(inventory)) {
+      brewableOptions.add("Stärketrank brauen");
+    }
+    if (canBrewLuckPotion(inventory)) {
+      brewableOptions.add("Glückstrank brauen");
+    }
+    
+    return brewableOptions.toArray(new String[0]);
+  }
+
+  // Method to check if any potion can be brewed
+  public static boolean canBrewAnyPotion(Map<Integer, Integer> inventory) {
+    return canBrewPotion(inventory) || canBrewStrengthPotion(inventory) || canBrewLuckPotion(inventory);
+  }
 }
 
 class BotConfig {
