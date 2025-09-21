@@ -12,6 +12,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
+        allTestsPassed &= testBotCounterAttackSetup();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -371,6 +372,55 @@ public class ClientTest {
         }
         allTestsPassed &= assertEquals(2, totalItemsAfterTrade,
             "Client should have 2 items after trade (started with 2, traded 1 for 1)");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testBotCounterAttackSetup() {
+        boolean allTestsPassed = true;
+        
+        // Test 1: Verify that prepareToFight sets both clients to FIGHTING status
+        Client player = new Client(100, "TestPlayer");
+        Client bot = new Client(-100, player);
+        
+        // Initial state - both should be IDLE
+        allTestsPassed &= assertEquals(1, player.status == Client.Status.IDLE ? 1 : 0,
+            "Player should start in IDLE status");
+        allTestsPassed &= assertEquals(1, bot.status == Client.Status.IDLE ? 1 : 0,
+            "Bot should start in IDLE status");
+        
+        // Call prepareToFight
+        try {
+            java.lang.reflect.Method method = Main.class.getDeclaredMethod("prepareToFight", Client.class, Client.class);
+            method.setAccessible(true);
+            method.invoke(null, player, bot);
+            
+            // Both should now be in FIGHTING status
+            allTestsPassed &= assertEquals(1, player.status == Client.Status.FIGHTING ? 1 : 0,
+                "Player should be in FIGHTING status after prepareToFight");
+            allTestsPassed &= assertEquals(1, bot.status == Client.Status.FIGHTING ? 1 : 0,
+                "Bot should be in FIGHTING status after prepareToFight - this prevents the counter-attack bug");
+            
+            // Check fight relationships are correct
+            allTestsPassed &= assertEquals(bot.chatId, player.fightingChatId,
+                "Player should be fighting the bot");
+            allTestsPassed &= assertEquals(player.chatId, bot.fightingChatId,
+                "Bot should be fighting the player");
+            
+        } catch (Exception e) {
+            System.out.println("Error in testBotCounterAttackSetup: " + e.getMessage());
+            return false;
+        }
+        
+        // Test 2: Verify counter-attack condition would be met
+        allTestsPassed &= assertEquals(1, bot.chatId < 0 ? 1 : 0,
+            "Bot should have negative chatId");
+        allTestsPassed &= assertEquals(1, bot.status == Client.Status.FIGHTING ? 1 : 0,
+            "Bot should be in FIGHTING status for counter-attack to work");
+        
+        boolean counterAttackCondition = (bot.chatId < 0 && bot.status == Client.Status.FIGHTING);
+        allTestsPassed &= assertEquals(1, counterAttackCondition ? 1 : 0,
+            "Counter-attack condition should be met - this is the critical test");
         
         return allTestsPassed;
     }

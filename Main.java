@@ -848,30 +848,10 @@ public class Main {
     fightingChats.add(client.chatId);
   }
 
-  private static void prepareToFight(Client client, Client opponent, int first) {
-    setupClientForFight(client, opponent);
-    if (first == 0) {
-      prepareToFight(opponent, client, 1);
-    } else {
-      // Ensure opponent is also set to FIGHTING status when client goes second
-      setupClientForFight(opponent, client);
-    }
-  }
-
-  // Determines who goes first based on luck values
-  // Returns 0 if client goes first, 1 if opponent goes first
-  private static int determineTurnOrder(Client client, Client opponent) {
-    int totalLuck = client.luck + opponent.luck;
-    int randomValue = Utils.rndInRange(1, totalLuck);
-    
-    // If random value is <= opponent's luck, opponent goes first
-    // Otherwise, client goes first
-    return (randomValue <= opponent.luck) ? 1 : 0;
-  }
-
   static void prepareToFight(Client client, Client opponent) {
-    int turnOrder = determineTurnOrder(client, opponent);
-    prepareToFight(client, opponent, turnOrder);
+    // Set both clients to FIGHTING status - turn order doesn't affect this
+    setupClientForFight(client, opponent);
+    setupClientForFight(opponent, client);
   }
 
   // Trading system methods
