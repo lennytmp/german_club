@@ -315,6 +315,18 @@ class Client {
     Storage.saveClient(this);
   }
 
+  public boolean generateTradeOffer(Game.Item requestedItem) {
+    if (!hasAnyItems()) {
+      return false;
+    }
+
+    // Generate trade offer
+    this.offeredItem = getRandomPlayerItem();
+    this.requestedItem = requestedItem;
+    this.status = Client.Status.TRADING;
+    return true;
+  }
+
   public boolean executeTrade() {
     if (status != Client.Status.TRADING || offeredItem == null || requestedItem == null) {
       return false;

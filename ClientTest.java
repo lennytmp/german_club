@@ -344,15 +344,16 @@ public class ClientTest {
         allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.BOTTLE) ? 1 : 0,
             "Client should have bottle");
         
-        // Test 3: Trading state fields should be properly initialized
-        clientWithItems.status = Client.Status.TRADING;
-        clientWithItems.offeredItem = Game.Item.COIN;
-        clientWithItems.requestedItem = Game.Item.GOLD;
-        
+        // Test 3: Generate trade offer
+        boolean offerGenerated = clientWithItems.generateTradeOffer(Game.Item.GOLD);
+        allTestsPassed &= assertEquals(1, offerGenerated ? 1 : 0,
+            "Trade offer should be generated successfully");
         allTestsPassed &= assertEquals(1, clientWithItems.status == Client.Status.TRADING ? 1 : 0,
             "Client should be in trading status");
-        allTestsPassed &= assertEquals(1, clientWithItems.offeredItem == Game.Item.COIN ? 1 : 0,
-            "Offered item should be coin");
+        allTestsPassed &= assertEquals(1, clientWithItems.offeredItem != null ? 1 : 0,
+            "Offered item should be set");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(clientWithItems.offeredItem) ? 1 : 0,
+            "Offered item should be one that client actually has");
         allTestsPassed &= assertEquals(1, clientWithItems.requestedItem == Game.Item.GOLD ? 1 : 0,
             "Requested item should be gold");
         
@@ -361,12 +362,15 @@ public class ClientTest {
         allTestsPassed &= assertEquals(1, tradeSuccessful ? 1 : 0,
             "Trade execution should be successful");
         
-        allTestsPassed &= assertEquals(0, clientWithItems.hasItem(Game.Item.COIN) ? 1 : 0,
-            "Client should no longer have coin after trade");
         allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.GOLD) ? 1 : 0,
             "Client should have gold after trade");
-        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.BOTTLE) ? 1 : 0,
-            "Client should still have bottle (not traded)");
+        // Verify that inventory count changed (one item was traded away)
+        int totalItemsAfterTrade = 0;
+        for (Map.Entry<Integer, Integer> entry : clientWithItems.inventory.entrySet()) {
+            totalItemsAfterTrade += entry.getValue();
+        }
+        allTestsPassed &= assertEquals(2, totalItemsAfterTrade,
+            "Client should have 2 items after trade (started with 2, traded 1 for 1)");
         
         return allTestsPassed;
     }

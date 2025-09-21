@@ -878,17 +878,13 @@ public class Main {
   }
 
   private static void initiateTradeOffer(Client client) {
-    // This method should only be called for players with items
-    if (!client.hasAnyItems()) {
+    // Generate trade offer
+    Game.Item randomTradeItem = getRandomTradeItem();
+    if (!client.generateTradeOffer(randomTradeItem)) {
       // This should never happen with the current logic, but fallback to nothing found
       handleNothingFound(client);
       return;
     }
-
-    // Generate trade offer
-    client.offeredItem = client.getRandomPlayerItem();
-    client.requestedItem = getRandomTradeItem();
-    client.status = Client.Status.TRADING;
     
     Storage.saveClient(client);
     
