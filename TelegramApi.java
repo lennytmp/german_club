@@ -14,15 +14,8 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLEncoder;
 
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonDeserializationContext;
 
 class TelegramApi {
   static String token;
@@ -34,7 +27,6 @@ class TelegramApi {
 
   private class Config {
     String token;
-    String file;
   }
 
   public static void initialize() {

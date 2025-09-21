@@ -2,14 +2,11 @@ package FightLang;
 
 import com.google.gson.Gson;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 class Storage {
-  private static Map<Integer, String> clients = new HashMap<>();
   private static Gson g = new Gson();
 
   static void saveClients(Client... clients) {
