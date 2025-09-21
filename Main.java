@@ -1,4 +1,4 @@
-package FightLang;
+THIS SHOULD BE A LINTER ERRORpackage FightLang;
 
 import java.lang.InterruptedException;
 import java.lang.Thread;
@@ -73,7 +73,6 @@ public class Main {
         restoreHpIfNeeded(Storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(Storage.getClientsByChatIds(readyToFightChats));
         Client[] fightingClients = Storage.getClientsByChatIds(fightingChats);
-        sendTimoutWarningsIfNeeded(fightingClients);
         stopFightsTimeoutIfNeeded(fightingClients);
       } catch (Exception e) {
         if (isProd) {
@@ -177,34 +176,19 @@ public class Main {
     }
   }
 
-  private static void sendTimoutWarningsIfNeeded(Client[] clients) {
-    for (Client client : clients) {
-      if (client.status != Client.Status.FIGHTING
-          || client.timeoutWarningSent
-          || client.lastFightActivitySince > curTimeSeconds - FIGHT_TIMEOUT) {
-        continue;
-      }
-      client.timeoutWarningSent = true;
-      Storage.saveClient(client);
-
-      Messenger.send(client.chatId, "You have 5 seconds to make a decision.");
-    }
-  }
 
   private static void stopFightsTimeoutIfNeeded(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
           || client.chatId < 0
-          || !client.timeoutWarningSent
-          || client.lastFightActivitySince > curTimeSeconds - 50) {
+          || client.lastFightActivitySince > curTimeSeconds - (FIGHT_TIMEOUT + 5)) {
         continue;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       Messenger.send(client.chatId, "Timeout!");
       Messenger.send(opponent.chatId, "Timeout!");
-      // Reset timeout warning and activity since we're handling the timeout
+      // Reset activity since we're handling the timeout
       client.lastFightActivitySince = curTimeSeconds;
-      client.timeoutWarningSent = false;
       // Timeout acts the same as pressing "Fail" - handle as failed task
       handleHitTask(client, opponent, false);
       Storage.saveClients(opponent, client);
@@ -390,7 +374,6 @@ public class Main {
         client.incSuccessToday();
       }
       client.lastFightActivitySince = curTimeSeconds;
-      client.timeoutWarningSent = false;
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       handleHitTask(client, opponent, isSuccess);
       Storage.saveClients(opponent, client);
@@ -472,7 +455,6 @@ public class Main {
 
   private static void activateBotTask(Client bot) {
     bot.lastFightActivitySince = curTimeSeconds;
-    bot.timeoutWarningSent = false;
     Client opponent = Storage.getClientByChatId(bot.fightingChatId);
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
@@ -601,8 +583,6 @@ public class Main {
     loser.status = Client.Status.IDLE;
     fightingChats.remove(winner.chatId);
     fightingChats.remove(loser.chatId);
-    winner.timeoutWarningSent = false;
-    loser.timeoutWarningSent = false;
   }
 
   private static void finishFight(Client winner, Client loser) {
@@ -702,7 +682,6 @@ public class Main {
     client.status = Client.Status.FIGHTING;
     client.fightingChatId = opponent.chatId;
     client.lastFightActivitySince = curTimeSeconds;
-    client.timeoutWarningSent = false;
     readyToFightChats.remove(client.chatId);
     fightingChats.add(client.chatId);
     if (first == 0) {

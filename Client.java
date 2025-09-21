@@ -36,7 +36,6 @@ class Client {
   int lastActivity = 0;
   private int successToday = 0;
   private int lastDailyCleanup = 0;
-  boolean timeoutWarningSent = false;
 
   int totalFights = 0;
   int fightsWon = 0;
