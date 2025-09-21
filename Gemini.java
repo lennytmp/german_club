@@ -18,12 +18,23 @@ public class Gemini {
     }
 
     public static void initialize() {
+        // In dev environment, skip API key initialization
+        if (!FightLang.Main.isProd) {
+            apiKey = null;
+            return;
+        }
+        
         String configText = Logger.getConfigText();
         Config c = g.fromJson(configText, Config.class);
         apiKey = c.gemini_api_key;
     }
 
     public static String AskGemini(String prompt) {
+        // In dev environment, don't call Gemini API
+        if (!FightLang.Main.isProd) {
+            return "";
+        }
+        
         String urlString = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key="
                 + apiKey;
 
