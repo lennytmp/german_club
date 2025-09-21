@@ -35,7 +35,7 @@ class PhraseGenerator {
         Utils.getRnd(Phrases.combatTexts.adjective) +
         " " + offender.username +  " " + Utils.getRnd(Phrases.combatTexts.hit[part.ordinal()]) + ". ";
     if (critHit) {
-      tmp += "Critical hit! ";
+      tmp += "Kritischer Treffer! ";
     }
     tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
     return tmp;
@@ -46,7 +46,7 @@ class PhraseGenerator {
     // https://stackoverflow.com/questions/4965513/stringbuilder-vs-string-considering-replace 
     String  tmp = "";
     if (damage > offender.getMaxDamage()) {
-      tmp += " Critical hit! ";
+      tmp += " Kritischer Treffer! ";
     }
     tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
     return tmp;
@@ -55,7 +55,7 @@ class PhraseGenerator {
   static String attackToOffender(Client offender, Client victim, int damage) {
     String  tmp = "";
     if (damage > offender.getMaxDamage()) {
-      tmp += " Critical hit! ";
+      tmp += " Kritischer Treffer! ";
     }
     tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
     return tmp;
