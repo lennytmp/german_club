@@ -676,7 +676,7 @@ public class Main {
         client.getItemNum(Game.Item.HPOTION) + " übrig. " +
         "[" + client.hp + "/" + client.getMaxHp() + "]";
     if (client.status == Client.Status.FIGHTING) {
-      Messenger.send(client.chatId, clientMsg);
+      Messenger.send(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       Messenger.send(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
           "[" + client.hp + "/" + client.getMaxHp() + "]");
