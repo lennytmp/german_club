@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORpackage FightLang;
+package FightLang;
 
 import java.util.HashMap;
 import java.util.Map;

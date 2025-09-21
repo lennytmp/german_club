@@ -73,7 +73,7 @@ public class Main {
         restoreHpIfNeeded(Storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(Storage.getClientsByChatIds(readyToFightChats));
         Client[] fightingClients = Storage.getClientsByChatIds(fightingChats);
-        stopFightsTimeoutIfNeeded(fightingClients);
+        handleFightTimeouts(fightingClients);
       } catch (Exception e) {
         if (isProd) {
           Logger.logException(e);
@@ -177,7 +177,7 @@ public class Main {
   }
 
 
-  private static void stopFightsTimeoutIfNeeded(Client[] clients) {
+  private static void handleFightTimeouts(Client[] clients) {
     for (Client client : clients) {
       if (client.status != Client.Status.FIGHTING
           || client.chatId < 0
