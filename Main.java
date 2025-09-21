@@ -1,4 +1,4 @@
-THIS SHOULD BE A LINTER ERRORpackage FightLang;
+package FightLang;
 
 import java.lang.InterruptedException;
 import java.lang.Thread;
@@ -185,8 +185,6 @@ public class Main {
         continue;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Messenger.send(client.chatId, "Timeout!");
-      Messenger.send(opponent.chatId, "Timeout!");
       // Reset activity since we're handling the timeout
       client.lastFightActivitySince = curTimeSeconds;
       // Timeout acts the same as pressing "Fail" - handle as failed task
