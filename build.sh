@@ -14,3 +14,7 @@ elif [ "$(expr substr $(uname -s) 1 9)" == "CYGWIN_NT" ]; then
 fi
 
 java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.ClientTest
+echo "Running core game tests..."
+java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.CoreGameTest
+echo "Running battle flow demonstration..."
+java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.BattleFlowTest
