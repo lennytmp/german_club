@@ -629,11 +629,6 @@ public class Main {
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
     Storage.saveClients(opponent, bot);
-    
-    // If the opponent is still alive and fighting, ask them to respond
-    if (opponent.status == Client.Status.FIGHTING && opponent.hp > 0) {
-      askTaskStatus(opponent);
-    }
   }
 
   private static void improveSkill(Client client, String skill) {
@@ -684,7 +679,7 @@ public class Main {
   }
 
   private static void askTaskStatus(Client client) {
-    Messenger.send(client.chatId, "Versuche eine Übung zu lösen und berichte Rückmeldung",
+    Messenger.send(client.chatId, "Du bist an der Reihe!",
         addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
@@ -724,17 +719,28 @@ public class Main {
     String victimPrefix = "\uD83D\uDEE1 ";
     int clientHits = getDamageTask(client, isSuccess);
     victim.hp = Math.max(victim.hp - clientHits, 0);
-    Messenger.send(victim.chatId, victimPrefix +
-        PhraseGenerator.attackToVictim(client,
-            victim,
-            clientHits));
+    
+    // Send damage message to victim with response buttons (if still fighting)
+    if (victim.status == Client.Status.FIGHTING && victim.hp > 0) {
+      Messenger.send(victim.chatId, victimPrefix +
+          PhraseGenerator.attackToVictim(client,
+              victim,
+              clientHits),
+          addPotions(victim, new String[] { TASK_SUCCESS }));
+    } else {
+      // If victim is dead or not fighting, just send the damage message
+      Messenger.send(victim.chatId, victimPrefix +
+          PhraseGenerator.attackToVictim(client,
+              victim,
+              clientHits));
+    }
+    
+    // Send confirmation to attacker (no buttons needed - they just acted)
     Messenger.send(client.chatId,
         clientPrefix +
             PhraseGenerator.attackToOffender(client,
                 victim,
-                clientHits),
-        addPotions(client, new String[] { TASK_SUCCESS }),
-        true);
+                clientHits));
   }
 
   private static void handleHitTask(Client client, Client opponent, boolean isSuccess) {
