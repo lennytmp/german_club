@@ -278,4 +278,40 @@ class Client {
 
     return result.toString();
   }
+
+  // Trading system methods
+  public boolean hasAnyItems() {
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      if (entry.getValue() > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public Game.Item getRandomPlayerItem() {
+    // Build a weighted list of item indices according to their counts
+    java.util.List<Integer> weighted = new java.util.ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int itemIndex = entry.getKey();
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      for (int i = 0; i < count; i++) {
+        weighted.add(itemIndex);
+      }
+    }
+    
+    if (weighted.isEmpty()) {
+      return null;
+    }
+    
+    int randomIndex = weighted.get(Utils.rndInRange(0, weighted.size() - 1));
+    return Game.ITEM_VALUES[randomIndex];
+  }
+
+  public void resetTradeState() {
+    status = Client.Status.IDLE;
+    offeredItem = null;
+    requestedItem = null;
+    Storage.saveClient(this);
+  }
 }

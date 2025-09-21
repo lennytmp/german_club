@@ -299,7 +299,7 @@ public class Main {
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
         // Nothing found: 25% chance to meet trader only if player has items
-        if (Utils.roll(25) && hasAnyItems(client)) {
+        if (Utils.roll(25) && client.hasAnyItems()) {
           initiateTradeOffer(client);
         } else {
           handleNothingFound(client);
@@ -872,34 +872,6 @@ public class Main {
   }
 
   // Trading system methods
-  private static boolean hasAnyItems(Client client) {
-    for (Map.Entry<Integer, Integer> entry : client.inventory.entrySet()) {
-      if (entry.getValue() > 0) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  private static Game.Item getRandomPlayerItem(Client client) {
-    // Build a weighted list of item indices according to their counts
-    java.util.List<Integer> weighted = new java.util.ArrayList<>();
-    for (Map.Entry<Integer, Integer> entry : client.inventory.entrySet()) {
-      int itemIndex = entry.getKey();
-      int count = entry.getValue() == null ? 0 : entry.getValue();
-      for (int i = 0; i < count; i++) {
-        weighted.add(itemIndex);
-      }
-    }
-    
-    if (weighted.isEmpty()) {
-      return null;
-    }
-    
-    int randomIndex = weighted.get(Utils.rndInRange(0, weighted.size() - 1));
-    return Game.ITEM_VALUES[randomIndex];
-  }
-
   private static Game.Item getRandomTradeItem() {
     // Trader can offer any item in the game
     return Utils.getRnd(Game.ITEM_VALUES);
@@ -907,14 +879,14 @@ public class Main {
 
   private static void initiateTradeOffer(Client client) {
     // This method should only be called for players with items
-    if (!hasAnyItems(client)) {
+    if (!client.hasAnyItems()) {
       // This should never happen with the current logic, but fallback to nothing found
       handleNothingFound(client);
       return;
     }
 
     // Generate trade offer
-    client.offeredItem = getRandomPlayerItem(client);
+    client.offeredItem = client.getRandomPlayerItem();
     client.requestedItem = getRandomTradeItem();
     client.status = Client.Status.TRADING;
     
@@ -953,7 +925,7 @@ public class Main {
     // Check if player still has the offered item
     if (!client.hasItem(client.offeredItem)) {
       Messenger.send(client.chatId, "Du hast das angebotene Item nicht mehr!", MAIN_BUTTONS);
-      resetTradeState(client);
+      client.resetTradeState();
       return;
     }
 
@@ -970,7 +942,7 @@ public class Main {
     );
     
     Messenger.send(client.chatId, successMessage, MAIN_BUTTONS);
-    resetTradeState(client);
+    client.resetTradeState();
   }
 
   private static void handleTradeReject(Client client) {
@@ -982,13 +954,7 @@ public class Main {
         "\uD83D\uDE45 Du lehnst das Angebot ab.\n\n" +
         "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.",
         MAIN_BUTTONS);
-    resetTradeState(client);
+    client.resetTradeState();
   }
 
-  private static void resetTradeState(Client client) {
-    client.status = Client.Status.IDLE;
-    client.offeredItem = null;
-    client.requestedItem = null;
-    Storage.saveClient(client);
-  }
 }
