@@ -152,7 +152,15 @@ public class Main {
 
       Messenger.send(client.chatId, "Du kämpfst jetzt mit " + bot.username + ".");
       Messenger.send(client.chatId, getClientStats(bot));
-      askTaskStatus(client);
+      
+      // Determine turn order and ask the first player to act
+      boolean clientGoesFirst = determineTurnOrder(client, bot);
+      if (clientGoesFirst) {
+        askTaskStatus(client);
+      } else {
+        // Bot goes first - activate bot immediately
+        activateBotTask(bot, client);
+      }
     }
   }
 
@@ -660,8 +668,14 @@ public class Main {
     Messenger.send(opponent.chatId, "Du kämpfst jetzt mit " + client.username + ".");
     Messenger.send(client.chatId, getClientStats(opponent));
     Messenger.send(opponent.chatId, getClientStats(client));
-    askTaskStatus(opponent);
-    askTaskStatus(client);
+    
+    // Determine turn order and ask the first player to act
+    boolean clientGoesFirst = determineTurnOrder(client, opponent);
+    if (clientGoesFirst) {
+      askTaskStatus(client);
+    } else {
+      askTaskStatus(opponent);
+    }
   }
 
   private static void askTaskStatus(Client client) {
@@ -848,8 +862,19 @@ public class Main {
     fightingChats.add(client.chatId);
   }
 
+  // Determines who goes first based on luck values
+  // Returns true if client goes first, false if opponent goes first
+  private static boolean determineTurnOrder(Client client, Client opponent) {
+    int totalLuck = client.luck + opponent.luck;
+    int randomValue = Utils.rndInRange(1, totalLuck);
+    
+    // If random value is <= opponent's luck, opponent goes first
+    // Otherwise, client goes first
+    return randomValue > opponent.luck;
+  }
+
   static void prepareToFight(Client client, Client opponent) {
-    // Set both clients to FIGHTING status - turn order doesn't affect this
+    // Set both clients to FIGHTING status regardless of turn order
     setupClientForFight(client, opponent);
     setupClientForFight(opponent, client);
   }

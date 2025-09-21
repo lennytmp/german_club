@@ -13,6 +13,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
         allTestsPassed &= testBotCounterAttackSetup();
+        allTestsPassed &= testTurnOrderLogic();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -421,6 +422,67 @@ public class ClientTest {
         boolean counterAttackCondition = (bot.chatId < 0 && bot.status == Client.Status.FIGHTING);
         allTestsPassed &= assertEquals(1, counterAttackCondition ? 1 : 0,
             "Counter-attack condition should be met - this is the critical test");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testTurnOrderLogic() {
+        boolean allTestsPassed = true;
+        
+        // Test that turn order is based on luck values
+        Client lowLuckClient = new Client(200, "LowLuck");
+        lowLuckClient.luck = 1;
+        
+        Client highLuckClient = new Client(300, "HighLuck");
+        highLuckClient.luck = 10;
+        
+        try {
+            java.lang.reflect.Method method = Main.class.getDeclaredMethod("determineTurnOrder", Client.class, Client.class);
+            method.setAccessible(true);
+            
+            // Test multiple times to verify the probability distribution
+            int lowLuckGoesFirst = 0;
+            int highLuckGoesFirst = 0;
+            int totalTests = 100;
+            
+            for (int i = 0; i < totalTests; i++) {
+                boolean lowLuckFirst = (Boolean) method.invoke(null, lowLuckClient, highLuckClient);
+                if (lowLuckFirst) {
+                    lowLuckGoesFirst++;
+                } else {
+                    highLuckGoesFirst++;
+                }
+            }
+            
+            // High luck client should go first more often (roughly 10/11 of the time)
+            // We'll be lenient and just check that high luck goes first at least 60% of the time
+            double highLuckPercentage = (double) highLuckGoesFirst / totalTests;
+            allTestsPassed &= assertEquals(1, highLuckPercentage > 0.6 ? 1 : 0,
+                "High luck client should go first more often than low luck client");
+            
+            // Test edge case: equal luck should be roughly 50/50
+            Client equalLuck1 = new Client(400, "Equal1");
+            equalLuck1.luck = 5;
+            Client equalLuck2 = new Client(500, "Equal2");
+            equalLuck2.luck = 5;
+            
+            int equal1First = 0;
+            for (int i = 0; i < totalTests; i++) {
+                boolean equal1GoesFirst = (Boolean) method.invoke(null, equalLuck1, equalLuck2);
+                if (equal1GoesFirst) {
+                    equal1First++;
+                }
+            }
+            
+            double equal1Percentage = (double) equal1First / totalTests;
+            // Should be roughly 50%, allow range from 30% to 70%
+            allTestsPassed &= assertEquals(1, (equal1Percentage > 0.3 && equal1Percentage < 0.7) ? 1 : 0,
+                "Equal luck clients should have roughly equal chance to go first");
+            
+        } catch (Exception e) {
+            System.out.println("Error in testTurnOrderLogic: " + e.getMessage());
+            return false;
+        }
         
         return allTestsPassed;
     }
