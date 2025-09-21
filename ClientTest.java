@@ -12,7 +12,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
-        allTestsPassed &= testBotCounterAttackSetup();
+        allTestsPassed &= testPrepareToFight();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -376,10 +376,10 @@ public class ClientTest {
         return allTestsPassed;
     }
 
-    public static boolean testBotCounterAttackSetup() {
+    public static boolean testPrepareToFight() {
         boolean allTestsPassed = true;
         
-        // Test 1: Verify that prepareToFight sets both clients to FIGHTING status
+        // Verify that prepareToFight sets both clients to FIGHTING status
         Client player = new Client(100, "TestPlayer");
         Client bot = new Client(-100, player);
         
@@ -399,7 +399,7 @@ public class ClientTest {
             allTestsPassed &= assertEquals(1, player.status == Client.Status.FIGHTING ? 1 : 0,
                 "Player should be in FIGHTING status after prepareToFight");
             allTestsPassed &= assertEquals(1, bot.status == Client.Status.FIGHTING ? 1 : 0,
-                "Bot should be in FIGHTING status after prepareToFight - this prevents the counter-attack bug");
+                "Bot should be in FIGHTING status after prepareToFight");
             
             // Check fight relationships are correct
             allTestsPassed &= assertEquals(bot.chatId, player.fightingChatId,
@@ -408,7 +408,7 @@ public class ClientTest {
                 "Bot should be fighting the player");
             
         } catch (Exception e) {
-            System.out.println("Error in testBotCounterAttackSetup: " + e.getMessage());
+            System.out.println("Error in testPrepareToFight: " + e.getMessage());
             return false;
         }
         
