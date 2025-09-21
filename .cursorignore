@@ -1,0 +1,6 @@
+*.class
+build/
+*.db
+/db
+config.json
+.DS_Store

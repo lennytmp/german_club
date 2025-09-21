@@ -8,7 +8,7 @@ import java.util.LinkedList;
 class Client {
   // TODO: Status and body port should move to Game
   enum Status {
-    FIGHTING, IDLE, READY_TO_FIGHT
+    FIGHTING, IDLE, READY_TO_FIGHT, TRADING
   };
 
 
@@ -38,6 +38,10 @@ class Client {
   int hp;
   // Enum ID to the quantity of that item.
   Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
+
+  // Trading system fields
+  Game.Item offeredItem = null;
+  Game.Item requestedItem = null;
 
   Client(int chatId, String username) {
     this.chatId = chatId;
@@ -273,5 +277,69 @@ class Client {
     }
 
     return result.toString();
+  }
+
+  // Trading system methods
+  public boolean hasAnyItems() {
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      if (entry.getValue() > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  public Game.Item getRandomPlayerItem() {
+    // Build a weighted list of item indices according to their counts
+    java.util.List<Integer> weighted = new java.util.ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int itemIndex = entry.getKey();
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      for (int i = 0; i < count; i++) {
+        weighted.add(itemIndex);
+      }
+    }
+    
+    if (weighted.isEmpty()) {
+      return null;
+    }
+    
+    int randomIndex = weighted.get(Utils.rndInRange(0, weighted.size() - 1));
+    return Game.ITEM_VALUES[randomIndex];
+  }
+
+  public void resetTradeState() {
+    status = Client.Status.IDLE;
+    offeredItem = null;
+    requestedItem = null;
+    Storage.saveClient(this);
+  }
+
+  public boolean generateTradeOffer(Game.Item requestedItem) {
+    if (!hasAnyItems()) {
+      return false;
+    }
+
+    // Generate trade offer
+    this.offeredItem = getRandomPlayerItem();
+    this.requestedItem = requestedItem;
+    this.status = Client.Status.TRADING;
+    return true;
+  }
+
+  public boolean executeTrade() {
+    if (status != Client.Status.TRADING || offeredItem == null || requestedItem == null) {
+      return false;
+    }
+
+    // Check if player still has the offered item
+    if (!hasItem(offeredItem)) {
+      return false;
+    }
+
+    // Execute the trade
+    takeItem(offeredItem);
+    giveItem(requestedItem);
+    return true;
   }
 }

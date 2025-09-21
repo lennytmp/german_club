@@ -11,6 +11,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
+        allTestsPassed &= testTradingSystem();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -321,6 +322,55 @@ public class ClientTest {
             "Message should mention Stärketrank");
         allTestsPassed &= assertEquals(1, messageContains(display.message, "Glückstrank") ? 1 : 0,
             "Message should mention Glückstrank");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testTradingSystem() {
+        boolean allTestsPassed = true;
+        
+        // Test 1: Client with no items should have empty inventory
+        Client clientNoItems = new Client(123, "testuser");
+        allTestsPassed &= assertEquals(0, clientNoItems.hasAnyItems() ? 1 : 0,
+            "New client should have no items");
+        
+        // Test 2: Client with items should be able to enter trading state
+        Client clientWithItems = new Client(124, "testuser2");
+        clientWithItems.giveItem(Game.Item.COIN);
+        clientWithItems.giveItem(Game.Item.BOTTLE);
+        
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.COIN) ? 1 : 0,
+            "Client should have coin");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.BOTTLE) ? 1 : 0,
+            "Client should have bottle");
+        
+        // Test 3: Generate trade offer
+        boolean offerGenerated = clientWithItems.generateTradeOffer(Game.Item.GOLD);
+        allTestsPassed &= assertEquals(1, offerGenerated ? 1 : 0,
+            "Trade offer should be generated successfully");
+        allTestsPassed &= assertEquals(1, clientWithItems.status == Client.Status.TRADING ? 1 : 0,
+            "Client should be in trading status");
+        allTestsPassed &= assertEquals(1, clientWithItems.offeredItem != null ? 1 : 0,
+            "Offered item should be set");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(clientWithItems.offeredItem) ? 1 : 0,
+            "Offered item should be one that client actually has");
+        allTestsPassed &= assertEquals(1, clientWithItems.requestedItem == Game.Item.GOLD ? 1 : 0,
+            "Requested item should be gold");
+        
+        // Test 4: Simulate trade execution
+        boolean tradeSuccessful = clientWithItems.executeTrade();
+        allTestsPassed &= assertEquals(1, tradeSuccessful ? 1 : 0,
+            "Trade execution should be successful");
+        
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.GOLD) ? 1 : 0,
+            "Client should have gold after trade");
+        // Verify that inventory count changed (one item was traded away)
+        int totalItemsAfterTrade = 0;
+        for (Map.Entry<Integer, Integer> entry : clientWithItems.inventory.entrySet()) {
+            totalItemsAfterTrade += entry.getValue();
+        }
+        allTestsPassed &= assertEquals(2, totalItemsAfterTrade,
+            "Client should have 2 items after trade (started with 2, traded 1 for 1)");
         
         return allTestsPassed;
     }
