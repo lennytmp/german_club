@@ -848,6 +848,13 @@ public class Main {
     fightingChats.add(client.chatId);
     if (first == 0) {
       prepareToFight(opponent, client, 1);
+    } else {
+      // Ensure opponent is also set to FIGHTING status when client goes second
+      opponent.status = Client.Status.FIGHTING;
+      opponent.fightingChatId = client.chatId;
+      opponent.lastFightActivitySince = curTimeSeconds;
+      readyToFightChats.remove(opponent.chatId);
+      fightingChats.add(opponent.chatId);
     }
   }
 
