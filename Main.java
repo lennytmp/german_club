@@ -16,9 +16,9 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] MAIN_BUTTONS = { "kämpfen", "profil", "aufgabe" };
+  private static final String[] MAIN_BUTTONS = { "Kämpfen", "Profil", "Aufgabe" };
   private static final String[] LEVEL_POINT_BUTTONS = {
-      "stärke verbessern", "vitalität verbessern", "glück verbessern"
+      "Stärke verbessern", "Vitalität verbessern", "Glück verbessern"
   };
   private static final int CHAT_TIMEOUT = 600;
   private static final int FIGHT_TIMEOUT = 60;
@@ -30,12 +30,12 @@ public class Main {
     "Fleisch, Knochen, Crack, Flasche, Münze.";
   private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. "
       +
-      "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen "
+      "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden." Du kannst dir einen "
       +
-      "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich ƒgesucht habe.";
-  private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %sgefunden. Du musst es kurz beschreiben. " +
+      "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
+  private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %s gefunden. Du musst es kurz beschreiben. " +
     "Zum Beispiel: „Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
-    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.“" + 
+    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt."" + 
     "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
     "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
   private static Set<Integer> activeChats = new HashSet<>();
@@ -232,7 +232,7 @@ public class Main {
 
     
 
-    if (txt.equals("profil") || txt.equals("/profil")) {
+    if (txt.equals("Profil") || txt.equals("/profil")) {
       showProfile(client);
       return;
     }
@@ -252,13 +252,13 @@ public class Main {
       return;
     }
 
-    if (txt.startsWith("stärke verbessern") || txt.startsWith("vitalität verbessern") || txt.startsWith("glück verbessern")) {
+    if (txt.startsWith("Stärke verbessern") || txt.startsWith("Vitalität verbessern") || txt.startsWith("Glück verbessern")) {
       String what = "";
-      if (txt.startsWith("stärke verbessern")) {
+      if (txt.startsWith("Stärke verbessern")) {
         what = "strength";
-      } else if (txt.startsWith("vitalität verbessern")) {
+      } else if (txt.startsWith("Vitalität verbessern")) {
         what = "vitality";
-      } else if (txt.startsWith("glück verbessern")) {
+      } else if (txt.startsWith("Glück verbessern")) {
         what = "luck";
       }
       if (client.levelPoints < 1) {
@@ -270,7 +270,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("kämpfen") || txt.equals("/kämpfen")) {
+    if (txt.equals("Kämpfen") || txt.equals("/kämpfen")) {
       if (client.status == Client.Status.FIGHTING) {
         Messenger.send(client.chatId, "Du kämpfst bereits mit jemandem.");
         return;
@@ -288,7 +288,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("/heiltrank") || txt.startsWith("heiltrank [")) {
+    if (txt.equals("/heiltrank") || txt.startsWith("Heiltrank [")) {
       if (!client.hasItem(Game.Item.HPOTION)) {
         Messenger.send(client.chatId, "Du hast keine Tränke.");
         return;
@@ -297,7 +297,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("aufgabe") && client.status != Client.Status.FIGHTING) {
+    if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING) {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
@@ -325,7 +325,7 @@ public class Main {
       return;
     }
 
-    if (txt.equals("brauen") && client.status != Client.Status.FIGHTING) {
+    if (txt.equals("Brauen") && client.status != Client.Status.FIGHTING) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
         client.incSuccessToday();
@@ -447,7 +447,7 @@ public class Main {
     if (Game.canBrewPotion(client.inventory)) {
       String[] buttons = new String[MAIN_BUTTONS.length + 1];
       System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
-      buttons[MAIN_BUTTONS.length] = "brauen";
+      buttons[MAIN_BUTTONS.length] = "Brauen";
       Messenger.send(client.chatId, "Du hast alle Zutaten, um einen Heiltrank zu brauen", buttons);
     }
   }
@@ -517,7 +517,7 @@ public class Main {
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     List<String> optionsList = new ArrayList<>(Arrays.asList(options));
     if (numPotions > 0) {
-      optionsList.add("heiltrank [" + numPotions + "]");
+      optionsList.add("Heiltrank [" + numPotions + "]");
     }
     return optionsList.toArray(new String[0]);
   }
