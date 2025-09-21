@@ -629,6 +629,11 @@ public class Main {
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
     Storage.saveClients(opponent, bot);
+    
+    // If the opponent is still alive and fighting, ask them to respond
+    if (opponent.status == Client.Status.FIGHTING && opponent.hp > 0) {
+      askTaskStatus(opponent);
+    }
   }
 
   private static void improveSkill(Client client, String skill) {
