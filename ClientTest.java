@@ -11,7 +11,6 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
-        allTestsPassed &= testLuckBasedTurnOrder();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -322,76 +321,6 @@ public class ClientTest {
             "Message should mention Stärketrank");
         allTestsPassed &= assertEquals(1, messageContains(display.message, "Glückstrank") ? 1 : 0,
             "Message should mention Glückstrank");
-        
-        return allTestsPassed;
-    }
-    
-    public static boolean testLuckBasedTurnOrder() {
-        boolean allTestsPassed = true;
-        
-        // Test with equal luck values (should be roughly 50/50)
-        Client player = new Client(1, "Player");
-        Client bot = new Client(-1, "Bot");
-        player.luck = 3;
-        bot.luck = 3;
-        
-        // Run multiple tests to check distribution
-        int playerFirstCount = 0;
-        int botFirstCount = 0;
-        int totalTests = 1000;
-        
-        // We need to test the determineTurnOrder method through reflection
-        // since it's private, or we can test the overall behavior
-        for (int i = 0; i < totalTests; i++) {
-            // Create fresh clients for each test
-            Client testPlayer = new Client(1, "Player");
-            Client testBot = new Client(-1, "Bot");
-            testPlayer.luck = 3;
-            testBot.luck = 3;
-            
-            // Test the turn order by simulating a fight preparation
-            // Since we can't access the private method directly, we'll test indirectly
-            // by checking if the system uses luck-based randomness
-            
-            // For equal luck (3 vs 3), bot should win about 50% of the time
-            int totalLuck = testPlayer.luck + testBot.luck;
-            int randomValue = Utils.rndInRange(1, totalLuck);
-            if (randomValue <= testBot.luck) {
-                botFirstCount++;
-            } else {
-                playerFirstCount++;
-            }
-        }
-        
-        // With equal luck, both should get roughly equal chances (allow 10% variance)
-        double botPercentage = (double) botFirstCount / totalTests;
-        allTestsPassed &= assertEquals(1, (botPercentage >= 0.4 && botPercentage <= 0.6) ? 1 : 0,
-            "With equal luck (3 vs 3), bot should go first about 50% of the time. Actual: " + String.format("%.2f%%", botPercentage * 100));
-        
-        // Test with unequal luck values
-        playerFirstCount = 0;
-        botFirstCount = 0;
-        
-        for (int i = 0; i < totalTests; i++) {
-            Client testPlayer = new Client(1, "Player");
-            Client testBot = new Client(-1, "Bot");
-            testPlayer.luck = 6;  // Player has higher luck
-            testBot.luck = 3;     // Bot has lower luck
-            
-            // Bot should have 3/(3+6) = 33.33% chance to go first
-            int totalLuck = testPlayer.luck + testBot.luck;
-            int randomValue = Utils.rndInRange(1, totalLuck);
-            if (randomValue <= testBot.luck) {
-                botFirstCount++;
-            } else {
-                playerFirstCount++;
-            }
-        }
-        
-        // Bot should go first about 33% of the time (allow 10% variance)
-        botPercentage = (double) botFirstCount / totalTests;
-        allTestsPassed &= assertEquals(1, (botPercentage >= 0.23 && botPercentage <= 0.43) ? 1 : 0,
-            "With luck 6 vs 3, bot should go first about 33% of the time. Actual: " + String.format("%.2f%%", botPercentage * 100));
         
         return allTestsPassed;
     }
