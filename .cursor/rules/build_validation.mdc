@@ -29,6 +29,7 @@ globs: ['**/*.java', '**/build.sh', '**/run*.sh']
 - All existing tests must continue to pass
 - New functionality should include appropriate tests
 - Use assertions (`-ea` flag is enabled) for runtime validation
+- **No compiled files in version control**: Ensure no `.class` files are included in diffs or commits - only source code should be tracked
 
 ## Dependencies
 - Project uses Gson 2.8.6 library (`lib/gson-2.8.6.jar`)
