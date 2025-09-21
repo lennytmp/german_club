@@ -419,18 +419,57 @@ public class Main {
   }
 
   private static void showProfile(Client client) {
-    Messenger.send(client.chatId, getClientStats(client), MAIN_BUTTONS);
+    StringBuilder profileMessage = new StringBuilder();
+    
+    // Add client stats
+    profileMessage.append(getClientStats(client));
+    
+    // Add name change hint if not sent yet
     if (!client.nameChangeHintSent) {
-      Messenger.send(client.chatId, "Du kannst deinen Namen mit folgendem Befehl ändern \n"
-          + "`/username neuername`.", MAIN_BUTTONS);
+      profileMessage.append("\n\nDu kannst deinen Namen mit folgendem Befehl ändern \n")
+                   .append("`/username neuername`.");
       client.nameChangeHintSent = true;
       Storage.saveClient(client);
     }
+    
+    // Add level points message if applicable
     if (client.levelPoints > 0) {
-      Messenger.send(client.chatId, "Du hast " + client.levelPoints + " nicht zugewiesene "
-          + "Stufenpunkte.", LEVEL_POINT_BUTTONS);
+      profileMessage.append("\n\nDu hast ").append(client.levelPoints)
+                   .append(" nicht zugewiesene Stufenpunkte.");
     }
-    sendInventoryDescription(client);
+    
+    // Add inventory description
+    String inventoryDesc = client.getInventoryDescription("\n");
+    if (!inventoryDesc.isEmpty()) {
+      profileMessage.append("\n\nDu hast:\n").append(inventoryDesc);
+    } else {
+      profileMessage.append("\n\nDu hast nichts.");
+    }
+    
+    // Add brewing message if possible
+    if (Game.canBrewPotion(client.inventory)) {
+      profileMessage.append("\n\nDu hast alle Zutaten, um einen Heiltrank zu brauen");
+    }
+    
+    // Determine which buttons to show
+    String[] buttons = MAIN_BUTTONS;
+    if (client.levelPoints > 0 && Game.canBrewPotion(client.inventory)) {
+      // Both level points and brewing available
+      buttons = new String[LEVEL_POINT_BUTTONS.length + 1];
+      System.arraycopy(LEVEL_POINT_BUTTONS, 0, buttons, 0, LEVEL_POINT_BUTTONS.length);
+      buttons[LEVEL_POINT_BUTTONS.length] = "Brauen";
+    } else if (client.levelPoints > 0) {
+      // Only level points available
+      buttons = LEVEL_POINT_BUTTONS;
+    } else if (Game.canBrewPotion(client.inventory)) {
+      // Only brewing available
+      buttons = new String[MAIN_BUTTONS.length + 1];
+      System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
+      buttons[MAIN_BUTTONS.length] = "Brauen";
+    }
+    
+    // Send single combined message
+    Messenger.send(client.chatId, profileMessage.toString(), buttons);
   }
 
   private static void sendInventoryDescription(Client client) {
