@@ -331,8 +331,8 @@ public class ClientTest {
         
         // Test 1: Client with no items should have empty inventory
         Client clientNoItems = new Client(123, "testuser");
-        allTestsPassed &= assertEquals(0, clientNoItems.inventory.size(),
-            "New client should have empty inventory");
+        allTestsPassed &= assertEquals(0, clientNoItems.hasAnyItems() ? 1 : 0,
+            "New client should have no items");
         
         // Test 2: Client with items should be able to enter trading state
         Client clientWithItems = new Client(124, "testuser2");
