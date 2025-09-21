@@ -654,7 +654,7 @@ public class Main {
         addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
-  private static String[] addPotions(Client client, String[] options) {
+  static String[] addPotions(Client client, String[] options) {
     Storage.saveClient(client);
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     List<String> optionsList = new ArrayList<>(Arrays.asList(options));

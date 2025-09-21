@@ -11,6 +11,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
+        allTestsPassed &= testPotionButtonCountUpdate();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -321,6 +322,78 @@ public class ClientTest {
             "Message should mention Stärketrank");
         allTestsPassed &= assertEquals(1, messageContains(display.message, "Glückstrank") ? 1 : 0,
             "Message should mention Glückstrank");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testPotionButtonCountUpdate() {
+        boolean allTestsPassed = true;
+        
+        // Create client with multiple healing potions
+        Client client = new Client(4, "TestUser");
+        client.nameChangeHintSent = true;
+        
+        // Give client 4 healing potions
+        client.giveItem(Game.Item.HPOTION);
+        client.giveItem(Game.Item.HPOTION);
+        client.giveItem(Game.Item.HPOTION);
+        client.giveItem(Game.Item.HPOTION);
+        
+        // Set client to fighting status to simulate combat
+        client.status = Client.Status.FIGHTING;
+        client.fightingChatId = 999; // Mock opponent chat ID
+        
+        // Test initial button state - should show "Heiltrank [4]"
+        String[] initialButtons = Main.addPotions(client, new String[] { "Erfolg" });
+        allTestsPassed &= assertEquals(2, initialButtons.length, 
+            "Should have 2 buttons initially (Erfolg + Heiltrank)");
+        allTestsPassed &= assertEquals(1, arrayContains(initialButtons, "Erfolg") ? 1 : 0,
+            "Should contain 'Erfolg' button");
+        allTestsPassed &= assertEquals(1, arrayContains(initialButtons, "Heiltrank [4]") ? 1 : 0,
+            "Should contain 'Heiltrank [4]' button initially");
+        
+        // Consume one potion
+        client.takeItem(Game.Item.HPOTION);
+        
+        // Test button state after consumption - should show "Heiltrank [3]"
+        String[] buttonsAfterOne = Main.addPotions(client, new String[] { "Erfolg" });
+        allTestsPassed &= assertEquals(2, buttonsAfterOne.length, 
+            "Should have 2 buttons after consuming one potion");
+        allTestsPassed &= assertEquals(1, arrayContains(buttonsAfterOne, "Erfolg") ? 1 : 0,
+            "Should contain 'Erfolg' button after consumption");
+        allTestsPassed &= assertEquals(1, arrayContains(buttonsAfterOne, "Heiltrank [3]") ? 1 : 0,
+            "Should contain 'Heiltrank [3]' button after consuming one potion");
+        allTestsPassed &= assertEquals(0, arrayContains(buttonsAfterOne, "Heiltrank [4]") ? 1 : 0,
+            "Should not contain old 'Heiltrank [4]' button after consumption");
+        
+        // Consume two more potions
+        client.takeItem(Game.Item.HPOTION);
+        client.takeItem(Game.Item.HPOTION);
+        
+        // Test button state with 1 potion remaining - should show "Heiltrank [1]"
+        String[] buttonsWithOne = Main.addPotions(client, new String[] { "Erfolg" });
+        allTestsPassed &= assertEquals(2, buttonsWithOne.length, 
+            "Should have 2 buttons with 1 potion remaining");
+        allTestsPassed &= assertEquals(1, arrayContains(buttonsWithOne, "Heiltrank [1]") ? 1 : 0,
+            "Should contain 'Heiltrank [1]' button with 1 potion remaining");
+        
+        // Consume last potion
+        client.takeItem(Game.Item.HPOTION);
+        
+        // Test button state with no potions - should not have potion button
+        String[] buttonsWithNone = Main.addPotions(client, new String[] { "Erfolg" });
+        allTestsPassed &= assertEquals(1, buttonsWithNone.length, 
+            "Should have only 1 button when no potions remain");
+        allTestsPassed &= assertEquals(1, arrayContains(buttonsWithNone, "Erfolg") ? 1 : 0,
+            "Should contain 'Erfolg' button when no potions remain");
+        allTestsPassed &= assertEquals(0, arrayContains(buttonsWithNone, "Heiltrank [1]") ? 1 : 0,
+            "Should not contain any Heiltrank button when no potions remain");
+        allTestsPassed &= assertEquals(0, arrayContains(buttonsWithNone, "Heiltrank [0]") ? 1 : 0,
+            "Should not contain 'Heiltrank [0]' button");
+        
+        // Verify client has no potions left
+        allTestsPassed &= assertEquals(0, client.getItemNum(Game.Item.HPOTION), 
+            "Client should have 0 healing potions remaining");
         
         return allTestsPassed;
     }
