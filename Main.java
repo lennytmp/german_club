@@ -227,7 +227,27 @@ public class Main {
       return;
     }
 
-    
+    // Handle trade responses first - must come before other commands
+    if (client.status == Client.Status.TRADING) {
+      if (txt.equals("Angebot annehmen")) {
+        handleTradeAccept(client);
+        return;
+      }
+      if (txt.equals("Angebot ablehnen")) {
+        handleTradeReject(client);
+        return;
+      }
+      // If player tries to use other commands while trading, resend the trade offer
+      String tradeMessage = String.format(
+          "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
+          "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
+          "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
+          client.requestedItem.singular,
+          client.offeredItem.singular
+      );
+      Messenger.send(client.chatId, tradeMessage, new String[] { "Angebot annehmen", "Angebot ablehnen" });
+      return;
+    }
 
     if (txt.equals("Profil") || txt.equals("/profil")) {
       showProfile(client);
@@ -384,29 +404,6 @@ public class Main {
       return;
     }
 
-    // Handle trade responses
-    if (client.status == Client.Status.TRADING) {
-      if (txt.equals("Angebot annehmen")) {
-        handleTradeAccept(client);
-        return;
-      }
-      if (txt.equals("Angebot ablehnen")) {
-        handleTradeReject(client);
-        return;
-      }
-      // If player tries to use other commands while trading, resend the trade offer
-      if (txt.equals("Profil") || txt.equals("/profil") || txt.equals("Kämpfen") || txt.equals("/kämpfen") || txt.equals("Aufgabe")) {
-        String tradeMessage = String.format(
-            "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
-            "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
-            "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
-            client.requestedItem.singular,
-            client.offeredItem.singular
-        );
-        Messenger.send(client.chatId, tradeMessage, new String[] { "Angebot annehmen", "Angebot ablehnen" });
-        return;
-      }
-    }
 
     if (!txt.startsWith("/")) {
       String message = "\uD83D\uDCE2 " + client.username + ": " + txt;
