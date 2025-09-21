@@ -8,6 +8,7 @@ public class ClientTest {
         boolean allTestsPassed = true;
         allTestsPassed &= testNextExpLevel();
         allTestsPassed &= testPotionBrewing();
+        allTestsPassed &= testBrewingUI();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -172,6 +173,163 @@ public class ClientTest {
             "Inventory size should remain unchanged after failed strength potion brewing");
         allTestsPassed &= assertEquals(originalInventory.size(), result3.size(), 
             "Inventory size should remain unchanged after failed luck potion brewing");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testBrewingUI() {
+        boolean allTestsPassed = true;
+        
+        // Test brewing options generation
+        allTestsPassed &= testBrewableOptionsGeneration();
+        
+        // Test canBrewAnyPotion method
+        allTestsPassed &= testCanBrewAnyPotion();
+        
+        // Test brewing options with multiple potions
+        allTestsPassed &= testMultiplePotionOptions();
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testBrewableOptionsGeneration() {
+        boolean allTestsPassed = true;
+        
+        // Test empty inventory - no brewing options
+        Map<Integer, Integer> emptyInventory = new HashMap<>();
+        String[] options = Game.getBrewableOptions(emptyInventory);
+        allTestsPassed &= assertEquals(0, options.length, 
+            "Empty inventory should have no brewing options");
+        
+        // Test healing potion ingredients only
+        Map<Integer, Integer> healingInventory = new HashMap<>();
+        healingInventory.put(Game.Item.ASH.ordinal(), 1);
+        healingInventory.put(Game.Item.BANDAGE.ordinal(), 1);
+        healingInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        
+        options = Game.getBrewableOptions(healingInventory);
+        allTestsPassed &= assertEquals(1, options.length, 
+            "Healing ingredients should provide 1 brewing option");
+        allTestsPassed &= assertEquals(1, options[0].equals("Heiltrank brauen") ? 1 : 0,
+            "Should offer 'Heiltrank brauen' option");
+        
+        // Test strength potion ingredients only
+        Map<Integer, Integer> strengthInventory = new HashMap<>();
+        strengthInventory.put(Game.Item.BONE.ordinal(), 1);
+        strengthInventory.put(Game.Item.FLESH.ordinal(), 1);
+        strengthInventory.put(Game.Item.FANG.ordinal(), 1);
+        
+        options = Game.getBrewableOptions(strengthInventory);
+        allTestsPassed &= assertEquals(1, options.length, 
+            "Strength ingredients should provide 1 brewing option");
+        allTestsPassed &= assertEquals(1, options[0].equals("Stärketrank brauen") ? 1 : 0,
+            "Should offer 'Stärketrank brauen' option");
+        
+        // Test luck potion ingredients only
+        Map<Integer, Integer> luckInventory = new HashMap<>();
+        luckInventory.put(Game.Item.COIN.ordinal(), 1);
+        luckInventory.put(Game.Item.GOLD.ordinal(), 1);
+        luckInventory.put(Game.Item.SILVER.ordinal(), 1);
+        
+        options = Game.getBrewableOptions(luckInventory);
+        allTestsPassed &= assertEquals(1, options.length, 
+            "Luck ingredients should provide 1 brewing option");
+        allTestsPassed &= assertEquals(1, options[0].equals("Glückstrank brauen") ? 1 : 0,
+            "Should offer 'Glückstrank brauen' option");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testCanBrewAnyPotion() {
+        boolean allTestsPassed = true;
+        
+        // Test empty inventory
+        Map<Integer, Integer> emptyInventory = new HashMap<>();
+        allTestsPassed &= assertEquals(0, Game.canBrewAnyPotion(emptyInventory) ? 1 : 0,
+            "Empty inventory should not allow brewing any potion");
+        
+        // Test with healing ingredients
+        Map<Integer, Integer> healingInventory = new HashMap<>();
+        healingInventory.put(Game.Item.ASH.ordinal(), 1);
+        healingInventory.put(Game.Item.BANDAGE.ordinal(), 1);
+        healingInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        
+        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(healingInventory) ? 1 : 0,
+            "Should be able to brew any potion with healing ingredients");
+        
+        // Test with strength ingredients
+        Map<Integer, Integer> strengthInventory = new HashMap<>();
+        strengthInventory.put(Game.Item.BONE.ordinal(), 1);
+        strengthInventory.put(Game.Item.FLESH.ordinal(), 1);
+        strengthInventory.put(Game.Item.FANG.ordinal(), 1);
+        
+        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(strengthInventory) ? 1 : 0,
+            "Should be able to brew any potion with strength ingredients");
+        
+        // Test with luck ingredients
+        Map<Integer, Integer> luckInventory = new HashMap<>();
+        luckInventory.put(Game.Item.COIN.ordinal(), 1);
+        luckInventory.put(Game.Item.GOLD.ordinal(), 1);
+        luckInventory.put(Game.Item.SILVER.ordinal(), 1);
+        
+        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(luckInventory) ? 1 : 0,
+            "Should be able to brew any potion with luck ingredients");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testMultiplePotionOptions() {
+        boolean allTestsPassed = true;
+        
+        // Test inventory with ingredients for all three potions
+        Map<Integer, Integer> multiInventory = new HashMap<>();
+        // Healing ingredients
+        multiInventory.put(Game.Item.ASH.ordinal(), 1);
+        multiInventory.put(Game.Item.BANDAGE.ordinal(), 1);
+        multiInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        // Strength ingredients
+        multiInventory.put(Game.Item.BONE.ordinal(), 1);
+        multiInventory.put(Game.Item.FLESH.ordinal(), 1);
+        multiInventory.put(Game.Item.FANG.ordinal(), 1);
+        // Luck ingredients
+        multiInventory.put(Game.Item.COIN.ordinal(), 1);
+        multiInventory.put(Game.Item.GOLD.ordinal(), 1);
+        multiInventory.put(Game.Item.SILVER.ordinal(), 1);
+        
+        String[] options = Game.getBrewableOptions(multiInventory);
+        allTestsPassed &= assertEquals(3, options.length, 
+            "Should have 3 brewing options when all ingredients are available");
+        
+        // Check that all expected options are present
+        boolean hasHealing = false;
+        boolean hasStrength = false;
+        boolean hasLuck = false;
+        
+        for (String option : options) {
+            if (option.equals("Heiltrank brauen")) hasHealing = true;
+            else if (option.equals("Stärketrank brauen")) hasStrength = true;
+            else if (option.equals("Glückstrank brauen")) hasLuck = true;
+        }
+        
+        allTestsPassed &= assertEquals(1, hasHealing ? 1 : 0,
+            "Should include 'Heiltrank brauen' option");
+        allTestsPassed &= assertEquals(1, hasStrength ? 1 : 0,
+            "Should include 'Stärketrank brauen' option");
+        allTestsPassed &= assertEquals(1, hasLuck ? 1 : 0,
+            "Should include 'Glückstrank brauen' option");
+        
+        // Test with ingredients for only two potions (healing + strength)
+        Map<Integer, Integer> twoInventory = new HashMap<>();
+        twoInventory.put(Game.Item.ASH.ordinal(), 1);
+        twoInventory.put(Game.Item.BANDAGE.ordinal(), 1);
+        twoInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        twoInventory.put(Game.Item.BONE.ordinal(), 1);
+        twoInventory.put(Game.Item.FLESH.ordinal(), 1);
+        twoInventory.put(Game.Item.FANG.ordinal(), 1);
+        
+        options = Game.getBrewableOptions(twoInventory);
+        allTestsPassed &= assertEquals(2, options.length, 
+            "Should have 2 brewing options when healing and strength ingredients are available");
         
         return allTestsPassed;
     }
