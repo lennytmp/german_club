@@ -329,10 +329,28 @@ public class ClientTest {
     public static boolean testTradingSystem() {
         boolean allTestsPassed = true;
         
-        // Test 1: Client with no items should not be able to trade
+        // Test 1: Client with no items can receive free gifts
         Client clientNoItems = new Client(123, "testuser");
         allTestsPassed &= assertEquals(0, clientNoItems.inventory.size(),
             "New client should have empty inventory");
+        
+        // Test free gift scenario
+        clientNoItems.status = Client.Status.TRADING;
+        clientNoItems.offeredItem = null; // No item offered by player (free gift)
+        clientNoItems.requestedItem = Game.Item.COIN;
+        clientNoItems.tradingWithChatId = -1;
+        
+        allTestsPassed &= assertEquals(1, clientNoItems.status == Client.Status.TRADING ? 1 : 0,
+            "Client should be in trading status for free gift");
+        allTestsPassed &= assertEquals(1, clientNoItems.offeredItem == null ? 1 : 0,
+            "Offered item should be null for free gift");
+        allTestsPassed &= assertEquals(1, clientNoItems.requestedItem == Game.Item.COIN ? 1 : 0,
+            "Requested item should be coin for free gift");
+        
+        // Simulate accepting free gift
+        clientNoItems.giveItem(clientNoItems.requestedItem);
+        allTestsPassed &= assertEquals(1, clientNoItems.hasItem(Game.Item.COIN) ? 1 : 0,
+            "Client should have coin after accepting free gift");
         
         // Test 2: Client with items should be able to enter trading state
         Client clientWithItems = new Client(124, "testuser2");

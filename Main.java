@@ -298,8 +298,8 @@ public class Main {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
-        // Nothing found: 25% chance to meet trader if player has items, otherwise normal nothing found logic
-        if (Utils.roll(25) && hasAnyItems(client)) {
+        // Nothing found: 25% chance to meet trader regardless of inventory
+        if (Utils.roll(25)) {
           initiateTradeOffer(client);
         } else {
           handleNothingFound(client);
@@ -386,24 +386,41 @@ public class Main {
 
     // Handle trade responses
     if (client.status == Client.Status.TRADING) {
-      if (txt.equals("Angebot annehmen")) {
+      if (txt.equals("Angebot annehmen") || txt.equals("Geschenk annehmen")) {
         handleTradeAccept(client);
         return;
       }
-      if (txt.equals("Angebot ablehnen")) {
+      if (txt.equals("Angebot ablehnen") || txt.equals("Geschenk ablehnen")) {
         handleTradeReject(client);
         return;
       }
       // If player tries to use other commands while trading, resend the trade offer
       if (txt.equals("Profil") || txt.equals("/profil") || txt.equals("Kämpfen") || txt.equals("/kämpfen") || txt.equals("Aufgabe")) {
-        String tradeMessage = String.format(
-            "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
-            "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
-            "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
-            client.requestedItem.singular,
-            client.offeredItem.singular
-        );
-        Messenger.send(client.chatId, tradeMessage, new String[] { "Angebot annehmen", "Angebot ablehnen" });
+        String tradeMessage;
+        String[] buttons;
+        
+        if (client.offeredItem == null) {
+          // Free gift case
+          tradeMessage = String.format(
+              "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
+              "\"Du siehst aus, als könntest du Hilfe gebrauchen. Hier, nimm das: 1 %s. Es ist kostenlos!\"\n\n" +
+              "Du musst zuerst auf das Geschenk antworten, bevor du etwas anderes tun kannst.",
+              client.requestedItem.singular
+          );
+          buttons = new String[] { "Geschenk annehmen", "Geschenk ablehnen" };
+        } else {
+          // Regular trade case
+          tradeMessage = String.format(
+              "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
+              "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
+              "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
+              client.requestedItem.singular,
+              client.offeredItem.singular
+          );
+          buttons = new String[] { "Angebot annehmen", "Angebot ablehnen" };
+        }
+        
+        Messenger.send(client.chatId, tradeMessage, buttons);
         return;
       }
     }
@@ -907,12 +924,26 @@ public class Main {
 
   private static void initiateTradeOffer(Client client) {
     if (!hasAnyItems(client)) {
-      // Player has no items to trade, fall back to normal "nothing found" logic
-      handleNothingFound(client);
+      // Player has no items - trader offers a free item
+      client.offeredItem = null; // No item offered by player
+      client.requestedItem = getRandomTradeItem();
+      client.status = Client.Status.TRADING;
+      client.tradingWithChatId = -1; // -1 indicates NPC trader
+      
+      Storage.saveClient(client);
+      
+      String tradeMessage = String.format(
+          "\uD83D\uDCBC Ein geheimnisvoller Händler erscheint vor dir!\n\n" +
+          "\"Du siehst aus, als könntest du Hilfe gebrauchen. Hier, nimm das: 1 %s. Es ist kostenlos!\"\n\n" +
+          "Du kannst das Geschenk annehmen oder ablehnen.",
+          client.requestedItem.singular
+      );
+      
+      Messenger.send(client.chatId, tradeMessage, new String[] { "Geschenk annehmen", "Geschenk ablehnen" });
       return;
     }
 
-    // Generate trade offer
+    // Generate trade offer for players with items
     client.offeredItem = getRandomPlayerItem(client);
     client.requestedItem = getRandomTradeItem();
     client.status = Client.Status.TRADING;
@@ -946,11 +977,27 @@ public class Main {
   }
 
   private static void handleTradeAccept(Client client) {
-    if (client.status != Client.Status.TRADING || client.offeredItem == null || client.requestedItem == null) {
+    if (client.status != Client.Status.TRADING || client.requestedItem == null) {
       return;
     }
 
-    // Check if player still has the offered item
+    if (client.offeredItem == null) {
+      // Free gift case - no item to take from player
+      client.giveItem(client.requestedItem);
+      
+      String successMessage = String.format(
+          "\uD83C\uDF81 Geschenk erhalten!\n\n" +
+          "Du hast 1 %s erhalten.\n\n" +
+          "\"Möge es dir auf deinen Abenteuern helfen!\" sagt der Händler und verschwindet.",
+          client.requestedItem.singular
+      );
+      
+      Messenger.send(client.chatId, successMessage, MAIN_BUTTONS);
+      resetTradeState(client);
+      return;
+    }
+
+    // Regular trade case - check if player still has the offered item
     if (!client.hasItem(client.offeredItem)) {
       Messenger.send(client.chatId, "Du hast das angebotene Item nicht mehr!", MAIN_BUTTONS);
       resetTradeState(client);
@@ -978,10 +1025,18 @@ public class Main {
       return;
     }
 
-    Messenger.send(client.chatId, 
-        "\uD83D\uDE45 Du lehnst das Angebot ab.\n\n" +
-        "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.",
-        MAIN_BUTTONS);
+    String rejectMessage;
+    if (client.offeredItem == null) {
+      // Free gift rejection
+      rejectMessage = "\uD83D\uDE45 Du lehnst das Geschenk ab.\n\n" +
+          "\"Wie du willst...\" murmelt der Händler und verschwindet in den Schatten.";
+    } else {
+      // Regular trade rejection
+      rejectMessage = "\uD83D\uDE45 Du lehnst das Angebot ab.\n\n" +
+          "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.";
+    }
+
+    Messenger.send(client.chatId, rejectMessage, MAIN_BUTTONS);
     resetTradeState(client);
   }
 
