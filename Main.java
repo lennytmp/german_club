@@ -16,26 +16,24 @@ import java.util.Set;
 public class Main {
   public static boolean isProd = false;
 
-  private static final String[] MAIN_BUTTONS = { "fight", "profile", "task" };
+  private static final String[] MAIN_BUTTONS = { "Kämpfen", "Profil", "Aufgabe" };
   private static final String[] LEVEL_POINT_BUTTONS = {
-      "improve strength", "improve vitality", "improve luck"
+      "Stärke verbessern", "Vitalität verbessern", "Glück verbessern"
   };
   private static final int CHAT_TIMEOUT = 600;
   private static final int FIGHT_TIMEOUT = 60;
-  private static final String TASK_FAIL = "Fail";
-  private static final String TASK_SUCCESS = "Success";
+  private static final String TASK_FAIL = "Fehler";
+  private static final String TASK_SUCCESS = "Erfolg";
   private static final String GAME_DESCRIPTION_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
     "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
     "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
     "Fleisch, Knochen, Crack, Flasche, Münze.";
-  private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. "
-      +
-      "Du musst etwas sagen wie: „Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.“ Du kannst dir einen "
-      +
-      "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich ƒgesucht habe.";
-  private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %sgefunden. Du musst es kurz beschreiben. " +
-    "Zum Beispiel: „Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
-    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.“" + 
+  private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. " +
+      "Du musst etwas sagen wie: \\u201eDu hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\\u201c Du kannst dir einen " +
+      "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
+  private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %s gefunden. Du musst es kurz beschreiben. " +
+    "Zum Beispiel: \\u201eDu bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
+    "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\\u201c " + 
     "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
     "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
   private static Set<Integer> activeChats = new HashSet<>();
@@ -153,7 +151,7 @@ public class Main {
       prepareToFight(client, bot);
       Storage.saveClients(bot, client);
 
-      Messenger.send(client.chatId, "You're now fighting with " + bot.username + ".");
+      Messenger.send(client.chatId, "Du kämpfst jetzt mit " + bot.username + ".");
       Messenger.send(client.chatId, getClientStats(bot));
       askTaskStatus(client);
     }
@@ -169,7 +167,7 @@ public class Main {
       client.hp++;
       client.lastRestore = curTimeSeconds;
       if (client.hp == client.getMaxHp()) {
-        Messenger.send(client.chatId, "You are now fully recovered.");
+        Messenger.send(client.chatId, "Du bist jetzt vollständig erholt.");
         injuredChats.remove(client.chatId);
       }
       Storage.saveClient(client);
@@ -219,7 +217,7 @@ public class Main {
     Storage.saveClient(client);
 
     if (newClient) {
-      Messenger.send(client.chatId, "Welcome to the German Club!", MAIN_BUTTONS);
+      Messenger.send(client.chatId, "Willkommen im German Club!", MAIN_BUTTONS);
       sendToActiveUsers(PhraseGenerator.getJoinedTheFightClub(
           client.username));
     }
@@ -232,44 +230,51 @@ public class Main {
 
     
 
-    if (txt.equals("profile") || txt.equals("/profile")) {
+    if (txt.equals("Profil") || txt.equals("/profil")) {
       showProfile(client);
       return;
     }
 
     if (txt.startsWith("/username ")) {
       if (client.status != Client.Status.IDLE) {
-        Messenger.send(client.chatId, "You can change your name only when you're not fighting.");
+        Messenger.send(client.chatId, "Du kannst deinen Namen nur ändern, wenn du nicht kämpfst.");
         return;
       }
       String newName = txt.substring(10, txt.length());
       if (!newName.matches("[A-z0-9]*")) {
-        Messenger.send(client.chatId, "Incorrect name, please make sure it has " +
-            "english characters and numbers only.");
+        Messenger.send(client.chatId, "Falscher Name, bitte stelle sicher, dass er nur " +
+            "englische Buchstaben und Zahlen enthält.");
         return;
       }
       changeUserName(client, newName);
       return;
     }
 
-    if (txt.startsWith("improve ")) {
-      String what = txt.substring(8, txt.length());
+    if (txt.startsWith("Stärke verbessern") || txt.startsWith("Vitalität verbessern") || txt.startsWith("Glück verbessern")) {
+      String what = "";
+      if (txt.startsWith("Stärke verbessern")) {
+        what = "strength";
+      } else if (txt.startsWith("Vitalität verbessern")) {
+        what = "vitality";
+      } else if (txt.startsWith("Glück verbessern")) {
+        what = "luck";
+      }
       if (client.levelPoints < 1) {
-        Messenger.send(client.chatId, "You have no level points available. You will have some "
-            + "when you level up.", MAIN_BUTTONS);
+        Messenger.send(client.chatId, "Du hast keine Stufenpunkte verfügbar. Du wirst welche haben, "
+            + "wenn du ein Level aufsteigst.", MAIN_BUTTONS);
         return;
       }
       improveSkill(client, what);
       return;
     }
 
-    if (txt.equals("fight") || txt.equals("/fight")) {
+    if (txt.equals("Kämpfen") || txt.equals("/kämpfen")) {
       if (client.status == Client.Status.FIGHTING) {
-        Messenger.send(client.chatId, "You're already fighiting with somebody.");
+        Messenger.send(client.chatId, "Du kämpfst bereits mit jemandem.");
         return;
       }
       if (client.status == Client.Status.READY_TO_FIGHT) {
-        Messenger.send(client.chatId, "You're already searching for a victim.");
+        Messenger.send(client.chatId, "Du suchst bereits nach einem Opfer.");
         return;
       }
       if (readyToFightChats.size() == 0) {
@@ -281,16 +286,16 @@ public class Main {
       return;
     }
 
-    if (txt.equals("/healing potion") || txt.startsWith("healing potion [")) {
+    if (txt.equals("/heiltrank") || txt.startsWith("Heiltrank [")) {
       if (!client.hasItem(Game.Item.HPOTION)) {
-        Messenger.send(client.chatId, "You don't have any potions.");
+        Messenger.send(client.chatId, "Du hast keine Tränke.");
         return;
       }
       consumePotion(client);
       return;
     }
 
-    if (txt.equals("task") && client.status != Client.Status.FIGHTING) {
+    if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING) {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
@@ -318,12 +323,12 @@ public class Main {
       return;
     }
 
-    if (txt.equals("brew") && client.status != Client.Status.FIGHTING) {
+    if (txt.equals("Brauen") && client.status != Client.Status.FIGHTING) {
       if (Game.canBrewPotion(client.inventory)) {
         client.inventory = Game.brewPotion(client.inventory);
         client.incSuccessToday();
         Storage.saveClient(client);
-        Messenger.send(client.chatId, "After lot's of work, you have a new healing potion.");
+        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Heiltrank.");
         sendInventoryDescription(client);
       }
       return;
@@ -334,8 +339,8 @@ public class Main {
         return;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Messenger.send(client.chatId, "Retreat42!");
-      Messenger.send(opponent.chatId, "Retreat42!");
+      Messenger.send(client.chatId, "Rückzug42!");
+      Messenger.send(opponent.chatId, "Rückzug42!");
       finishFight(opponent, client);
       Storage.saveClients(opponent, client);
       return;
@@ -346,8 +351,8 @@ public class Main {
         return;
       }
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Messenger.send(client.chatId, "Kill42 activated!");
-      Messenger.send(opponent.chatId, "Kill42 activated!");
+      Messenger.send(client.chatId, "Töten42 aktiviert!");
+      Messenger.send(opponent.chatId, "Töten42 aktiviert!");
       finishFight(client, opponent);
       Storage.saveClients(opponent, client);
       return;
@@ -356,7 +361,7 @@ public class Main {
     if (txt.equals("/reset42")) {
       Client cleanClient = new Client(client.chatId, client.username);
       Storage.saveClient(cleanClient);
-      Messenger.send(cleanClient.chatId, "Reset42");
+      Messenger.send(cleanClient.chatId, "Zurücksetzen42");
       return;
     }
 
@@ -385,13 +390,13 @@ public class Main {
       String message = "\uD83D\uDCE2 " + client.username + ": " + txt;
       int numListeners = sendToActiveUsers(message) - 1;
       if (numListeners == 0) {
-        Messenger.send(client.chatId, "You were not heard by anyone :(");
+        Messenger.send(client.chatId, "Du wurdest von niemandem gehört :(");
       }
       return;
     }
 
     // TODO: Add help page link here
-    Messenger.send(client.chatId, "Use buttons below to make valid actions.");
+    Messenger.send(client.chatId, "Verwende die Schaltflächen unten, um gültige Aktionen auszuführen.");
   }
 
   // returns number of people who heard you
@@ -417,14 +422,14 @@ public class Main {
   private static void showProfile(Client client) {
     Messenger.send(client.chatId, getClientStats(client), MAIN_BUTTONS);
     if (!client.nameChangeHintSent) {
-      Messenger.send(client.chatId, "You can change your name with the following command \n"
-          + "`/username newname`.", MAIN_BUTTONS);
+      Messenger.send(client.chatId, "Du kannst deinen Namen mit folgendem Befehl ändern \n"
+          + "`/username neuername`.", MAIN_BUTTONS);
       client.nameChangeHintSent = true;
       Storage.saveClient(client);
     }
     if (client.levelPoints > 0) {
-      Messenger.send(client.chatId, "You have " + client.levelPoints + " unassigned "
-          + "level points.", LEVEL_POINT_BUTTONS);
+      Messenger.send(client.chatId, "Du hast " + client.levelPoints + " nicht zugewiesene "
+          + "Stufenpunkte.", LEVEL_POINT_BUTTONS);
     }
     sendInventoryDescription(client);
   }
@@ -440,14 +445,14 @@ public class Main {
     if (Game.canBrewPotion(client.inventory)) {
       String[] buttons = new String[MAIN_BUTTONS.length + 1];
       System.arraycopy(MAIN_BUTTONS, 0, buttons, 0, MAIN_BUTTONS.length);
-      buttons[MAIN_BUTTONS.length] = "brew";
-      Messenger.send(client.chatId, "You have all the ingredients to brew a healing potion", buttons);
+      buttons[MAIN_BUTTONS.length] = "Brauen";
+      Messenger.send(client.chatId, "Du hast alle Zutaten, um einen Heiltrank zu brauen", buttons);
     }
   }
 
   private static void changeUserName(Client client, String newName) {
     client.username = newName;
-    Messenger.send(client.chatId, "Your name is now " + newName + ".");
+    Messenger.send(client.chatId, "Dein Name ist jetzt " + newName + ".");
     Storage.saveClient(client);
   }
 
@@ -470,13 +475,13 @@ public class Main {
       newValue = ++client.luck;
     }
     if (newValue == 0) {
-      Messenger.send(client.chatId, "Don't know how to improve " + skill + ".");
+      Messenger.send(client.chatId, "Weiß nicht, wie man " + skill + " verbessert.");
       return;
     }
     client.levelPoints--;
-    Messenger.send(client.chatId, "You have increased your " + skill + ", it is now "
-        + newValue + ". You have " + client.levelPoints
-        + " more level points.", MAIN_BUTTONS);
+    Messenger.send(client.chatId, "Du hast deine " + skill + " erhöht, sie ist jetzt "
+        + newValue + ". Du hast " + client.levelPoints
+        + " weitere Stufenpunkte.", MAIN_BUTTONS);
     Storage.saveClient(client);
   }
 
@@ -492,8 +497,8 @@ public class Main {
   private static void startFightReal(Client client, Client opponent) {
     prepareToFight(client, opponent);
     Storage.saveClients(client, opponent);
-    Messenger.send(client.chatId, "You're now fighting with " + opponent.username + ".");
-    Messenger.send(opponent.chatId, "You're now fighting with " + client.username + ".");
+    Messenger.send(client.chatId, "Du kämpfst jetzt mit " + opponent.username + ".");
+    Messenger.send(opponent.chatId, "Du kämpfst jetzt mit " + client.username + ".");
     Messenger.send(client.chatId, getClientStats(opponent));
     Messenger.send(opponent.chatId, getClientStats(client));
     askTaskStatus(opponent);
@@ -501,7 +506,7 @@ public class Main {
   }
 
   private static void askTaskStatus(Client client) {
-    Messenger.send(client.chatId, "Attempt at solving an exercise and report feedback",
+    Messenger.send(client.chatId, "Versuche eine Übung zu lösen und berichte Rückmeldung",
         addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
@@ -510,7 +515,7 @@ public class Main {
     int numPotions = client.getItemNum(Game.Item.HPOTION);
     List<String> optionsList = new ArrayList<>(Arrays.asList(options));
     if (numPotions > 0) {
-      optionsList.add("healing potion [" + numPotions + "]");
+      optionsList.add("Heiltrank [" + numPotions + "]");
     }
     return optionsList.toArray(new String[0]);
   }
@@ -523,13 +528,13 @@ public class Main {
     client.takeItem(Game.Item.HPOTION);
     Storage.saveClient(client);
 
-    String clientMsg = "\uD83C\uDF76 Potion consumed, you have " +
-        client.getItemNum(Game.Item.HPOTION) + " left. " +
+    String clientMsg = "\uD83C\uDF76 Trank konsumiert, du hast " +
+        client.getItemNum(Game.Item.HPOTION) + " übrig. " +
         "[" + client.hp + "/" + client.getMaxHp() + "]";
     if (client.status == Client.Status.FIGHTING) {
       Messenger.send(client.chatId, clientMsg);
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
-      Messenger.send(opponent.chatId, "\uD83C\uDF76 " + client.username + " have consumed a healing potion " +
+      Messenger.send(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
           "[" + client.hp + "/" + client.getMaxHp() + "]");
     } else {
       Messenger.send(client.chatId, clientMsg);
@@ -589,24 +594,24 @@ public class Main {
     winner.exp += expGained;
     sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
     int winnerExpUntilPromo = winner.nextExp() - winner.exp;
-    Messenger.send(winner.chatId, "You gained " + expGained + " experience, " +
-        winnerExpUntilPromo + " experience left until level up.");
+    Messenger.send(winner.chatId, "Du hast " + expGained + " Erfahrung erhalten, " +
+        winnerExpUntilPromo + " Erfahrung fehlt bis zum Levelaufstieg.");
     String lost = "";
     if (loser.chatId > 0) {
       winner.giveItem(Game.Item.HPOTION);
       lost = loser.loseRandomItems();
-      Messenger.send(winner.chatId, "You found 1 healing potion!");
+        Messenger.send(winner.chatId, "Du hast 1 Heiltrank gefunden!");
     } else {
       // logic for looting bots is here
       int rnd = Utils.rndInRange(1, 6);
       if (rnd == 1) {
         winner.giveItem(Game.Item.HPOTION);
-        Messenger.send(winner.chatId, "You found 1 healing potion!");
+        Messenger.send(winner.chatId, "Du hast 1 Heiltrank gefunden!");
       } else if (rnd < 4) {
         Game.Item found = Game.ITEM_VALUES[Utils.getRndKeyWithWeight(
             loser.inventory)];
         winner.giveItem(found);
-        Messenger.send(winner.chatId, "You found 1 " + found.singular + "!");
+        Messenger.send(winner.chatId, "Du hast 1 " + found.singular + " gefunden!");
       }
     }
     if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
@@ -641,18 +646,18 @@ public class Main {
   private static String getClientStats(Client client) {
     String result = "*" + client.username + "*\n"
         + "Level: " + client.level + "\n"
-        + "Health: " + client.hp + " (out of " + client.getMaxHp() + ")\n"
-        + "Damage: 1 - " + client.getMaxDamage() + "\n"
-        + "Strength: " + client.strength + "\n"
-        + "Vitality: " + client.vitality + "\n"
-        + "Luck: " + client.luck;
+        + "Gesundheit: " + client.hp + " (von " + client.getMaxHp() + ")\n"
+        + "Schaden: 1 - " + client.getMaxDamage() + "\n"
+        + "Stärke: " + client.strength + "\n"
+        + "Vitalität: " + client.vitality + "\n"
+        + "Glück: " + client.luck;
     if (client.chatId > 0) {
       result += "\n"
-          + "Experience: " + client.exp + " "
-          + "(" + client.nextExp() + " needed to level up)\n"
-          + "Fights won: " + client.fightsWon + " "
-          + "(out of " + client.totalFights + ")\n";
-      result += "Success today: " + client.getSuccessToday() + "\n";
+          + "Erfahrung: " + client.exp + " "
+          + "(" + client.nextExp() + " benötigt für Levelaufstieg)\n"
+          + "Kämpfe gewonnen: " + client.fightsWon + " "
+          + "(von " + client.totalFights + ")\n";
+      result += "Erfolg heute: " + client.getSuccessToday() + "\n";
     }
     return result;
   }
@@ -671,7 +676,7 @@ public class Main {
 
   private static void levelUpIfNeeded(Client client) {
     if (client.levelUpIfNeeded()) {
-      Messenger.send(client.chatId, "You have achieved level " + client.level + "!\n",
+      Messenger.send(client.chatId, "Du hast Level " + client.level + " erreicht!\n",
           LEVEL_POINT_BUTTONS);
     }
   }

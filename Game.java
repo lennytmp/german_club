@@ -5,22 +5,22 @@ import java.util.Map;
 
 class Game {
   static final BotConfig[] BOT_TYPES = {
-      new BotConfig("Beggar",
+      new BotConfig("Bettler",
           new int[] { 1, 3 },
           new int[] { 1, 1, 6 },
           new Item[] { Item.COIN }),
 
-      new BotConfig("Drunk",
+      new BotConfig("Betrunkener",
           new int[] { 1, 3 },
           new int[] { 1, 6, 1 },
           new Item[] { Item.BOTTLE }),
 
-      new BotConfig("Crackhead",
+      new BotConfig("Crack-Süchtiger",
           new int[] { 1, 3 },
           new int[] { 6, 1, 1 },
           new Item[] { Item.CRACK }),
 
-      new BotConfig("Skeleton",
+      new BotConfig("Skelett",
           new int[] { 4, 6 },
           new int[] { 4, 4, 1 },
           new Item[] { Item.BONE }),
@@ -30,12 +30,12 @@ class Game {
           new int[] { 6, 1, 1 },
           new Item[] { Item.FLESH }),
 
-      new BotConfig("Ghost",
+      new BotConfig("Geist",
           new int[] { 4, 6 },
           new int[] { 1, 1, 6 },
           new Item[] { Item.SOUL_STONE }),
 
-      new BotConfig("Mummy",
+      new BotConfig("Mumie",
           new int[] { 7, 9 },
           new int[] { 1, 1, 1 },
           new Item[] { Item.BANDAGE }),
@@ -45,32 +45,32 @@ class Game {
           new int[] { 4, 4, 1 },
           new Item[] { Item.WAX }),
 
-      new BotConfig("Vampire",
+      new BotConfig("Vampir",
           new int[] { 7, 9 },
           new int[] { 1, 6, 1 },
           new Item[] { Item.FANG, Item.CLAW }),
 
-      new BotConfig("Ghoul",
+      new BotConfig("Ghul",
           new int[] { 10, 12 },
           new int[] { 6, 1, 1 },
           new Item[] { Item.CLAW }),
 
-      new BotConfig("Undead",
+      new BotConfig("Untoter",
           new int[] { 10, 12 },
           new int[] { 1, 6, 1 },
           new Item[] { Item.ASH }),
 
-      new BotConfig("Necromant",
+      new BotConfig("Nekromant",
           new int[] { 10, 12 },
           new int[] { 1, 1, 6 },
           new Item[] { Item.PAPER, Item.ASH }),
 
-      new BotConfig("Devil",
+      new BotConfig("Teufel",
           new int[] { 12, 20 },
           new int[] { 1, 1, 6 },
           new Item[] { Item.SILVER, Item.GOLD }),
 
-      new BotConfig("Demon",
+      new BotConfig("Dämon",
           new int[] { 12, 20 },
           new int[] { 1, 1, 1 },
           new Item[] { Item.GOLD, Item.SILVER })
@@ -79,7 +79,7 @@ class Game {
   enum Item {
     // TODO: when an item is added to the list - clients needs to be updated with a
     // larger array.
-    COIN("Münze", "coins"), BOTTLE("Flasche", "Flaschen"),
+    COIN("Münze", "Münzen"), BOTTLE("Flasche", "Flaschen"),
     CRACK("Gramm Crack", "Gramm Crack"), BONE("Knochen", "Knochen"),
     FLESH("Fleischstück", "Fleischstücke"), SOUL_STONE("Seelenstein", "Seelensteine"),
     BANDAGE("Bandage", "Bandagen"), WAX("Gramm Wachs", "Gramm Wachs"),
