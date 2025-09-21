@@ -357,10 +357,9 @@ public class ClientTest {
             "Requested item should be gold");
         
         // Test 4: Simulate trade execution
-        if (clientWithItems.hasItem(clientWithItems.offeredItem)) {
-            clientWithItems.takeItem(clientWithItems.offeredItem);
-            clientWithItems.giveItem(clientWithItems.requestedItem);
-        }
+        boolean tradeSuccessful = clientWithItems.executeTrade();
+        allTestsPassed &= assertEquals(1, tradeSuccessful ? 1 : 0,
+            "Trade execution should be successful");
         
         allTestsPassed &= assertEquals(0, clientWithItems.hasItem(Game.Item.COIN) ? 1 : 0,
             "Client should no longer have coin after trade");

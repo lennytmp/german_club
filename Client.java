@@ -314,4 +314,20 @@ class Client {
     requestedItem = null;
     Storage.saveClient(this);
   }
+
+  public boolean executeTrade() {
+    if (status != Client.Status.TRADING || offeredItem == null || requestedItem == null) {
+      return false;
+    }
+
+    // Check if player still has the offered item
+    if (!hasItem(offeredItem)) {
+      return false;
+    }
+
+    // Execute the trade
+    takeItem(offeredItem);
+    giveItem(requestedItem);
+    return true;
+  }
 }

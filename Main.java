@@ -922,23 +922,22 @@ public class Main {
       return;
     }
 
-    // Check if player still has the offered item
-    if (!client.hasItem(client.offeredItem)) {
+    // Store items for message before executing trade
+    Game.Item offeredItem = client.offeredItem;
+    Game.Item requestedItem = client.requestedItem;
+
+    if (!client.executeTrade()) {
       Messenger.send(client.chatId, "Du hast das angebotene Item nicht mehr!", MAIN_BUTTONS);
       client.resetTradeState();
       return;
     }
-
-    // Execute the trade
-    client.takeItem(client.offeredItem);
-    client.giveItem(client.requestedItem);
     
     String successMessage = String.format(
         "\uD83E\uDD1D Handel erfolgreich!\n\n" +
         "Du hast deine %s gegen 1 %s getauscht.\n\n" +
         "\"Danke für das Geschäft!\" sagt der Händler und verschwindet.",
-        client.offeredItem.singular,
-        client.requestedItem.singular
+        offeredItem.singular,
+        requestedItem.singular
     );
     
     Messenger.send(client.chatId, successMessage, MAIN_BUTTONS);
