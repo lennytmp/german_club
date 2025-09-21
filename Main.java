@@ -48,7 +48,7 @@ public class Main {
   public static void main(String[] args)
       throws InterruptedException, Exception {
     initialize(args);
-    System.out.println("German Club Server gestartet...");
+    System.out.println("German Club Server started...");
     while (true) {
       try {
         int maxUpdateId = Storage.getMaxUpdateId();
@@ -102,7 +102,7 @@ public class Main {
 
   private static void initialize(String[] args) {
     if (args.length < 1) {
-      System.out.println("Verwendung: FightLang.jar pfad/zur/db");
+      System.out.println("Usage: FightLang.jar path/to/db");
       System.exit(0);
     }
     Logger.setDbPath(args[0]);
