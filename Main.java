@@ -188,7 +188,7 @@ public class Main {
       handleHitTask(client, opponent, false);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
-        activateBotTask(opponent);
+        activateBotTask(opponent, client);
       }
     }
   }
@@ -399,7 +399,7 @@ public class Main {
       handleHitTask(client, opponent, isSuccess);
       Storage.saveClients(opponent, client);
       if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
-        activateBotTask(opponent);
+        activateBotTask(opponent, client);
       }
       return;
     }
@@ -616,9 +616,8 @@ public class Main {
     Storage.saveClient(client);
   }
 
-  private static void activateBotTask(Client bot) {
+  private static void activateBotTask(Client bot, Client opponent) {
     bot.lastFightActivitySince = curTimeSeconds;
-    Client opponent = Storage.getClientByChatId(bot.fightingChatId);
     boolean isSuccess = Utils.roll(50);
     handleHitTask(bot, opponent, isSuccess);
     Storage.saveClients(opponent, bot);
