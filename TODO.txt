@@ -1,23 +1,10 @@
 TODO:
-- If you delete conversation, buttons disappear
 - Bots can attack first
 - Shop
   - Add a button "Marketplace". When the player hits it, they meet a random trader, the trader has a randomized inventory.
     The player gets the description of that inventory.
-- Crafting
-  - Define which mobs drop what
-  - Make a characteristic (Crafting) which influences chance to get a potion
-  - Give exp for succesful brewing
-  - Du wurdest im Kampf besiegt, und 3 healing potions, 1 bottle, 1 gr of ash, 2 bandages, 2 coins wurden gestohlen.
-    Deine Gesundheit wird sich in 3 Sekunden regenerieren.- wrong buttons
-  - You are now fully recovered. - wrong buttons
 
 IDEAS:
 - Bigger game concept: there is map with cities (tree). You can buy/sell things in various cities and carry them with you.
   On your way you encounter events (some paths might be more dangerous). You may get a trader that you can trade with or attack. You may get a monster.
-- More fun: ask LLM to describe what happened given the damage to player1 and player2.
-- Add a shop
-- Add leaderboard / stats
 - Fight many to many, many to one
-- Generate fantasy names
-- Injuries when hit by more hp than you have
