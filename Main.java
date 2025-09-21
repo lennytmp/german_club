@@ -322,36 +322,18 @@ public class Main {
       return;
     }
 
-    if ((txt.equals("Heiltrank brauen") || txt.equals("Brauen")) && client.status != Client.Status.FIGHTING) {
-      if (Game.canBrewPotion(client.inventory)) {
-        client.inventory = Game.brewPotion(client.inventory);
-        client.incSuccessToday();
-        Storage.saveClient(client);
-        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Heiltrank.");
-        sendInventoryDescription(client);
-      }
+    if (txt.equals("Heiltrank brauen") && client.status != Client.Status.FIGHTING) {
+      handleBrewingCommand(client, "Heiltrank");
       return;
     }
 
     if (txt.equals("Stärketrank brauen") && client.status != Client.Status.FIGHTING) {
-      if (Game.canBrewStrengthPotion(client.inventory)) {
-        client.inventory = Game.brewStrengthPotion(client.inventory);
-        client.incSuccessToday();
-        Storage.saveClient(client);
-        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Stärketrank.");
-        sendInventoryDescription(client);
-      }
+      handleBrewingCommand(client, "Stärketrank");
       return;
     }
 
     if (txt.equals("Glückstrank brauen") && client.status != Client.Status.FIGHTING) {
-      if (Game.canBrewLuckPotion(client.inventory)) {
-        client.inventory = Game.brewLuckPotion(client.inventory);
-        client.incSuccessToday();
-        Storage.saveClient(client);
-        Messenger.send(client.chatId, "Nach viel Arbeit hast du einen neuen Glückstrank.");
-        sendInventoryDescription(client);
-      }
+      handleBrewingCommand(client, "Glückstrank");
       return;
     }
 
@@ -524,6 +506,42 @@ public class Main {
       Messenger.send(client.chatId, brewingMsg.toString(), buttons);
     } else {
       Messenger.send(client.chatId, inventoryDesc, MAIN_BUTTONS);
+    }
+  }
+
+  private static void handleBrewingCommand(Client client, String potionType) {
+    boolean canBrew = false;
+    String successMessage = "";
+    
+    switch (potionType) {
+      case "Heiltrank":
+        canBrew = Game.canBrewPotion(client.inventory);
+        if (canBrew) {
+          client.inventory = Game.brewPotion(client.inventory);
+          successMessage = "Nach viel Arbeit hast du einen neuen Heiltrank.";
+        }
+        break;
+      case "Stärketrank":
+        canBrew = Game.canBrewStrengthPotion(client.inventory);
+        if (canBrew) {
+          client.inventory = Game.brewStrengthPotion(client.inventory);
+          successMessage = "Nach viel Arbeit hast du einen neuen Stärketrank.";
+        }
+        break;
+      case "Glückstrank":
+        canBrew = Game.canBrewLuckPotion(client.inventory);
+        if (canBrew) {
+          client.inventory = Game.brewLuckPotion(client.inventory);
+          successMessage = "Nach viel Arbeit hast du einen neuen Glückstrank.";
+        }
+        break;
+    }
+    
+    if (canBrew) {
+      client.incSuccessToday();
+      Storage.saveClient(client);
+      Messenger.send(client.chatId, successMessage);
+      sendInventoryDescription(client);
     }
   }
 
