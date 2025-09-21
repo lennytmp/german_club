@@ -294,20 +294,15 @@ public class Main {
       return;
     }
 
-    if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING) {
+    if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING && client.status != Client.Status.TRADING) {
       client.incSuccessToday();
       Storage.saveClient(client);
       if (!Utils.roll(30)) {
-        // Nothing found: with 50% chance send wiseman message, otherwise send the generated message
-        boolean sendWisdom = Utils.roll(50);
-        if (sendWisdom) {
-          Messenger.send(client.chatId, PhraseGenerator.getWisdom(client));
+        // Nothing found: 25% chance to meet trader if player has items, otherwise normal nothing found logic
+        if (Utils.roll(25) && hasAnyItems(client)) {
+          initiateTradeOffer(client);
         } else {
-          String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
-          if (notFound == "") {
-            notFound = "Du hast einen Spaziergang im Wald gemacht, aber nichts Nützliches gefunden.";
-          }
-          Messenger.send(client.chatId, notFound);
+          handleNothingFound(client);
         }
         return;
       }
@@ -387,6 +382,30 @@ public class Main {
         activateBotTask(opponent);
       }
       return;
+    }
+
+    // Handle trade responses
+    if (client.status == Client.Status.TRADING) {
+      if (txt.equals("Angebot annehmen")) {
+        handleTradeAccept(client);
+        return;
+      }
+      if (txt.equals("Angebot ablehnen")) {
+        handleTradeReject(client);
+        return;
+      }
+      // If player tries to use other commands while trading, resend the trade offer
+      if (txt.equals("Profil") || txt.equals("/profil") || txt.equals("Kämpfen") || txt.equals("/kämpfen") || txt.equals("Aufgabe")) {
+        String tradeMessage = String.format(
+            "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
+            "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
+            "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
+            client.requestedItem.singular,
+            client.offeredItem.singular
+        );
+        Messenger.send(client.chatId, tradeMessage, new String[] { "Angebot annehmen", "Angebot ablehnen" });
+        return;
+      }
     }
 
     if (!txt.startsWith("/")) {
@@ -850,5 +869,127 @@ public class Main {
   static void prepareToFight(Client client, Client opponent) {
     int turnOrder = determineTurnOrder(client, opponent);
     prepareToFight(client, opponent, turnOrder);
+  }
+
+  // Trading system methods
+  private static boolean hasAnyItems(Client client) {
+    for (Map.Entry<Integer, Integer> entry : client.inventory.entrySet()) {
+      if (entry.getValue() > 0) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static Game.Item getRandomPlayerItem(Client client) {
+    // Build a weighted list of item indices according to their counts
+    java.util.List<Integer> weighted = new java.util.ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : client.inventory.entrySet()) {
+      int itemIndex = entry.getKey();
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      for (int i = 0; i < count; i++) {
+        weighted.add(itemIndex);
+      }
+    }
+    
+    if (weighted.isEmpty()) {
+      return null;
+    }
+    
+    int randomIndex = weighted.get(Utils.rndInRange(0, weighted.size() - 1));
+    return Game.ITEM_VALUES[randomIndex];
+  }
+
+  private static Game.Item getRandomTradeItem() {
+    // Trader can offer any item in the game
+    return Utils.getRnd(Game.ITEM_VALUES);
+  }
+
+  private static void initiateTradeOffer(Client client) {
+    if (!hasAnyItems(client)) {
+      // Player has no items to trade, fall back to normal "nothing found" logic
+      handleNothingFound(client);
+      return;
+    }
+
+    // Generate trade offer
+    client.offeredItem = getRandomPlayerItem(client);
+    client.requestedItem = getRandomTradeItem();
+    client.status = Client.Status.TRADING;
+    client.tradingWithChatId = -1; // -1 indicates NPC trader
+    
+    Storage.saveClient(client);
+    
+    String tradeMessage = String.format(
+        "\uD83D\uDCBC Ein geheimnisvoller Händler erscheint vor dir!\n\n" +
+        "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
+        "Du kannst das Angebot annehmen oder ablehnen.",
+        client.requestedItem.singular,
+        client.offeredItem.singular
+    );
+    
+    Messenger.send(client.chatId, tradeMessage, new String[] { "Angebot annehmen", "Angebot ablehnen" });
+  }
+
+  private static void handleNothingFound(Client client) {
+    // Nothing found: with 50% chance send wiseman message, otherwise send the generated message
+    boolean sendWisdom = Utils.roll(50);
+    if (sendWisdom) {
+      Messenger.send(client.chatId, PhraseGenerator.getWisdom(client));
+    } else {
+      String notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
+      if (notFound == "") {
+        notFound = "Du hast einen Spaziergang im Wald gemacht, aber nichts Nützliches gefunden.";
+      }
+      Messenger.send(client.chatId, notFound);
+    }
+  }
+
+  private static void handleTradeAccept(Client client) {
+    if (client.status != Client.Status.TRADING || client.offeredItem == null || client.requestedItem == null) {
+      return;
+    }
+
+    // Check if player still has the offered item
+    if (!client.hasItem(client.offeredItem)) {
+      Messenger.send(client.chatId, "Du hast das angebotene Item nicht mehr!", MAIN_BUTTONS);
+      resetTradeState(client);
+      return;
+    }
+
+    // Execute the trade
+    client.takeItem(client.offeredItem);
+    client.giveItem(client.requestedItem);
+    
+    String successMessage = String.format(
+        "\uD83E\uDD1D Handel erfolgreich!\n\n" +
+        "Du hast deine %s gegen 1 %s getauscht.\n\n" +
+        "\"Danke für das Geschäft!\" sagt der Händler und verschwindet.",
+        client.offeredItem.singular,
+        client.requestedItem.singular
+    );
+    
+    Messenger.send(client.chatId, successMessage, MAIN_BUTTONS);
+    resetTradeState(client);
+  }
+
+  private static void handleTradeReject(Client client) {
+    if (client.status != Client.Status.TRADING) {
+      return;
+    }
+
+    Messenger.send(client.chatId, 
+        "\uD83D\uDE45 Du lehnst das Angebot ab.\n\n" +
+        "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.",
+        MAIN_BUTTONS);
+    resetTradeState(client);
+  }
+
+  private static void resetTradeState(Client client) {
+    client.status = Client.Status.IDLE;
+    client.offeredItem = null;
+    client.requestedItem = null;
+    client.tradingWithChatId = 0;
+    Storage.saveClient(client);
   }
 }

@@ -8,7 +8,7 @@ import java.util.LinkedList;
 class Client {
   // TODO: Status and body port should move to Game
   enum Status {
-    FIGHTING, IDLE, READY_TO_FIGHT
+    FIGHTING, IDLE, READY_TO_FIGHT, TRADING
   };
 
 
@@ -38,6 +38,11 @@ class Client {
   int hp;
   // Enum ID to the quantity of that item.
   Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
+
+  // Trading system fields
+  Game.Item offeredItem = null;
+  Game.Item requestedItem = null;
+  int tradingWithChatId = 0;
 
   Client(int chatId, String username) {
     this.chatId = chatId;

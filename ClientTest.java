@@ -11,6 +11,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
+        allTestsPassed &= testTradingSystem();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -321,6 +322,55 @@ public class ClientTest {
             "Message should mention Stärketrank");
         allTestsPassed &= assertEquals(1, messageContains(display.message, "Glückstrank") ? 1 : 0,
             "Message should mention Glückstrank");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testTradingSystem() {
+        boolean allTestsPassed = true;
+        
+        // Test 1: Client with no items should not be able to trade
+        Client clientNoItems = new Client(123, "testuser");
+        allTestsPassed &= assertEquals(0, clientNoItems.inventory.size(),
+            "New client should have empty inventory");
+        
+        // Test 2: Client with items should be able to enter trading state
+        Client clientWithItems = new Client(124, "testuser2");
+        clientWithItems.giveItem(Game.Item.COIN);
+        clientWithItems.giveItem(Game.Item.BOTTLE);
+        
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.COIN) ? 1 : 0,
+            "Client should have coin");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.BOTTLE) ? 1 : 0,
+            "Client should have bottle");
+        
+        // Test 3: Trading state fields should be properly initialized
+        clientWithItems.status = Client.Status.TRADING;
+        clientWithItems.offeredItem = Game.Item.COIN;
+        clientWithItems.requestedItem = Game.Item.GOLD;
+        clientWithItems.tradingWithChatId = -1;
+        
+        allTestsPassed &= assertEquals(1, clientWithItems.status == Client.Status.TRADING ? 1 : 0,
+            "Client should be in trading status");
+        allTestsPassed &= assertEquals(1, clientWithItems.offeredItem == Game.Item.COIN ? 1 : 0,
+            "Offered item should be coin");
+        allTestsPassed &= assertEquals(1, clientWithItems.requestedItem == Game.Item.GOLD ? 1 : 0,
+            "Requested item should be gold");
+        allTestsPassed &= assertEquals(-1, clientWithItems.tradingWithChatId,
+            "Trading chat ID should be -1 for NPC trader");
+        
+        // Test 4: Simulate trade execution
+        if (clientWithItems.hasItem(clientWithItems.offeredItem)) {
+            clientWithItems.takeItem(clientWithItems.offeredItem);
+            clientWithItems.giveItem(clientWithItems.requestedItem);
+        }
+        
+        allTestsPassed &= assertEquals(0, clientWithItems.hasItem(Game.Item.COIN) ? 1 : 0,
+            "Client should no longer have coin after trade");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.GOLD) ? 1 : 0,
+            "Client should have gold after trade");
+        allTestsPassed &= assertEquals(1, clientWithItems.hasItem(Game.Item.BOTTLE) ? 1 : 0,
+            "Client should still have bottle (not traded)");
         
         return allTestsPassed;
     }
