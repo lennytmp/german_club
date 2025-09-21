@@ -1,38 +1,41 @@
-# Cursor Rules for Java Project
+---
+description: Enforce build and test validation using build.sh for Java project
+globs: ['**/*.java', '**/build.sh', '**/run*.sh']
+---
 
-## Build and Test Validation
+# Build and Test Validation Rules
 
-### Use build.sh for validation
+## Use build.sh for validation
 - Before making any code changes that could affect compilation or tests, run `./build.sh` to validate the current state
 - After making code changes, always run `./build.sh` to ensure:
   1. The code compiles successfully
   2. All tests pass
   3. The build completes without errors
 
-### Build Script Requirements
+## Build Script Requirements
 - The `build.sh` script handles both compilation and test execution
 - It compiles Java files to `build/classes` directory
 - It runs the test suite using `ClientTest` class
 - Exit code 0 indicates success, non-zero indicates failure
 
-### Validation Process
+## Validation Process
 1. **Before Changes**: Run `./build.sh` to establish baseline
 2. **After Changes**: Run `./build.sh` to validate changes
 3. **Error Handling**: If build fails, fix compilation errors before proceeding
 4. **Test Failures**: If tests fail, address test failures before considering changes complete
 
-### Code Quality Standards
+## Code Quality Standards
 - All Java files must compile without warnings when possible
 - All existing tests must continue to pass
 - New functionality should include appropriate tests
 - Use assertions (`-ea` flag is enabled) for runtime validation
 
-### Dependencies
+## Dependencies
 - Project uses Gson 2.8.6 library (`lib/gson-2.8.6.jar`)
 - Classpath includes both compiled classes and external libraries
 - Cross-platform compatibility maintained for Windows, macOS, and Linux
 
-### Usage Examples
+## Usage Examples
 ```bash
 # Validate before starting work
 ./build.sh
