@@ -202,8 +202,15 @@ public class Main {
       Client opponent = Storage.getClientByChatId(client.fightingChatId);
       Messenger.send(client.chatId, "Timeout!");
       Messenger.send(opponent.chatId, "Timeout!");
-      finishFight(opponent, client);
+      // Reset timeout warning and activity since we're handling the timeout
+      client.lastFightActivitySince = curTimeSeconds;
+      client.timeoutWarningSent = false;
+      // Timeout acts the same as pressing "Fail" - handle as failed task
+      handleHitTask(client, opponent, false);
       Storage.saveClients(opponent, client);
+      if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
+        activateBotTask(opponent);
+      }
     }
   }
 
@@ -515,7 +522,7 @@ public class Main {
 
   private static void askTaskStatus(Client client) {
     Messenger.send(client.chatId, "Attempt at solving an exercise and report feedback",
-        new String[] { TASK_FAIL, TASK_SUCCESS });
+        addPotions(client, new String[] { TASK_SUCCESS }));
   }
 
   private static String[] addPotions(Client client, String[] options) {
@@ -563,7 +570,7 @@ public class Main {
             PhraseGenerator.attackToOffender(client,
                 victim,
                 clientHits),
-        addPotions(client, new String[] { TASK_FAIL, TASK_SUCCESS }),
+        addPotions(client, new String[] { TASK_SUCCESS }),
         true);
   }
 
