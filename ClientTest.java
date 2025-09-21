@@ -8,7 +8,9 @@ public class ClientTest {
         boolean allTestsPassed = true;
         allTestsPassed &= testNextExpLevel();
         allTestsPassed &= testPotionBrewing();
-        allTestsPassed &= testBrewingUI();
+        allTestsPassed &= testBrewableOptionsGeneration();
+        allTestsPassed &= testCanBrewAnyPotion();
+        allTestsPassed &= testMultiplePotionOptions();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -173,21 +175,6 @@ public class ClientTest {
             "Inventory size should remain unchanged after failed strength potion brewing");
         allTestsPassed &= assertEquals(originalInventory.size(), result3.size(), 
             "Inventory size should remain unchanged after failed luck potion brewing");
-        
-        return allTestsPassed;
-    }
-
-    public static boolean testBrewingUI() {
-        boolean allTestsPassed = true;
-        
-        // Test brewing options generation
-        allTestsPassed &= testBrewableOptionsGeneration();
-        
-        // Test canBrewAnyPotion method
-        allTestsPassed &= testCanBrewAnyPotion();
-        
-        // Test brewing options with multiple potions
-        allTestsPassed &= testMultiplePotionOptions();
         
         return allTestsPassed;
     }
