@@ -41,8 +41,6 @@ class Messenger {
                           msg.removeOptionsIfNeeded);
           lastTimeSent.put(msg.chatId, curTime);
         } else {
-          // TODO: Don't send them every time, otherwise we get errors.
-          // TelegramApi.sendTypingEvent(msg.chatId);
           newQueue.add(msg);
         }
       }
@@ -77,20 +75,6 @@ class Messenger {
     queue.add(new Message(chatId, msg, options, removeOptionsIfNeeded));
   }
 
-  public static void sendNow(int chatId,
-                          String msg,
-                          String[] options,
-                          boolean removeOptionsIfNeeded) {
-    if (chatId < 0) {
-      return;
-    }
-    TelegramApi.say(chatId,
-                    msg,
-                    options,
-                    removeOptionsIfNeeded);
-    int curTime = (int)(System.currentTimeMillis() / 1000L);
-    lastTimeSent.put(chatId, curTime);
-  }
 
   public static void send(int chatId, String msg, String[] options) {
     send(chatId, msg, options, true);

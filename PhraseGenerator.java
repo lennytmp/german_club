@@ -1,7 +1,5 @@
 package FightLang;
 
-import java.util.HashMap;
-import java.util.Map;
 
 class PhraseGenerator {
   static String getJoinedTheFightClub(String username) {
@@ -23,23 +21,6 @@ class PhraseGenerator {
         Utils.getRnd(Phrases.wiseTexts.wisdoms);
   }
 
-  static String getHitPhrase(Client offender,
-                             Client victim,
-                             Client.BodyPart part,
-                             boolean critHit,
-                             int damage) {
-    // Don't think about StringBuilder, it's a lie.
-    // https://stackoverflow.com/questions/4965513/stringbuilder-vs-string-considering-replace 
-    String tmp = victim.username + " " + Utils.getRnd(Phrases.combatTexts.wasDoingSomething) + ", " +
-        Utils.getRnd(Phrases.combatTexts.when) + " " +
-        Utils.getRnd(Phrases.combatTexts.adjective) +
-        " " + offender.username +  " " + Utils.getRnd(Phrases.combatTexts.hit[part.ordinal()]) + ". ";
-    if (critHit) {
-      tmp += "Kritischer Treffer! ";
-    }
-    tmp += "-" + damage + " [" + victim.hp + "/" + victim.getMaxHp() + "]";
-    return tmp;
-  }
 
   static String attackToVictim(Client offender, Client victim, int damage) {
     // Don't think about StringBuilder, it's a lie.

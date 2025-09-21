@@ -11,23 +11,11 @@ class Client {
     FIGHTING, IDLE, READY_TO_FIGHT
   };
 
-  enum BodyPart {
-    HEAD, TORSO, LEGS
-  };
 
   String username;
   int chatId = 0;
   boolean nameChangeHintSent = false;
   Status status = Client.Status.IDLE;
-  // challenge: [questionId, difficulty]
-  int[] challenge = new int[2];
-  // questionId -> next challenge level
-  // 0: guess the word
-  // 1: guess the article (if it is present)
-  // 2: guess correct spelling
-  // 3: spell given the letters
-  // 4: spell, no hints
-  Map<Integer, Integer> fightQuestions = new HashMap<>();
 
   int fightingChatId = 0;
   int lastRestore = 0;
