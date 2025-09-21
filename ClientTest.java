@@ -348,7 +348,6 @@ public class ClientTest {
         clientWithItems.status = Client.Status.TRADING;
         clientWithItems.offeredItem = Game.Item.COIN;
         clientWithItems.requestedItem = Game.Item.GOLD;
-        clientWithItems.tradingWithChatId = -1;
         
         allTestsPassed &= assertEquals(1, clientWithItems.status == Client.Status.TRADING ? 1 : 0,
             "Client should be in trading status");
@@ -356,8 +355,6 @@ public class ClientTest {
             "Offered item should be coin");
         allTestsPassed &= assertEquals(1, clientWithItems.requestedItem == Game.Item.GOLD ? 1 : 0,
             "Requested item should be gold");
-        allTestsPassed &= assertEquals(-1, clientWithItems.tradingWithChatId,
-            "Trading chat ID should be -1 for NPC trader");
         
         // Test 4: Simulate trade execution
         if (clientWithItems.hasItem(clientWithItems.offeredItem)) {

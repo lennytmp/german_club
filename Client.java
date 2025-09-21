@@ -42,7 +42,6 @@ class Client {
   // Trading system fields
   Game.Item offeredItem = null;
   Game.Item requestedItem = null;
-  int tradingWithChatId = 0;
 
   Client(int chatId, String username) {
     this.chatId = chatId;

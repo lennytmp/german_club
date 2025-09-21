@@ -917,7 +917,6 @@ public class Main {
     client.offeredItem = getRandomPlayerItem(client);
     client.requestedItem = getRandomTradeItem();
     client.status = Client.Status.TRADING;
-    client.tradingWithChatId = -1; // -1 indicates NPC trader
     
     Storage.saveClient(client);
     
@@ -990,7 +989,6 @@ public class Main {
     client.status = Client.Status.IDLE;
     client.offeredItem = null;
     client.requestedItem = null;
-    client.tradingWithChatId = 0;
     Storage.saveClient(client);
   }
 }
