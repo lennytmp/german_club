@@ -8,9 +8,9 @@ public class ClientTest {
         boolean allTestsPassed = true;
         allTestsPassed &= testNextExpLevel();
         allTestsPassed &= testPotionBrewing();
-        allTestsPassed &= testBrewableOptionsGeneration();
-        allTestsPassed &= testCanBrewAnyPotion();
-        allTestsPassed &= testMultiplePotionOptions();
+        allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
+        allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
+        allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -25,6 +25,21 @@ public class ClientTest {
         }
         System.out.println(" Test: " + testName + " FAILED: expected " + expected + " but got " + actual);
         return false;
+    }
+    
+    // Helper to check if string array contains specific value
+    public static boolean arrayContains(String[] array, String value) {
+        for (String item : array) {
+            if (item.equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    // Helper to check if message contains specific text
+    public static boolean messageContains(String message, String text) {
+        return message.contains(text);
     }
 
     public static boolean testNextExpLevel() {
@@ -179,144 +194,133 @@ public class ClientTest {
         return allTestsPassed;
     }
 
-    public static boolean testBrewableOptionsGeneration() {
+    public static boolean testProfileDisplayWithNoBrewingOptions() {
         boolean allTestsPassed = true;
         
-        // Test empty inventory - no brewing options
-        Map<Integer, Integer> emptyInventory = new HashMap<>();
-        String[] options = Game.getBrewableOptions(emptyInventory);
-        allTestsPassed &= assertEquals(0, options.length, 
-            "Empty inventory should have no brewing options");
+        // Create client with empty inventory
+        Client client = new Client(1, "TestUser");
+        client.nameChangeHintSent = true; // Avoid name change hint in message
         
-        // Test healing potion ingredients only
-        Map<Integer, Integer> healingInventory = new HashMap<>();
-        healingInventory.put(Game.Item.ASH.ordinal(), 1);
-        healingInventory.put(Game.Item.BANDAGE.ordinal(), 1);
-        healingInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        // Test profile display
+        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
         
-        options = Game.getBrewableOptions(healingInventory);
-        allTestsPassed &= assertEquals(1, options.length, 
-            "Healing ingredients should provide 1 brewing option");
-        allTestsPassed &= assertEquals(1, options[0].equals("Heiltrank brauen") ? 1 : 0,
-            "Should offer 'Heiltrank brauen' option");
+        // Should have standard buttons only
+        allTestsPassed &= assertEquals(3, display.buttons.length, 
+            "Should have 3 main buttons when no brewing options available");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Kämpfen") ? 1 : 0,
+            "Should include 'Kämpfen' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Profil") ? 1 : 0,
+            "Should include 'Profil' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Aufgabe") ? 1 : 0,
+            "Should include 'Aufgabe' button");
         
-        // Test strength potion ingredients only
-        Map<Integer, Integer> strengthInventory = new HashMap<>();
-        strengthInventory.put(Game.Item.BONE.ordinal(), 1);
-        strengthInventory.put(Game.Item.FLESH.ordinal(), 1);
-        strengthInventory.put(Game.Item.FANG.ordinal(), 1);
+        // Should not contain brewing buttons
+        allTestsPassed &= assertEquals(0, arrayContains(display.buttons, "Heiltrank brauen") ? 1 : 0,
+            "Should not include brewing buttons");
         
-        options = Game.getBrewableOptions(strengthInventory);
-        allTestsPassed &= assertEquals(1, options.length, 
-            "Strength ingredients should provide 1 brewing option");
-        allTestsPassed &= assertEquals(1, options[0].equals("Stärketrank brauen") ? 1 : 0,
-            "Should offer 'Stärketrank brauen' option");
-        
-        // Test luck potion ingredients only
-        Map<Integer, Integer> luckInventory = new HashMap<>();
-        luckInventory.put(Game.Item.COIN.ordinal(), 1);
-        luckInventory.put(Game.Item.GOLD.ordinal(), 1);
-        luckInventory.put(Game.Item.SILVER.ordinal(), 1);
-        
-        options = Game.getBrewableOptions(luckInventory);
-        allTestsPassed &= assertEquals(1, options.length, 
-            "Luck ingredients should provide 1 brewing option");
-        allTestsPassed &= assertEquals(1, options[0].equals("Glückstrank brauen") ? 1 : 0,
-            "Should offer 'Glückstrank brauen' option");
+        // Message should not mention brewing
+        allTestsPassed &= assertEquals(0, messageContains(display.message, "Du kannst brauen") ? 1 : 0,
+            "Message should not mention brewing when no ingredients available");
         
         return allTestsPassed;
     }
 
-    public static boolean testCanBrewAnyPotion() {
+    public static boolean testProfileDisplayWithSingleBrewingOption() {
         boolean allTestsPassed = true;
         
-        // Test empty inventory
-        Map<Integer, Integer> emptyInventory = new HashMap<>();
-        allTestsPassed &= assertEquals(0, Game.canBrewAnyPotion(emptyInventory) ? 1 : 0,
-            "Empty inventory should not allow brewing any potion");
+        // Create client with healing potion ingredients
+        Client client = new Client(2, "TestUser");
+        client.nameChangeHintSent = true;
+        client.giveItem(Game.Item.ASH);
+        client.giveItem(Game.Item.BANDAGE);
+        client.giveItem(Game.Item.BOTTLE);
         
-        // Test with healing ingredients
-        Map<Integer, Integer> healingInventory = new HashMap<>();
-        healingInventory.put(Game.Item.ASH.ordinal(), 1);
-        healingInventory.put(Game.Item.BANDAGE.ordinal(), 1);
-        healingInventory.put(Game.Item.BOTTLE.ordinal(), 1);
+        // Test profile display
+        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
         
-        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(healingInventory) ? 1 : 0,
-            "Should be able to brew any potion with healing ingredients");
+        // Should have main buttons + 1 brewing button
+        allTestsPassed &= assertEquals(4, display.buttons.length, 
+            "Should have 4 buttons when 1 brewing option available");
         
-        // Test with strength ingredients
-        Map<Integer, Integer> strengthInventory = new HashMap<>();
-        strengthInventory.put(Game.Item.BONE.ordinal(), 1);
-        strengthInventory.put(Game.Item.FLESH.ordinal(), 1);
-        strengthInventory.put(Game.Item.FANG.ordinal(), 1);
+        // Should contain main buttons
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Kämpfen") ? 1 : 0,
+            "Should include 'Kämpfen' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Profil") ? 1 : 0,
+            "Should include 'Profil' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Aufgabe") ? 1 : 0,
+            "Should include 'Aufgabe' button");
         
-        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(strengthInventory) ? 1 : 0,
-            "Should be able to brew any potion with strength ingredients");
+        // Should contain healing potion brewing button
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Heiltrank brauen") ? 1 : 0,
+            "Should include 'Heiltrank brauen' button");
         
-        // Test with luck ingredients
-        Map<Integer, Integer> luckInventory = new HashMap<>();
-        luckInventory.put(Game.Item.COIN.ordinal(), 1);
-        luckInventory.put(Game.Item.GOLD.ordinal(), 1);
-        luckInventory.put(Game.Item.SILVER.ordinal(), 1);
+        // Should not contain other brewing buttons
+        allTestsPassed &= assertEquals(0, arrayContains(display.buttons, "Stärketrank brauen") ? 1 : 0,
+            "Should not include 'Stärketrank brauen' button");
+        allTestsPassed &= assertEquals(0, arrayContains(display.buttons, "Glückstrank brauen") ? 1 : 0,
+            "Should not include 'Glückstrank brauen' button");
         
-        allTestsPassed &= assertEquals(1, Game.canBrewAnyPotion(luckInventory) ? 1 : 0,
-            "Should be able to brew any potion with luck ingredients");
+        // Message should mention brewing healing potion
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Du kannst brauen") ? 1 : 0,
+            "Message should mention brewing when ingredients available");
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Heiltrank") ? 1 : 0,
+            "Message should mention Heiltrank specifically");
         
         return allTestsPassed;
     }
 
-    public static boolean testMultiplePotionOptions() {
+    public static boolean testProfileDisplayWithMultipleBrewingOptions() {
         boolean allTestsPassed = true;
         
-        // Test inventory with ingredients for all three potions
-        Map<Integer, Integer> multiInventory = new HashMap<>();
-        // Healing ingredients
-        multiInventory.put(Game.Item.ASH.ordinal(), 1);
-        multiInventory.put(Game.Item.BANDAGE.ordinal(), 1);
-        multiInventory.put(Game.Item.BOTTLE.ordinal(), 1);
-        // Strength ingredients
-        multiInventory.put(Game.Item.BONE.ordinal(), 1);
-        multiInventory.put(Game.Item.FLESH.ordinal(), 1);
-        multiInventory.put(Game.Item.FANG.ordinal(), 1);
-        // Luck ingredients
-        multiInventory.put(Game.Item.COIN.ordinal(), 1);
-        multiInventory.put(Game.Item.GOLD.ordinal(), 1);
-        multiInventory.put(Game.Item.SILVER.ordinal(), 1);
+        // Create client with ingredients for all three potions
+        Client client = new Client(3, "TestUser");
+        client.nameChangeHintSent = true;
         
-        String[] options = Game.getBrewableOptions(multiInventory);
-        allTestsPassed &= assertEquals(3, options.length, 
-            "Should have 3 brewing options when all ingredients are available");
+        // Add healing ingredients
+        client.giveItem(Game.Item.ASH);
+        client.giveItem(Game.Item.BANDAGE);
+        client.giveItem(Game.Item.BOTTLE);
+        // Add strength ingredients
+        client.giveItem(Game.Item.BONE);
+        client.giveItem(Game.Item.FLESH);
+        client.giveItem(Game.Item.FANG);
+        // Add luck ingredients
+        client.giveItem(Game.Item.COIN);
+        client.giveItem(Game.Item.GOLD);
+        client.giveItem(Game.Item.SILVER);
         
-        // Check that all expected options are present
-        boolean hasHealing = false;
-        boolean hasStrength = false;
-        boolean hasLuck = false;
+        // Test profile display
+        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
         
-        for (String option : options) {
-            if (option.equals("Heiltrank brauen")) hasHealing = true;
-            else if (option.equals("Stärketrank brauen")) hasStrength = true;
-            else if (option.equals("Glückstrank brauen")) hasLuck = true;
-        }
+        // Should have main buttons + 3 brewing buttons
+        allTestsPassed &= assertEquals(6, display.buttons.length, 
+            "Should have 6 buttons when 3 brewing options available");
         
-        allTestsPassed &= assertEquals(1, hasHealing ? 1 : 0,
-            "Should include 'Heiltrank brauen' option");
-        allTestsPassed &= assertEquals(1, hasStrength ? 1 : 0,
-            "Should include 'Stärketrank brauen' option");
-        allTestsPassed &= assertEquals(1, hasLuck ? 1 : 0,
-            "Should include 'Glückstrank brauen' option");
+        // Should contain all main buttons
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Kämpfen") ? 1 : 0,
+            "Should include 'Kämpfen' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Profil") ? 1 : 0,
+            "Should include 'Profil' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Aufgabe") ? 1 : 0,
+            "Should include 'Aufgabe' button");
         
-        // Test with ingredients for only two potions (healing + strength)
-        Map<Integer, Integer> twoInventory = new HashMap<>();
-        twoInventory.put(Game.Item.ASH.ordinal(), 1);
-        twoInventory.put(Game.Item.BANDAGE.ordinal(), 1);
-        twoInventory.put(Game.Item.BOTTLE.ordinal(), 1);
-        twoInventory.put(Game.Item.BONE.ordinal(), 1);
-        twoInventory.put(Game.Item.FLESH.ordinal(), 1);
-        twoInventory.put(Game.Item.FANG.ordinal(), 1);
+        // Should contain all brewing buttons
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Heiltrank brauen") ? 1 : 0,
+            "Should include 'Heiltrank brauen' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Stärketrank brauen") ? 1 : 0,
+            "Should include 'Stärketrank brauen' button");
+        allTestsPassed &= assertEquals(1, arrayContains(display.buttons, "Glückstrank brauen") ? 1 : 0,
+            "Should include 'Glückstrank brauen' button");
         
-        options = Game.getBrewableOptions(twoInventory);
-        allTestsPassed &= assertEquals(2, options.length, 
-            "Should have 2 brewing options when healing and strength ingredients are available");
+        // Message should mention all brewable potions
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Du kannst brauen") ? 1 : 0,
+            "Message should mention brewing when ingredients available");
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Heiltrank") ? 1 : 0,
+            "Message should mention Heiltrank");
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Stärketrank") ? 1 : 0,
+            "Message should mention Stärketrank");
+        allTestsPassed &= assertEquals(1, messageContains(display.message, "Glückstrank") ? 1 : 0,
+            "Message should mention Glückstrank");
         
         return allTestsPassed;
     }

@@ -422,7 +422,19 @@ public class Main {
     return numListeners;
   }
 
-  private static void showProfile(Client client) {
+  // Testable class to hold profile display data
+  static class ProfileDisplay {
+    String message;
+    String[] buttons;
+    
+    ProfileDisplay(String message, String[] buttons) {
+      this.message = message;
+      this.buttons = buttons;
+    }
+  }
+  
+  // Testable method that builds profile display without sending messages
+  static ProfileDisplay buildProfileDisplay(Client client) {
     StringBuilder profileMessage = new StringBuilder();
     
     // Add client stats
@@ -432,8 +444,6 @@ public class Main {
     if (!client.nameChangeHintSent) {
       profileMessage.append("\n\nDu kannst deinen Namen mit folgendem Befehl ändern \n")
                    .append("`/username neuername`.");
-      client.nameChangeHintSent = true;
-      Storage.saveClient(client);
     }
     
     // Add level points message if applicable
@@ -478,8 +488,20 @@ public class Main {
       System.arraycopy(brewableOptions, 0, buttons, MAIN_BUTTONS.length, brewableOptions.length);
     }
     
-    // Send single combined message
-    Messenger.send(client.chatId, profileMessage.toString(), buttons);
+    return new ProfileDisplay(profileMessage.toString(), buttons);
+  }
+
+  private static void showProfile(Client client) {
+    ProfileDisplay display = buildProfileDisplay(client);
+    
+    // Handle side effects that can't be easily tested
+    if (!client.nameChangeHintSent) {
+      client.nameChangeHintSent = true;
+      Storage.saveClient(client);
+    }
+    
+    // Send the message
+    Messenger.send(client.chatId, display.message, display.buttons);
   }
 
   private static void sendInventoryDescription(Client client) {
