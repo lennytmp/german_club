@@ -10,7 +10,8 @@ class Migrator {
     Logger.initialize();
 
     System.out.println("Starting migration...");
-    Storage.forEachClient(new ClientDo() {
+    Storage storage = new Storage();
+    storage.forEachClient(new ClientDo() {
       public void run(Client client) {
         if (client == null) {
           return; // this shouldn't happen
@@ -18,13 +19,15 @@ class Migrator {
         if (client.chatId < 0) {
           return; // bots have no async logic as of now
         }
-        migrate(client);
+        migrate(client, storage);
       }
     });
     System.out.println("Migration finished...");
   }
 
-  private static void migrate(Client client) {
+  private static void migrate(Client client, Storage storage) {
+    client.setStorage(storage); // Set storage dependency
+    
     if (client.level == 0) {
       client.level = 1;
     }
@@ -36,6 +39,6 @@ class Migrator {
         + "got level up");
       client.level++;
     }
-    Storage.saveClient(client);
+    storage.saveClient(client);
   }
 }

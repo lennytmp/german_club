@@ -6,10 +6,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
-class Storage {
-  private static Gson g = new Gson();
+class Storage implements StorageInterface {
+  private Gson g = new Gson();
 
-  static void saveClients(Client... clients) {
+  @Override
+  public void saveClients(Client... clients) {
     String[] names = new String[clients.length];
     String[] values = new String[clients.length];
     for (int i = 0; i < clients.length; i++) {
@@ -19,12 +20,14 @@ class Storage {
     Logger.saveClients(names, values);
   }
 
-  static void saveClient(Client client) {
+  @Override
+  public void saveClient(Client client) {
     String chatId = Integer.toString(client.chatId);
     Logger.saveClient(chatId, g.toJson(client));
   }
 
-  static void forEachClient(ClientDo doable) {
+  @Override
+  public void forEachClient(ClientDo doable) {
     List<String> chatIds = Logger.getAllClientNames();
     for (String chatId : chatIds) {
       String clientJson = Logger.getClient(chatId);
@@ -37,7 +40,8 @@ class Storage {
     }
   }
 
-  static Client getClientByChatId(int chatId) {
+  @Override
+  public Client getClientByChatId(int chatId) {
     String clientJson = Logger.getClient(Integer.toString(chatId));
     if (clientJson == null) {
       return null;
@@ -45,7 +49,8 @@ class Storage {
     return g.fromJson(clientJson, Client.class);
   }
 
-  static Client[] getClientsByChatIds(Set<Integer> chatIds) {
+  @Override
+  public Client[] getClientsByChatIds(Set<Integer> chatIds) {
     Client[] result = new Client[chatIds.size()];
     int i = 0;
     for (int chatId : chatIds) {
@@ -55,7 +60,8 @@ class Storage {
     return result;
   }
 
-  static int getMaxUpdateId() {
+  @Override
+  public int getMaxUpdateId() {
     Integer result = Logger.getIntVar("maxUpdateId");
     if (result == null) {
       result = 0;
@@ -63,7 +69,8 @@ class Storage {
     return result;
   }
 
-  static void saveMaxUpdateId(int id) {
+  @Override
+  public void saveMaxUpdateId(int id) {
     Logger.saveIntVar("maxUpdateId", id);
   }
 }

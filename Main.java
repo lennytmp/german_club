@@ -17,8 +17,8 @@ public class Main {
     System.out.println("German Club Server started...");
     while (true) {
       try {
-        StorageInterface storage = new RealStorage();
-        TelegramInterface telegram = new RealTelegram();
+        StorageInterface storage = new Storage();
+        TelegramInterface telegram = new TelegramService();
         int maxUpdateId = storage.getMaxUpdateId();
         // TODO: download updates async and put to queue
         Telegram.Update[] updates = telegram.getUpdates(maxUpdateId + 1);
@@ -65,8 +65,8 @@ public class Main {
     }
 
     // Initialize the game engine
-    StorageInterface storage = new RealStorage();
-    TelegramInterface telegram = new RealTelegram();
+    StorageInterface storage = new Storage();
+    TelegramInterface telegram = new TelegramService();
     gameEngine = new GameEngine(storage, telegram);
   }
 
@@ -93,6 +93,11 @@ public class Main {
     // We'll create a temporary GameEngine just for this test method
     StorageInterface storage = new MockStorage();
     TelegramInterface telegram = new MockTelegram();
+    
+    // Ensure clients have storage dependency set
+    client.setStorage(storage);
+    opponent.setStorage(storage);
+    
     GameEngine tempEngine = new GameEngine(storage, telegram);
     tempEngine.prepareToFight(client, opponent);
   }

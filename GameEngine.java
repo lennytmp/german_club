@@ -48,12 +48,24 @@ public class GameEngine {
         initializeClientSets();
     }
     
+    // Helper method to get client and ensure storage dependency is set
+    private Client getClientWithStorage(int chatId) {
+        Client client = storage.getClientByChatId(chatId);
+        if (client != null) {
+            client.setStorage(storage);
+        }
+        return client;
+    }
+    
     private void initializeClientSets() {
         storage.forEachClient(new ClientDo() {
             public void run(Client client) {
                 if (client == null) {
                     return; // this shouldn't happen
                 }
+                // Ensure client has storage dependency set
+                client.setStorage(storage);
+                
                 if (client.chatId < 0) {
                     return; // bots have no async logic as of now
                 }
@@ -76,7 +88,7 @@ public class GameEngine {
     public void processUpdate(Telegram.Update upd) {
         updateCurTime();
         int chatId = upd.message.chat.id;
-        Client client = storage.getClientByChatId(chatId);
+        Client client = getClientWithStorage(chatId);
         boolean newClient = client == null;
         if (newClient) {
             String username;
@@ -86,6 +98,10 @@ public class GameEngine {
                 username = upd.message.from.first_name;
             }
             client = new Client(chatId, username);
+            client.setStorage(storage);
+        } else {
+            // Ensure existing client has storage dependency set
+            client.setStorage(storage);
         }
         client.lastActivity = curTimeSeconds;
         activeChats.add(chatId);
@@ -179,7 +195,7 @@ public class GameEngine {
                 setReadyToFight(client);
             } else {
                 int opponentChatId = readyToFightChats.iterator().next();
-                startFightReal(client, storage.getClientByChatId(opponentChatId));
+                startFightReal(client, getClientWithStorage(opponentChatId));
             }
             return;
         }
@@ -240,7 +256,7 @@ public class GameEngine {
             if (client.status != Client.Status.FIGHTING) {
                 return;
             }
-            Client opponent = storage.getClientByChatId(client.fightingChatId);
+            Client opponent = getClientWithStorage(client.fightingChatId);
             telegram.sendMessage(client.chatId, "Rückzug42!");
             telegram.sendMessage(opponent.chatId, "Rückzug42!");
             finishFight(opponent, client);
@@ -252,7 +268,7 @@ public class GameEngine {
             if (client.status != Client.Status.FIGHTING) {
                 return;
             }
-            Client opponent = storage.getClientByChatId(client.fightingChatId);
+            Client opponent = getClientWithStorage(client.fightingChatId);
             telegram.sendMessage(client.chatId, "Töten42 aktiviert!");
             telegram.sendMessage(opponent.chatId, "Töten42 aktiviert!");
             finishFight(client, opponent);
@@ -279,7 +295,7 @@ public class GameEngine {
                 client.incSuccessToday();
             }
             client.lastFightActivitySince = curTimeSeconds;
-            Client opponent = storage.getClientByChatId(client.fightingChatId);
+            Client opponent = getClientWithStorage(client.fightingChatId);
             handleHitTask(client, opponent, isSuccess);
             storage.saveClients(opponent, client);
             if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
@@ -317,6 +333,9 @@ public class GameEngine {
         }
         storage.forEachClient(new ClientDo() {
             public void run(Client client) {
+                if (client == null) return;
+                client.setStorage(storage); // Ensure storage dependency is set
+                
                 if (client.getLastDailyCleanup() + 24 * 60 * 60 < curTimeSeconds) {
                     client.setSuccessToday(0);
                     client.setLastDailyCleanup(curTimeSeconds);
@@ -327,11 +346,15 @@ public class GameEngine {
     
     private void assignBotsIfTimeout(Client[] clients) {
         for (Client client : clients) {
+            if (client == null) continue;
+            client.setStorage(storage); // Ensure storage dependency is set
+            
             if (client.status != Client.Status.READY_TO_FIGHT
                 || client.readyToFightSince > curTimeSeconds - 10) {
                 return;
             }
             Client bot = new Client(-client.chatId, client);
+            bot.setStorage(storage); // Set storage for bot too
             prepareToFight(client, bot);
             storage.saveClients(bot, client);
 
@@ -351,6 +374,9 @@ public class GameEngine {
     
     private void restoreHpIfNeeded(Client[] clients) {
         for (Client client : clients) {
+            if (client == null) continue;
+            client.setStorage(storage); // Ensure storage dependency is set
+            
             if (client.status != Client.Status.IDLE
                 || client.hp == client.getMaxHp()
                 || client.lastRestore > curTimeSeconds - 3) {
@@ -368,12 +394,15 @@ public class GameEngine {
     
     private void handleFightTimeouts(Client[] clients) {
         for (Client client : clients) {
+            if (client == null) continue;
+            client.setStorage(storage); // Ensure storage dependency is set
+            
             if (client.status != Client.Status.FIGHTING
                 || client.chatId < 0
                 || client.lastFightActivitySince > curTimeSeconds - (FIGHT_TIMEOUT + 5)) {
                 continue;
             }
-            Client opponent = storage.getClientByChatId(client.fightingChatId);
+            Client opponent = getClientWithStorage(client.fightingChatId);
             // Reset activity since we're handling the timeout
             client.lastFightActivitySince = curTimeSeconds;
             // Timeout acts the same as pressing "Fail" - handle as failed task
@@ -395,8 +424,8 @@ public class GameEngine {
         int numListeners = 0;
         List<Integer> passive = new LinkedList<>();
         for (int recepientChatId : activeChats) {
-            Client recepient = storage.getClientByChatId(recepientChatId);
-            if (recepient.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
+            Client recepient = getClientWithStorage(recepientChatId);
+            if (recepient != null && recepient.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
                 telegram.sendMessage(recepient.chatId, message);
                 numListeners++;
             } else {
@@ -646,7 +675,7 @@ public class GameEngine {
             "[" + client.hp + "/" + client.getMaxHp() + "]";
         if (client.status == Client.Status.FIGHTING) {
             telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
-            Client opponent = storage.getClientByChatId(client.fightingChatId);
+            Client opponent = getClientWithStorage(client.fightingChatId);
             telegram.sendMessage(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
                 "[" + client.hp + "/" + client.getMaxHp() + "]");
         } else {

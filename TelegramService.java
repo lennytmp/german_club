@@ -1,6 +1,6 @@
 package FightLang;
 
-public class RealTelegram implements TelegramInterface {
+public class TelegramService implements TelegramInterface {
     @Override
     public Telegram.Update[] getUpdates(int offset) {
         return TelegramApi.getUpdates(offset);
