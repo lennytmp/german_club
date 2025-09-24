@@ -12,7 +12,6 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
-        allTestsPassed &= testPrepareToFight();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -452,10 +451,4 @@ public class ClientTest {
         return allTestsPassed;
     }
 
-    public static boolean testPrepareToFight() {
-        // This test is now covered by CoreGameTest.testFightPreparation() using end-to-end simulation
-        // Keeping this as a simple placeholder that always passes to maintain test compatibility
-        System.out.print("S"); // Indicate success for this placeholder test
-        return true;
-    }
 }
