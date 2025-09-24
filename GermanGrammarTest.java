@@ -17,27 +17,90 @@ public class GermanGrammarTest {
         System.out.println("=== German Grammar Test for Victory Phrases ===");
         System.out.println("Testing that German word order is correct...\n");
         
-        // Test each victory phrase template multiple times to ensure all variants work
-        boolean allTestsPassed = true;
+        // First, let's determine all possible phrases by checking the JSON structure
+        System.out.println("📋 All possible victory phrases according to combats.json:");
+        String[] expectedPhrases = {
+            "☠ Lenny hat gewonnen gegen Dämon.",
+            "☠ Lenny hat Dämon besiegt.",
+            "☠ Lenny hat Dämon überwunden."
+        };
         
-        for (int i = 0; i < 20; i++) {
+        for (String phrase : expectedPhrases) {
+            System.out.println("   " + phrase);
+        }
+        System.out.println();
+        
+        // Now generate phrases exhaustively to ensure we see all variants
+        System.out.println("🔄 Generating phrases to find all variants...");
+        boolean[] phraseSeen = new boolean[expectedPhrases.length];
+        boolean allTestsPassed = true;
+        boolean specificPhraseFound = false;
+        String targetPhrase = "☠ Lenny hat gewonnen gegen Dämon.";
+        
+        // Generate enough phrases to guarantee we see all variants (with high probability)
+        // Since there are 3 possible phrases, generating 100 should be more than enough
+        for (int i = 0; i < 100; i++) {
             String phrase = PhraseGenerator.getWonPhrase(winner, loser);
-            System.out.println("Generated: " + phrase);
+            
+            // Check if this is our specific target phrase
+            if (phrase.equals(targetPhrase)) {
+                if (!specificPhraseFound) {
+                    System.out.println("🎯 FOUND TARGET PHRASE: " + phrase);
+                    specificPhraseFound = true;
+                }
+            }
+            
+            // Track which expected phrases we've seen
+            for (int j = 0; j < expectedPhrases.length; j++) {
+                if (phrase.equals(expectedPhrases[j])) {
+                    if (!phraseSeen[j]) {
+                        System.out.println("✅ Generated expected phrase: " + phrase);
+                        phraseSeen[j] = true;
+                    }
+                    break;
+                }
+            }
             
             // Verify the phrase follows correct German grammar patterns
             if (!isGermanGrammarCorrect(phrase, "Lenny", "Dämon")) {
                 System.err.println("❌ GRAMMAR ERROR: " + phrase);
                 allTestsPassed = false;
-            } else {
-                System.out.println("✅ Grammar correct");
             }
-            System.out.println();
         }
         
-        if (allTestsPassed) {
-            System.out.println("🎉 ALL TESTS PASSED - German grammar is correct!");
+        System.out.println();
+        System.out.println("📊 Test Results:");
+        System.out.println("================");
+        
+        // Check if we found the specific phrase
+        if (specificPhraseFound) {
+            System.out.println("✅ SPECIFIC PHRASE CONFIRMED: \"☠ Lenny hat gewonnen gegen Dämon.\"");
         } else {
-            System.out.println("💥 SOME TESTS FAILED - Grammar issues detected!");
+            System.err.println("❌ SPECIFIC PHRASE NOT FOUND: \"☠ Lenny hat gewonnen gegen Dämon.\"");
+            allTestsPassed = false;
+        }
+        
+        // Check if we found all expected phrases
+        boolean allPhrasesFound = true;
+        for (int i = 0; i < expectedPhrases.length; i++) {
+            if (phraseSeen[i]) {
+                System.out.println("✅ Found: " + expectedPhrases[i]);
+            } else {
+                System.err.println("❌ Missing: " + expectedPhrases[i]);
+                allPhrasesFound = false;
+            }
+        }
+        
+        if (allTestsPassed && allPhrasesFound && specificPhraseFound) {
+            System.out.println("\n🎉 ALL TESTS PASSED!");
+            System.out.println("   ✓ German grammar is correct");
+            System.out.println("   ✓ All expected phrases generated");
+            System.out.println("   ✓ Specific target phrase confirmed: \"☠ Lenny hat gewonnen gegen Dämon.\"");
+        } else {
+            System.out.println("\n💥 SOME TESTS FAILED!");
+            if (!allTestsPassed) System.out.println("   ✗ Grammar issues detected");
+            if (!allPhrasesFound) System.out.println("   ✗ Not all expected phrases found");
+            if (!specificPhraseFound) System.out.println("   ✗ Target phrase not generated");
             System.exit(1);
         }
     }
