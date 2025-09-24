@@ -21,7 +21,6 @@ public class VictoryMessageTest {
         if (!allTestsPassed) {
             System.exit(1);
         }
-        System.out.println("\nAll victory message tests passed!");
     }
     
     /**
