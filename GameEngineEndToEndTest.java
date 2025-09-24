@@ -118,6 +118,7 @@ public class GameEngineEndToEndTest {
             opponent = temp;
             
             if (round == maxRounds - 1) {
+                System.out.println("Fight didn't end in " + maxRounds + " rounds");
                 testPassed &= false; // Fight didn't end in reasonable time
             }
         }
