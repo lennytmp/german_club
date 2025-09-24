@@ -70,22 +70,6 @@ public class Main {
     gameEngine = new GameEngine(storage, telegram);
   }
 
-  // Testable class to hold profile display data - kept for backward compatibility with tests
-  static class ProfileDisplay {
-    String message;
-    String[] buttons;
-    
-    ProfileDisplay(String message, String[] buttons) {
-      this.message = message;
-      this.buttons = buttons;
-    }
-  }
-  
-  // Testable method that builds profile display without sending messages - kept for backward compatibility with tests
-  static ProfileDisplay buildProfileDisplay(Client client) {
-    GameEngine.ProfileDisplay engineDisplay = GameEngine.buildProfileDisplay(client);
-    return new ProfileDisplay(engineDisplay.message, engineDisplay.buttons);
-  }
 
   // Kept for backward compatibility with tests
   static void prepareToFight(Client client, Client opponent) {
