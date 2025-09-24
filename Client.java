@@ -11,6 +11,8 @@ class Client {
     FIGHTING, IDLE, READY_TO_FIGHT, TRADING
   };
 
+  // Storage dependency for saving client state
+  private transient StorageInterface storage;
 
   String username;
   int chatId = 0;
@@ -47,6 +49,11 @@ class Client {
     this.chatId = chatId;
     this.username = username;
     hp = getMaxHp();
+  }
+  
+  // Set storage dependency (needed after deserialization or for testing)
+  public void setStorage(StorageInterface storage) {
+    this.storage = storage;
   }
 
   // Used for creating bots
@@ -158,12 +165,16 @@ class Client {
 
   public void setSuccessToday(int val) {
     successToday = val;
-    Storage.saveClient(this);
+    if (storage != null) {
+      storage.saveClient(this);
+    }
   }
 
   public void incSuccessToday() {
     successToday++;
-    Storage.saveClient(this);
+    if (storage != null) {
+      storage.saveClient(this);
+    }
   }
 
   public int getLastDailyCleanup() {
@@ -172,7 +183,9 @@ class Client {
 
   public void setLastDailyCleanup(int val) {
     lastDailyCleanup = val;
-    Storage.saveClient(this);
+    if (storage != null) {
+      storage.saveClient(this);
+    }
   }
 
   public int getMaxHp() {
@@ -312,7 +325,9 @@ class Client {
     status = Client.Status.IDLE;
     offeredItem = null;
     requestedItem = null;
-    Storage.saveClient(this);
+    if (storage != null) {
+      storage.saveClient(this);
+    }
   }
 
   public boolean generateTradeOffer(Game.Item requestedItem) {

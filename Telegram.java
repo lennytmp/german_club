@@ -1,17 +1,17 @@
 package FightLang;
 
 class Telegram {
-  class GetUpdatesResult {
+  static class GetUpdatesResult {
     boolean ok;
     Update[] result;
   }
 
-  class Update {
+  static class Update {
     int update_id;
     Message message;
   }
 
-  class Message {
+  static class Message {
     int message_id;
     int date;
     String text;
@@ -19,14 +19,14 @@ class Telegram {
     Chat chat;
   }
 
-  class User {
+  static class User {
     int id;
     String username;
     String first_name;
     String last_name;
   }
 
-  class Chat {
+  static class Chat {
     int id;
     String first_name;
     String last_name;
