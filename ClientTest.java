@@ -204,7 +204,7 @@ public class ClientTest {
         client.nameChangeHintSent = true; // Avoid name change hint in message
         
         // Test profile display
-        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
+        GameEngine.ProfileDisplay display = GameEngine.buildProfileDisplay(client);
         
         // Should have standard buttons only
         allTestsPassed &= assertEquals(3, display.buttons.length, 
@@ -238,7 +238,7 @@ public class ClientTest {
         client.giveItem(Game.Item.BOTTLE);
         
         // Test profile display
-        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
+        GameEngine.ProfileDisplay display = GameEngine.buildProfileDisplay(client);
         
         // Should have main buttons + 1 brewing button
         allTestsPassed &= assertEquals(4, display.buttons.length, 
@@ -292,7 +292,7 @@ public class ClientTest {
         client.giveItem(Game.Item.SILVER);
         
         // Test profile display
-        Main.ProfileDisplay display = Main.buildProfileDisplay(client);
+        GameEngine.ProfileDisplay display = GameEngine.buildProfileDisplay(client);
         
         // Should have main buttons + 3 brewing buttons
         allTestsPassed &= assertEquals(6, display.buttons.length, 
