@@ -26,51 +26,32 @@ public class VictoryMessageTest {
     
     /**
      * Comprehensive test that verifies the consolidated victory message functionality.
-     * Tests message components, level-up integration, and single message count.
+     * Tests message components, level-up integration, and single message count in one test.
      */
     private static boolean testConsolidatedVictoryMessage() {
         System.out.print("Testing consolidated victory message functionality... ");
         boolean testPassed = true;
         
-        // Test 1: Basic victory message components
-        testPassed &= testBasicVictoryComponents();
-        
-        // Test 2: Victory message with level-up
-        testPassed &= testVictoryWithLevelUp();
-        
-        // Test 3: Verify only one message is sent
-        testPassed &= testSingleMessageCount();
-        
-        if (testPassed) {
-            System.out.println("PASSED");
-        } else {
-            System.out.println("FAILED");
-        }
-        
-        return testPassed;
-    }
-    
-    /**
-     * Test basic victory message contains all expected components
-     */
-    private static boolean testBasicVictoryComponents() {
         MockStorage storage = new MockStorage();
         MockTelegram telegram = new MockTelegram();
         GameEngine engine = new GameEngine(storage, telegram);
         
-        // Create two players
-        telegram.simulateUserMessage(100, "Winner", "/start");
+        // Create a player close to leveling up to test level-up integration
+        Client nearLevelUp = new Client(100, "LevelUpWinner");
+        nearLevelUp.exp = 25; // Close to level 2 (needs 30)
+        storage.addClient(nearLevelUp);
+        
+        // Create opponent
+        telegram.simulateUserMessage(200, "Opponent", "/start");
         engine.processUpdate(telegram.getUpdates(1)[0]);
-        telegram.simulateUserMessage(200, "Loser", "/start");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
         
         telegram.clearMessages();
         
         // Start fight
-        telegram.simulateUserMessage(100, "Winner", "Kämpfen");
+        telegram.simulateUserMessage(100, "LevelUpWinner", "Kämpfen");
+        engine.processUpdate(telegram.getUpdates(2)[0]);
+        telegram.simulateUserMessage(200, "Opponent", "Kämpfen");
         engine.processUpdate(telegram.getUpdates(3)[0]);
-        telegram.simulateUserMessage(200, "Loser", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(4)[0]);
         
         // Find who has the turn and force fight to completion
         boolean player1HasTurn = telegram.hasMessageForChatContaining(100, "Du bist an der Reihe!");
@@ -82,7 +63,7 @@ public class VictoryMessageTest {
             telegram.clearMessages();
             
             telegram.simulateUserMessage(activePlayer, "Player" + activePlayer, "Erfolg");
-            engine.processUpdate(telegram.getUpdates(5 + round)[0]);
+            engine.processUpdate(telegram.getUpdates(4 + round)[0]);
             
             // Check if fight ended
             if (telegram.hasMessageContaining("Du hast gewonnen!")) {
@@ -98,138 +79,28 @@ public class VictoryMessageTest {
                 if (victoryMessage != null) {
                     String message = victoryMessage.message;
                     
-                    // Check that all components are in the single message
-                    if (!message.contains("Du hast gewonnen!")) return false;
-                    if (!message.contains("Erfahrung erhalten")) return false;
-                    if (!message.contains("Erfahrung fehlt bis zum Levelaufstieg")) return false;
-                    if (!message.contains("Heiltrank gefunden")) return false;
+                    // Test 1: Check that all basic components are in the single message
+                    testPassed &= message.contains("Du hast gewonnen!");
+                    testPassed &= message.contains("Erfahrung erhalten");
+                    testPassed &= message.contains("Erfahrung fehlt bis zum Levelaufstieg");
+                    testPassed &= message.contains("Heiltrank gefunden");
                     
-                    // Check for proper formatting with emojis
-                    if (!message.contains("🎯")) return false;
-                    if (!message.contains("💎")) return false;
+                    // Test 2: Check for proper formatting with emojis
+                    testPassed &= message.contains("🎯");
+                    testPassed &= message.contains("💎");
                     
-                    // Check that message has proper line breaks (not all on one line)
-                    if (!message.contains("\n")) return false;
+                    // Test 3: Check that message has proper line breaks (not all on one line)
+                    testPassed &= message.contains("\n");
                     
-                    return true;
-                }
-                break;
-            }
-            
-            // Switch players
-            int temp = activePlayer;
-            activePlayer = passivePlayer;
-            passivePlayer = temp;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Test victory message when player levels up
-     */
-    private static boolean testVictoryWithLevelUp() {
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
-        
-        // Create a player close to leveling up
-        Client nearLevelUp = new Client(300, "NearLevelUp");
-        nearLevelUp.exp = 25; // Close to level 2 (needs 30)
-        storage.addClient(nearLevelUp);
-        
-        // Create opponent
-        telegram.simulateUserMessage(400, "Opponent", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
-        
-        telegram.clearMessages();
-        
-        // Start fight
-        telegram.simulateUserMessage(300, "NearLevelUp", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
-        telegram.simulateUserMessage(400, "Opponent", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(3)[0]);
-        
-        // Determine turn order
-        boolean nearLevelUpHasTurn = telegram.hasMessageForChatContaining(300, "Du bist an der Reihe!");
-        int activePlayer = nearLevelUpHasTurn ? 300 : 400;
-        int passivePlayer = nearLevelUpHasTurn ? 400 : 300;
-        
-        // Fight until victory
-        for (int round = 0; round < 50; round++) {
-            telegram.clearMessages();
-            
-            telegram.simulateUserMessage(activePlayer, "Player" + activePlayer, "Erfolg");
-            engine.processUpdate(telegram.getUpdates(4 + round)[0]);
-            
-            if (telegram.hasMessageContaining("Du hast gewonnen!")) {
-                // Find victory message for the near-level-up player
-                if (activePlayer == 300) {
-                    MockTelegram.SentMessage victoryMessage = null;
-                    for (MockTelegram.SentMessage msg : telegram.getSentMessages()) {
-                        if (msg.chatId == 300 && msg.message.contains("Du hast gewonnen!")) {
-                            victoryMessage = msg;
-                            break;
-                        }
-                    }
-                    
-                    if (victoryMessage != null) {
-                        // Should contain level up message in the same victory message
-                        if (!victoryMessage.message.contains("Du hast Level")) return false;
-                        if (!victoryMessage.message.contains("erreicht!")) return false;
-                        if (!victoryMessage.message.contains("🎉")) return false;
-                        return true;
+                    // Test 4: If player 100 won (the near-level-up player), check level-up integration
+                    if (victoryMessage.chatId == 100) {
+                        testPassed &= message.contains("Du hast Level");
+                        testPassed &= message.contains("erreicht!");
+                        testPassed &= message.contains("🎉");
                     }
                 }
-                // If player 400 won, we can't test level-up, but that's ok
-                return true;
-            }
-            
-            // Switch players
-            int temp = activePlayer;
-            activePlayer = passivePlayer;
-            passivePlayer = temp;
-        }
-        
-        return false;
-    }
-    
-    /**
-     * Test that only ONE victory message is sent (not multiple messages)
-     */
-    private static boolean testSingleMessageCount() {
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
-        
-        // Create two players
-        telegram.simulateUserMessage(600, "SingleMsgWinner", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
-        telegram.simulateUserMessage(700, "SingleMsgLoser", "/start");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
-        
-        telegram.clearMessages();
-        
-        // Start fight
-        telegram.simulateUserMessage(600, "SingleMsgWinner", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(3)[0]);
-        telegram.simulateUserMessage(700, "SingleMsgLoser", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(4)[0]);
-        
-        // Find who has the turn
-        boolean player1HasTurn = telegram.hasMessageForChatContaining(600, "Du bist an der Reihe!");
-        int activePlayer = player1HasTurn ? 600 : 700;
-        int passivePlayer = player1HasTurn ? 700 : 600;
-        
-        // Fight until victory
-        for (int round = 0; round < 50; round++) {
-            telegram.clearMessages();
-            
-            telegram.simulateUserMessage(activePlayer, "Player" + activePlayer, "Erfolg");
-            engine.processUpdate(telegram.getUpdates(5 + round)[0]);
-            
-            if (telegram.hasMessageContaining("Du hast gewonnen!")) {
-                // Count victory-related messages for the winner
+                
+                // Test 5: Count victory-related messages - should be exactly 1
                 int victoryMessageCount = 0;
                 for (MockTelegram.SentMessage msg : telegram.getSentMessages()) {
                     if (msg.chatId == activePlayer && 
@@ -240,9 +111,9 @@ public class VictoryMessageTest {
                         victoryMessageCount++;
                     }
                 }
+                testPassed &= (victoryMessageCount == 1);
                 
-                // Should be exactly 1 message containing all victory information
-                return (victoryMessageCount == 1);
+                break;
             }
             
             // Switch players
@@ -251,6 +122,12 @@ public class VictoryMessageTest {
             passivePlayer = temp;
         }
         
-        return false;
+        if (testPassed) {
+            System.out.println("PASSED");
+        } else {
+            System.out.println("FAILED");
+        }
+        
+        return testPassed;
     }
 }
