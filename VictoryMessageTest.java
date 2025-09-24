@@ -29,7 +29,6 @@ public class VictoryMessageTest {
      * Tests message components, level-up integration, and single message count in one test.
      */
     private static boolean testConsolidatedVictoryMessage() {
-        System.out.print("Testing consolidated victory message functionality... ");
         boolean testPassed = true;
         
         MockStorage storage = new MockStorage();
@@ -123,9 +122,9 @@ public class VictoryMessageTest {
         }
         
         if (testPassed) {
-            System.out.println("PASSED");
+            System.out.print("S");
         } else {
-            System.out.println("FAILED");
+            System.out.println("Victory message test FAILED");
         }
         
         return testPassed;
