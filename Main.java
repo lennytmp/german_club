@@ -55,14 +55,16 @@ public class Main {
     }
     Logger.setDbPath(args[0]);
     Logger.initialize();
+    
+    // Set environment before initializing components that depend on it
+    if (args.length > 1 && args[1].equals("PROD")) {
+      isProd = true;
+    }
+    
     TelegramApi.initialize();
     Logger.log("test");
     Gemini.initialize();
     Phrases.initialize();
-
-    if (args.length > 1 && args[1].equals("PROD")) {
-      isProd = true;
-    }
 
     // Initialize the game engine
     StorageInterface storage = new Storage();
