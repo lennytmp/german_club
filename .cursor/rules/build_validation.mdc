@@ -31,6 +31,14 @@ globs: ['**/*.java', '**/build.sh', '**/run*.sh']
 - Use assertions (`-ea` flag is enabled) for runtime validation
 - **No compiled files in version control**: Ensure no `.class` files are included in diffs or commits - only source code should be tracked
 
+## Test Output Format Standards
+- **Success Indication**: Tests should output ONLY the single character `"S"` when they run successfully
+- **No Verbose Success Messages**: Avoid printing "PASSED", "Test completed successfully", or any other verbose success messages
+- **Failure Details**: Only failures should include descriptive error messages
+- **Implementation**: Use `System.out.print("S");` for success, `System.out.println("Description FAILED");` for failures
+- **Consistency**: All test files must follow the same output format for maintainability
+- **Examples**: See `BattleFlowTest.java`, `CoreGameTest.java`, `ClientTest.java`, `VictoryMessageTest.java` for proper patterns
+
 ## Dependencies
 - Project uses Gson 2.8.6 library (`lib/gson-2.8.6.jar`)
 - Classpath includes both compiled classes and external libraries
@@ -53,3 +61,5 @@ globs: ['**/*.java', '**/build.sh', '**/run*.sh']
 - If `build.sh` fails, investigate and fix issues immediately
 - Maintain the build script's cross-platform compatibility
 - Keep the test suite comprehensive and up-to-date
+- **Follow test output format**: Tests must print ONLY "S" for success, never verbose success messages
+- New tests should integrate seamlessly with existing test suite output pattern

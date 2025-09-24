@@ -736,40 +736,67 @@ public class GameEngine {
         updateFightStats(winner, loser);
         int expGained = loser.expForKillingMe();
         winner.exp += expGained;
+        
+        // Send victory announcement to all active users
         try {
             sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
         } catch (Exception e) {
             // Ignore phrase generation errors in test environment
         }
+        
+        // Build comprehensive victory message for the winner
+        StringBuilder victoryMessage = new StringBuilder();
+        victoryMessage.append("Du hast gewonnen!");
+        
+        // Add experience information
         int winnerExpUntilPromo = winner.nextExp() - winner.exp;
-        telegram.sendMessage(winner.chatId, "Du hast " + expGained + " Erfahrung erhalten, " +
-            winnerExpUntilPromo + " Erfahrung fehlt bis zum Levelaufstieg.");
+        victoryMessage.append("\n\n🎯 Du hast ").append(expGained).append(" Erfahrung erhalten, ")
+                     .append(winnerExpUntilPromo).append(" Erfahrung fehlt bis zum Levelaufstieg.");
+        
+        // Handle item findings
         String lost = "";
+        boolean foundItems = false;
         if (loser.chatId > 0) {
             winner.giveItem(Game.Item.HPOTION);
             lost = loser.loseRandomItems();
-            telegram.sendMessage(winner.chatId, "Du hast 1 Heiltrank gefunden!");
+            victoryMessage.append("\n\n💎 Du hast 1 Heiltrank gefunden!");
+            foundItems = true;
         } else {
             // logic for looting bots is here
             int rnd = Utils.rndInRange(1, 6);
             if (rnd == 1) {
                 winner.giveItem(Game.Item.HPOTION);
-                telegram.sendMessage(winner.chatId, "Du hast 1 Heiltrank gefunden!");
+                victoryMessage.append("\n\n💎 Du hast 1 Heiltrank gefunden!");
+                foundItems = true;
             } else if (rnd < 4) {
                 Game.Item found = Game.ITEM_VALUES[Utils.getRndKeyWithWeight(
                     loser.inventory)];
                 winner.giveItem(found);
-                telegram.sendMessage(winner.chatId, "Du hast 1 " + found.singular + " gefunden!");
+                victoryMessage.append("\n\n💎 Du hast 1 ").append(found.singular).append(" gefunden!");
+                foundItems = true;
             }
         }
+        
+        // Add health regeneration information if needed
         if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
-            telegram.sendMessage(winner.chatId, "Du hast gewonnen! Deine Gesundheit wird sich in "
-                + 3 * (winner.getMaxHp() - winner.hp) + " Sekunden regenerieren.", MAIN_BUTTONS);
+            victoryMessage.append("\n\n❤️ Deine Gesundheit wird sich in ")
+                         .append(3 * (winner.getMaxHp() - winner.hp))
+                         .append(" Sekunden regenerieren.");
             injuredChats.add(winner.chatId);
-        } else {
-            telegram.sendMessage(winner.chatId, "Du hast gewonnen!", MAIN_BUTTONS);
         }
-        levelUpIfNeeded(winner);
+        
+        // Check for level up and add to message if applicable
+        boolean leveledUp = winner.levelUpIfNeeded();
+        if (leveledUp) {
+            victoryMessage.append("\n\n🎉 Du hast Level ").append(winner.level).append(" erreicht!");
+        }
+        
+        // Send the comprehensive victory message
+        if (leveledUp) {
+            telegram.sendMessage(winner.chatId, victoryMessage.toString(), LEVEL_POINT_BUTTONS);
+        } else {
+            telegram.sendMessage(winner.chatId, victoryMessage.toString(), MAIN_BUTTONS);
+        }
         if (loser.chatId < 0) {
             return;
         }
@@ -779,7 +806,7 @@ public class GameEngine {
     private void handleLoserDefeat(Client loser, String lost) {
         String message;
         if (loser.hp < loser.getMaxHp()) {
-            message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? "." : ", und " + lost + " wurden gestohlen. ") +
+            message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? ". " : ", und " + lost + " wurden gestohlen. ") +
                 "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) +
                 " Sekunden regenerieren.";
             injuredChats.add(loser.chatId);
