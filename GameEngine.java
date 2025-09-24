@@ -19,6 +19,7 @@ public class GameEngine {
     };
     private static final int CHAT_TIMEOUT = 600;
     private static final int FIGHT_TIMEOUT = 60;
+    private static final int REGEN_INTERVAL_SECONDS = 9;
     private static final String TASK_FAIL = "Fehler";
     private static final String TASK_SUCCESS = "Erfolg";
     private static final String GAME_DESCRIPTION_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
@@ -379,7 +380,7 @@ public class GameEngine {
             
             if (client.status != Client.Status.IDLE
                 || client.hp == client.getMaxHp()
-                || client.lastRestore > curTimeSeconds - 3) {
+                || client.lastRestore > curTimeSeconds - REGEN_INTERVAL_SECONDS) {
                 continue;
             }
             client.hp++;
@@ -780,7 +781,7 @@ public class GameEngine {
         // Add health regeneration information if needed
         if (winner.hp < winner.getMaxHp() && winner.chatId > 0) {
             victoryMessage.append("\n\n❤️ Deine Gesundheit wird sich in ")
-                         .append(3 * (winner.getMaxHp() - winner.hp))
+                         .append(REGEN_INTERVAL_SECONDS * (winner.getMaxHp() - winner.hp))
                          .append(" Sekunden regenerieren.");
             injuredChats.add(winner.chatId);
         }
@@ -807,7 +808,7 @@ public class GameEngine {
         String message;
         if (loser.hp < loser.getMaxHp()) {
             message = "Du wurdest im Kampf besiegt" + (lost.isEmpty() ? ". " : ", und " + lost + " wurden gestohlen. ") +
-                "Deine Gesundheit wird sich in " + 3 * (loser.getMaxHp() - loser.hp) +
+                "Deine Gesundheit wird sich in " + REGEN_INTERVAL_SECONDS * (loser.getMaxHp() - loser.hp) +
                 " Sekunden regenerieren.";
             injuredChats.add(loser.chatId);
         } else {
