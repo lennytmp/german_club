@@ -152,12 +152,10 @@ public class GermanGrammarTest {
         
         // Check for incorrect patterns that would indicate grammar errors
         if (afterHat.equals("besiegt " + loser) || afterHat.equals("überwunden " + loser)) {
-            System.err.println("DETECTED INCORRECT WORD ORDER: Past participle before object");
             return false;
         }
         
         // If we get here, it's an unexpected pattern
-        System.err.println("UNEXPECTED PHRASE PATTERN: " + afterHat);
         return false;
     }
 }
