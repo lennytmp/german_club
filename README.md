@@ -1,10 +1,5 @@
 # German Club Telegram bot
 
-## Development Guidelines
-
-- **Testing**: See [TESTING_GUIDELINES.md](TESTING_GUIDELINES.md) for test output standards and best practices
-- **Build Validation**: Always run `./build.sh` before and after making changes
-
 ## First run
 
 In ordert to launch dev environment initialize the database:
