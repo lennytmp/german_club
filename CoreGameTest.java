@@ -51,37 +51,50 @@ public class CoreGameTest {
     }
     
     /**
-     * Test profile display functionality
+     * Test profile display functionality through end-to-end simulation
      */
     private static boolean testProfileDisplay() {
         boolean testPassed = true;
         
         try {
-            // Create a test client
-            Client client = new Client(100, "TestPlayer");
-            client.giveItem(Game.Item.ASH);
-            client.giveItem(Game.Item.BANDAGE);
-            client.giveItem(Game.Item.BOTTLE);
+            // Setup mocks using the new approach
+            MockStorage storage = new MockStorage();
+            MockTelegram telegram = new MockTelegram();
+            GameEngine engine = new GameEngine(storage, telegram);
             
-            // Test profile display
-            GameEngine.ProfileDisplay display = GameEngine.buildProfileDisplay(client);
+            // Create a player by simulating joining the game
+            telegram.simulateUserMessage(100, "TestPlayer", "/start");
+            engine.processUpdate(telegram.getUpdates(1)[0]);
             
-            testPassed &= assertEquals(display != null, "Profile display should be created");
-            testPassed &= assertEquals(display.message != null, "Profile message should not be null");
-            testPassed &= assertEquals(display.buttons != null, "Profile buttons should not be null");
-            testPassed &= assertEquals(display.message.contains("TestPlayer"), "Profile should contain player name");
-            testPassed &= assertEquals(display.message.contains("Level:"), "Profile should contain level info");
-            testPassed &= assertEquals(display.message.contains("Gesundheit:"), "Profile should contain health info");
-            
-            // Check that brewing options are available
-            boolean hasBrewButton = false;
-            for (String button : display.buttons) {
-                if (button.contains("brauen")) {
-                    hasBrewButton = true;
-                    break;
-                }
+            // Give the player some items by manually adding them to storage
+            Client client = storage.getClientByChatId(100);
+            if (client != null) {
+                client.giveItem(Game.Item.ASH);
+                client.giveItem(Game.Item.BANDAGE);
+                client.giveItem(Game.Item.BOTTLE);
+                storage.saveClient(client);
             }
-            testPassed &= assertEquals(hasBrewButton, "Should have brewing button when ingredients available");
+            
+            telegram.clearMessages();
+            
+            // Simulate player requesting profile view
+            telegram.simulateUserMessage(100, "TestPlayer", "Profil");
+            engine.processUpdate(telegram.getUpdates(2)[0]);
+            
+            // Check that a profile message was sent
+            testPassed &= assertEquals(telegram.getMessageCountForChat(100) > 0, "Profile request should send response");
+            
+            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(100);
+            testPassed &= assertEquals(profileMsg != null, "Profile message should be sent");
+            
+            if (profileMsg != null) {
+                testPassed &= assertEquals(profileMsg.message.contains("TestPlayer"), "Profile should contain player name");
+                testPassed &= assertEquals(profileMsg.message.contains("Level:"), "Profile should contain level info");
+                testPassed &= assertEquals(profileMsg.message.contains("Gesundheit:"), "Profile should contain health info");
+                
+                // Check that brewing options are available in buttons
+                testPassed &= assertEquals(profileMsg.hasButton("Heiltrank brauen"), "Should have healing potion brewing button when ingredients available");
+            }
             
         } catch (Exception e) {
             System.out.println("Testing profile display... FAILED");
@@ -93,7 +106,7 @@ public class CoreGameTest {
     }
     
     /**
-     * Test fight preparation mechanics
+     * Test fight initiation through end-to-end simulation
      */
     private static boolean testFightPreparation() {
         boolean testPassed = true;
@@ -103,24 +116,48 @@ public class CoreGameTest {
             MockTelegram telegram = new MockTelegram();
             GameEngine engine = new GameEngine(storage, telegram);
             
-            // Create two test clients
-            Client player1 = new Client(200, "Fighter1");
-            Client player2 = new Client(300, "Fighter2");
+            // Create two players by simulating them joining the game
+            telegram.simulateUserMessage(200, "Fighter1", "/start");
+            engine.processUpdate(telegram.getUpdates(1)[0]);
+            telegram.simulateUserMessage(300, "Fighter2", "/start");
+            engine.processUpdate(telegram.getUpdates(2)[0]);
             
-            // Initially both should be IDLE
-            testPassed &= assertEquals(player1.status == Client.Status.IDLE, "Player1 should start IDLE");
-            testPassed &= assertEquals(player2.status == Client.Status.IDLE, "Player2 should start IDLE");
+            // Verify both players are created and initially IDLE
+            Client player1 = storage.getClientByChatId(200);
+            Client player2 = storage.getClientByChatId(300);
+            testPassed &= assertEquals(player1 != null, "Player1 should be created");
+            testPassed &= assertEquals(player2 != null, "Player2 should be created");
             
-            // Prepare them to fight
-            engine.prepareToFight(player1, player2);
+            if (player1 != null && player2 != null) {
+                testPassed &= assertEquals(player1.status == Client.Status.IDLE, "Player1 should start IDLE");
+                testPassed &= assertEquals(player2.status == Client.Status.IDLE, "Player2 should start IDLE");
+            }
             
-            // Both should now be FIGHTING
-            testPassed &= assertEquals(player1.status == Client.Status.FIGHTING, "Player1 should be FIGHTING after preparation");
-            testPassed &= assertEquals(player2.status == Client.Status.FIGHTING, "Player2 should be FIGHTING after preparation");
+            telegram.clearMessages();
             
-            // They should be fighting each other
-            testPassed &= assertEquals(player1.fightingChatId == player2.chatId, "Player1 should be fighting Player2");
-            testPassed &= assertEquals(player2.fightingChatId == player1.chatId, "Player2 should be fighting Player1");
+            // Both players look for fights - this should trigger fight matching
+            telegram.simulateUserMessage(200, "Fighter1", "Kämpfen");
+            engine.processUpdate(telegram.getUpdates(3)[0]);
+            telegram.simulateUserMessage(300, "Fighter2", "Kämpfen");
+            engine.processUpdate(telegram.getUpdates(4)[0]);
+            
+            // Verify fight messages were sent to both players
+            testPassed &= assertEquals(telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit Fighter2"), 
+                                     "Fighter1 should be told they're fighting Fighter2");
+            testPassed &= assertEquals(telegram.hasMessageForChatContaining(300, "Du kämpfst jetzt mit Fighter1"), 
+                                     "Fighter2 should be told they're fighting Fighter1");
+            
+            // Verify both players are now in FIGHTING status
+            player1 = storage.getClientByChatId(200);
+            player2 = storage.getClientByChatId(300);
+            if (player1 != null && player2 != null) {
+                testPassed &= assertEquals(player1.status == Client.Status.FIGHTING, "Player1 should be FIGHTING after match");
+                testPassed &= assertEquals(player2.status == Client.Status.FIGHTING, "Player2 should be FIGHTING after match");
+                
+                // They should be fighting each other
+                testPassed &= assertEquals(player1.fightingChatId == player2.chatId, "Player1 should be fighting Player2");
+                testPassed &= assertEquals(player2.fightingChatId == player1.chatId, "Player2 should be fighting Player1");
+            }
             
         } catch (Exception e) {
             System.out.println("Testing fight preparation... FAILED");

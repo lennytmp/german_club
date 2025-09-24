@@ -438,19 +438,7 @@ public class GameEngine {
         return numListeners;
     }
     
-    // Testable class to hold profile display data
-    public static class ProfileDisplay {
-        public String message;
-        public String[] buttons;
-        
-        ProfileDisplay(String message, String[] buttons) {
-            this.message = message;
-            this.buttons = buttons;
-        }
-    }
-    
-    // Testable method that builds profile display without sending messages
-    public static ProfileDisplay buildProfileDisplay(Client client) {
+    private void showProfile(Client client) {
         StringBuilder profileMessage = new StringBuilder();
         
         // Add client stats
@@ -460,6 +448,8 @@ public class GameEngine {
         if (!client.nameChangeHintSent) {
             profileMessage.append("\n\nDu kannst deinen Namen mit folgendem Befehl ändern \n")
                        .append("`/username neuername`.");
+            client.nameChangeHintSent = true;
+            storage.saveClient(client);
         }
         
         // Add level points message if applicable
@@ -504,20 +494,8 @@ public class GameEngine {
             System.arraycopy(brewableOptions, 0, buttons, MAIN_BUTTONS.length, brewableOptions.length);
         }
         
-        return new ProfileDisplay(profileMessage.toString(), buttons);
-    }
-
-    private void showProfile(Client client) {
-        ProfileDisplay display = buildProfileDisplay(client);
-        
-        // Handle side effects that can't be easily tested
-        if (!client.nameChangeHintSent) {
-            client.nameChangeHintSent = true;
-            storage.saveClient(client);
-        }
-        
         // Send the message
-        telegram.sendMessage(client.chatId, display.message, display.buttons);
+        telegram.sendMessage(client.chatId, profileMessage.toString(), buttons);
     }
     
     private void handleBrewingCommand(Client client, String potionType) {
