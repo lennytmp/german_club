@@ -222,7 +222,7 @@ public class GameEngine {
                 }
                 return;
             }
-            Game.Item found = Utils.getRnd(new Game.Item[] { Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE });
+            Game.Item found = Utils.getRnd(Game.ITEM_VALUES);
             client.giveItem(found);
             storage.saveClient(client);
             String foundMsg = "";
