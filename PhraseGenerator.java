@@ -12,8 +12,9 @@ class PhraseGenerator {
   }
 
   static String getWonPhrase(Client winner, Client loser) {
-    return "\u2620 " + winner.username + " " +
-        Utils.getRnd(Phrases.combatTexts.won) + " " + loser.username + ".";
+    String template = Utils.getRnd(Phrases.combatTexts.won);
+    String phrase = template.replace("{loser}", loser.username);
+    return "\u2620 " + winner.username + " " + phrase + ".";
   }
 
   static String getWisdom(Client client) {
