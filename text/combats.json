@@ -103,8 +103,8 @@
     "während"
   ],
   "won": [
-    "hat gewonnen gegen",
-    "hat besiegt",
-    "hat überwunden"
+    "hat gewonnen gegen {loser}",
+    "hat {loser} besiegt",
+    "hat {loser} überwunden"
   ]
 }
