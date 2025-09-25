@@ -672,13 +672,30 @@ public class GameEngine {
     }
 
     // Generic potion consumption method to avoid code duplication
-    private void consumePotionGeneric(Client client, Game.Item potionType, String emoji, String potionName, PotionEffect effect) {
+    private void consumePotionGeneric(Client client, Game.Item potionType, String potionName, PotionEffect effect) {
         // Apply the specific effect of the potion
         effect.apply(client);
         
         // Remove the potion from inventory
         client.takeItem(potionType);
         storage.saveClient(client);
+
+        // Determine emoji based on potion type
+        String emoji;
+        switch (potionType) {
+            case HPOTION:
+                emoji = "\uD83C\uDF76"; // 🍶
+                break;
+            case SPOTION:
+                emoji = "\uD83D\uDCAA"; // 💪
+                break;
+            case LPOTION:
+                emoji = "\uD83C\uDF40"; // 🍀
+                break;
+            default:
+                emoji = "\uD83E\uDDEA"; // 🧪 (generic potion emoji for any future potions)
+                break;
+        }
 
         // Build client message - consistent format for all potions
         String clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
@@ -715,7 +732,7 @@ public class GameEngine {
     }
 
     private void consumePotion(Client client) {
-        consumePotionGeneric(client, Game.Item.HPOTION, "\uD83C\uDF76", "Heiltrank", (c) -> {
+        consumePotionGeneric(client, Game.Item.HPOTION, "Heiltrank", (c) -> {
             c.hp += 5;
             if (c.hp > c.getMaxHp()) {
                 c.hp = c.getMaxHp();
@@ -724,13 +741,13 @@ public class GameEngine {
     }
 
     private void consumeStrengthPotion(Client client) {
-        consumePotionGeneric(client, Game.Item.SPOTION, "\uD83D\uDCAA", "Stärketrank", (c) -> {
+        consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
             // No effect for now as requested
         });
     }
 
     private void consumeLuckPotion(Client client) {
-        consumePotionGeneric(client, Game.Item.LPOTION, "\uD83C\uDF40", "Glückstrank", (c) -> {
+        consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
             // No effect for now as requested
         });
     }
