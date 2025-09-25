@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -29,6 +30,29 @@ public class Gemini {
         apiKey = c.gemini_api_key;
     }
 
+    /**
+     * Creates the JSON payload for Gemini API requests.
+     * This method is package-private to allow testing.
+     */
+    static String createGeminiJsonPayload(String prompt) {
+        JsonObject textPart = new JsonObject();
+        textPart.addProperty("text", prompt);
+        
+        JsonArray parts = new JsonArray();
+        parts.add(textPart);
+        
+        JsonObject contentItem = new JsonObject();
+        contentItem.add("parts", parts);
+        
+        JsonArray contents = new JsonArray();
+        contents.add(contentItem);
+        
+        JsonObject payload = new JsonObject();
+        payload.add("contents", contents);
+        
+        return g.toJson(payload);
+    }
+
     public static String AskGemini(String prompt) {
         // In dev environment, don't call Gemini API
         if (!FightLang.Main.isProd) {
@@ -42,8 +66,8 @@ public class Gemini {
             // Create an HttpClient instance
             HttpClient client = HttpClient.newHttpClient();
 
-            // Create the JSON payload
-            String jsonInputString = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
+            // Create the JSON payload using proper JSON construction
+            String jsonInputString = createGeminiJsonPayload(prompt);
 
             // Create the HttpRequest
             HttpRequest request = HttpRequest.newBuilder()
