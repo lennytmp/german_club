@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.ArrayList;
 
 class Client {
   // TODO: Status and body port should move to Game
@@ -44,6 +45,12 @@ class Client {
   // Trading system fields
   Game.Item offeredItem = null;
   Game.Item requestedItem = null;
+
+  // Potion effects tracking - persistent timestamps
+  int strengthPotionExpiry = 0;  // Unix timestamp when strength effect expires
+  int strengthPotionBonus = 0;   // Current strength bonus from potions
+  int luckPotionExpiry = 0;      // Unix timestamp when luck effect expires  
+  int luckPotionBonus = 0;       // Current luck bonus from potions
 
   Client(int chatId, String username) {
     this.chatId = chatId;
@@ -193,7 +200,7 @@ class Client {
   }
 
   public int getMaxDamage() {
-    return strength;
+    return getEffectiveStrength();
   }
 
   public void giveItem(Game.Item item) {
@@ -205,10 +212,13 @@ class Client {
   public void takeItem(Game.Item item) {
     Integer curHave = inventory.get(item.ordinal());
     curHave = curHave == null ? 0 : curHave;
-    if (curHave - 1 == 0) {
-      inventory.remove(item.ordinal());
+    if (curHave > 0) {
+      if (curHave - 1 == 0) {
+        inventory.remove(item.ordinal());
+      } else {
+        inventory.put(item.ordinal(), curHave - 1);
+      }
     }
-    inventory.put(item.ordinal(), --curHave);
   }
 
   public boolean hasItem(Game.Item item) {
@@ -356,5 +366,55 @@ class Client {
     takeItem(offeredItem);
     giveItem(requestedItem);
     return true;
+  }
+
+  // Potion effect management methods
+  public void addStrengthPotionEffect(int bonusValue, int currentTime) {
+    int newExpiry = currentTime + 180; // 3 minutes = 180 seconds
+    
+    // For stacking behavior: if current effect is still active, add to bonus
+    // and set expiry to the new potion's expiry (each potion's effect is independent)
+    if (strengthPotionExpiry > currentTime) {
+      strengthPotionBonus += bonusValue;
+    } else {
+      strengthPotionBonus = bonusValue;
+    }
+    strengthPotionExpiry = newExpiry;
+  }
+
+  public void addLuckPotionEffect(int bonusValue, int currentTime) {
+    int newExpiry = currentTime + 180; // 3 minutes = 180 seconds
+    
+    // For stacking behavior: if current effect is still active, add to bonus
+    // and set expiry to the new potion's expiry (each potion's effect is independent)
+    if (luckPotionExpiry > currentTime) {
+      luckPotionBonus += bonusValue;
+    } else {
+      luckPotionBonus = bonusValue;
+    }
+    luckPotionExpiry = newExpiry;
+  }
+
+  public void removeExpiredPotionEffects(int currentTime) {
+    if (strengthPotionExpiry > 0 && strengthPotionExpiry <= currentTime) {
+      strengthPotionExpiry = 0;
+      strengthPotionBonus = 0;
+    }
+    if (luckPotionExpiry > 0 && luckPotionExpiry <= currentTime) {
+      luckPotionExpiry = 0;
+      luckPotionBonus = 0;
+    }
+  }
+
+  public int getEffectiveStrength() {
+    return strength + (strengthPotionExpiry > 0 ? strengthPotionBonus : 0);
+  }
+
+  public int getEffectiveLuck() {
+    return luck + (luckPotionExpiry > 0 ? luckPotionBonus : 0);
+  }
+
+  public boolean hasActivePotionEffects() {
+    return strengthPotionExpiry > 0 || luckPotionExpiry > 0;
   }
 }

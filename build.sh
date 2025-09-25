@@ -18,4 +18,5 @@ java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.Core
 java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.BattleFlowTest
 java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.VictoryMessageTest
 java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.GeminiJsonTest
+java -cp "./build/classes/$JAVA_PATH_SEP./lib/gson-2.8.6.jar" -ea FightLang.PotionEffectsTest
 echo
