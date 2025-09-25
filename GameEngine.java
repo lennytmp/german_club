@@ -680,17 +680,15 @@ public class GameEngine {
         client.takeItem(potionType);
         storage.saveClient(client);
 
-        // Build client message - keep backward compatibility for healing potions
-        String clientMsg;
+        // Build client message - consistent format for all potions
+        String clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
+            client.getItemNum(potionType) + " übrig.";
+        
+        // Add health info for healing potions, no effect note for others
         if (potionType == Game.Item.HPOTION) {
-            // Use original format for healing potions to maintain test compatibility
-            clientMsg = emoji + " Trank konsumiert, du hast " +
-                client.getItemNum(potionType) + " übrig. " +
-                "[" + client.hp + "/" + client.getMaxHp() + "]";
+            clientMsg += " [" + client.hp + "/" + client.getMaxHp() + "]";
         } else {
-            // Use new format for other potions
-            clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
-                client.getItemNum(potionType) + " übrig. (Noch keine Wirkung)";
+            clientMsg += " (Noch keine Wirkung)";
         }
 
         // Send messages based on fighting status
@@ -698,14 +696,12 @@ public class GameEngine {
             telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
             Client opponent = getClientWithStorage(client.fightingChatId);
             
-            String opponentMsg;
+            // Consistent format for opponent notification
+            String opponentMsg = emoji + " " + client.username + " hat einen " + potionName + " konsumiert";
             if (potionType == Game.Item.HPOTION) {
-                // Keep original format for healing potions
-                opponentMsg = emoji + " " + client.username + " hat einen Heiltrank konsumiert " +
-                    "[" + client.hp + "/" + client.getMaxHp() + "]";
+                opponentMsg += " [" + client.hp + "/" + client.getMaxHp() + "]";
             } else {
-                // Use new format for other potions
-                opponentMsg = emoji + " " + client.username + " hat einen " + potionName + " konsumiert.";
+                opponentMsg += ".";
             }
             telegram.sendMessage(opponent.chatId, opponentMsg);
         } else {
