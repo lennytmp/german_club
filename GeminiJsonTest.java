@@ -1,17 +1,14 @@
 package FightLang;
 
-import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 /**
  * Test to prevent JSON escaping issues in Gemini API calls.
- * This test ensures that the JSON payload construction properly handles
- * special characters that could break the API request.
+ * This test validates the actual JSON creation logic used by the Gemini.AskGemini method.
  */
 public class GeminiJsonTest {
-    private static Gson g = new Gson();
     
     public static void main(String[] args) {
         boolean allTestsPassed = true;
@@ -38,28 +35,6 @@ public class GeminiJsonTest {
     }
     
     /**
-     * Creates JSON payload using the same method as Gemini.java
-     */
-    private static String createJsonPayload(String prompt) {
-        JsonObject textPart = new JsonObject();
-        textPart.addProperty("text", prompt);
-        
-        JsonArray parts = new JsonArray();
-        parts.add(textPart);
-        
-        JsonObject contentItem = new JsonObject();
-        contentItem.add("parts", parts);
-        
-        JsonArray contents = new JsonArray();
-        contents.add(contentItem);
-        
-        JsonObject payload = new JsonObject();
-        payload.add("contents", contents);
-        
-        return g.toJson(payload);
-    }
-    
-    /**
      * Validates that a JSON string can be parsed back without errors
      */
     private static boolean isValidJson(String jsonString) {
@@ -78,7 +53,7 @@ public class GeminiJsonTest {
         boolean testPassed = true;
         
         String promptWithQuotes = "Du musst sagen: \"Hallo Welt!\" und dann: \"Auf Wiedersehen!\"";
-        String json = createJsonPayload(promptWithQuotes);
+        String json = Gemini.createGeminiJsonPayload(promptWithQuotes);
         
         testPassed &= assertEquals(isValidJson(json), "JSON with quotes should be valid");
         
@@ -106,7 +81,7 @@ public class GeminiJsonTest {
         boolean testPassed = true;
         
         String promptWithNewlines = "Erste Zeile\nZweite Zeile\nDritte Zeile";
-        String json = createJsonPayload(promptWithNewlines);
+        String json = Gemini.createGeminiJsonPayload(promptWithNewlines);
         
         testPassed &= assertEquals(isValidJson(json), "JSON with newlines should be valid");
         
@@ -134,7 +109,7 @@ public class GeminiJsonTest {
         boolean testPassed = true;
         
         String promptWithBackslashes = "Pfad: C:\\Users\\Player\\Game\\file.txt";
-        String json = createJsonPayload(promptWithBackslashes);
+        String json = Gemini.createGeminiJsonPayload(promptWithBackslashes);
         
         testPassed &= assertEquals(isValidJson(json), "JSON with backslashes should be valid");
         
@@ -161,7 +136,7 @@ public class GeminiJsonTest {
         boolean testPassed = true;
         
         String promptWithSpecialChars = "Special chars: \t (tab), \b (backspace), \f (form feed), \r (carriage return)";
-        String json = createJsonPayload(promptWithSpecialChars);
+        String json = Gemini.createGeminiJsonPayload(promptWithSpecialChars);
         
         testPassed &= assertEquals(isValidJson(json), "JSON with special characters should be valid");
         
@@ -176,7 +151,7 @@ public class GeminiJsonTest {
         
         // This is the exact text from NOT_FOUND_PROMPT that was causing the issue
         String problematicPrompt = "Du musst etwas sagen wie: \"Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\"";
-        String json = createJsonPayload(problematicPrompt);
+        String json = Gemini.createGeminiJsonPayload(problematicPrompt);
         
         testPassed &= assertEquals(isValidJson(json), "German text with quotes should be valid JSON");
         
@@ -208,7 +183,7 @@ public class GeminiJsonTest {
         boolean testPassed = true;
         
         String testPrompt = "Test prompt";
-        String json = createJsonPayload(testPrompt);
+        String json = Gemini.createGeminiJsonPayload(testPrompt);
         
         try {
             JsonObject parsed = JsonParser.parseString(json).getAsJsonObject();
