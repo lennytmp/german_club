@@ -210,6 +210,24 @@ public class GameEngine {
             return;
         }
 
+        if (txt.equals("/stärketrank") || txt.startsWith("Stärketrank [")) {
+            if (!client.hasItem(Game.Item.SPOTION)) {
+                telegram.sendMessage(client.chatId, "Du hast keine Stärketränke.");
+                return;
+            }
+            consumeStrengthPotion(client);
+            return;
+        }
+
+        if (txt.equals("/glückstrank") || txt.startsWith("Glückstrank [")) {
+            if (!client.hasItem(Game.Item.LPOTION)) {
+                telegram.sendMessage(client.chatId, "Du hast keine Glückstränke.");
+                return;
+            }
+            consumeLuckPotion(client);
+            return;
+        }
+
         if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING && client.status != Client.Status.TRADING) {
             client.incSuccessToday();
             storage.saveClient(client);
@@ -633,33 +651,91 @@ public class GameEngine {
 
     private String[] addPotions(Client client, String[] options) {
         storage.saveClient(client);
-        int numPotions = client.getItemNum(Game.Item.HPOTION);
         List<String> optionsList = new ArrayList<>(Arrays.asList(options));
-        if (numPotions > 0) {
-            optionsList.add("Heiltrank [" + numPotions + "]");
+        
+        int numHealingPotions = client.getItemNum(Game.Item.HPOTION);
+        if (numHealingPotions > 0) {
+            optionsList.add("Heiltrank [" + numHealingPotions + "]");
         }
+        
+        int numStrengthPotions = client.getItemNum(Game.Item.SPOTION);
+        if (numStrengthPotions > 0) {
+            optionsList.add("Stärketrank [" + numStrengthPotions + "]");
+        }
+        
+        int numLuckPotions = client.getItemNum(Game.Item.LPOTION);
+        if (numLuckPotions > 0) {
+            optionsList.add("Glückstrank [" + numLuckPotions + "]");
+        }
+        
         return optionsList.toArray(new String[0]);
     }
 
-    private void consumePotion(Client client) {
-        client.hp += 5;
-        if (client.hp > client.getMaxHp()) {
-            client.hp = client.getMaxHp();
-        }
-        client.takeItem(Game.Item.HPOTION);
+    // Generic potion consumption method to avoid code duplication
+    private void consumePotionGeneric(Client client, Game.Item potionType, String potionName, PotionEffect effect) {
+        // Apply the specific effect of the potion
+        effect.apply(client);
+        
+        // Remove the potion from inventory
+        client.takeItem(potionType);
         storage.saveClient(client);
 
-        String clientMsg = "\uD83C\uDF76 Trank konsumiert, du hast " +
-            client.getItemNum(Game.Item.HPOTION) + " übrig. " +
-            "[" + client.hp + "/" + client.getMaxHp() + "]";
+        // All potions use the same emoji
+        String emoji = "\uD83C\uDF76"; // 🍶
+
+        // Build client message - consistent format for all potions
+        String clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
+            client.getItemNum(potionType) + " übrig.";
+        
+        // Add health info for healing potions, no effect note for others
+        if (potionType == Game.Item.HPOTION) {
+            clientMsg += " [" + client.hp + "/" + client.getMaxHp() + "]";
+        } else {
+            clientMsg += " (Noch keine Wirkung)";
+        }
+
+        // Send messages based on fighting status
         if (client.status == Client.Status.FIGHTING) {
             telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
             Client opponent = getClientWithStorage(client.fightingChatId);
-            telegram.sendMessage(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
-                "[" + client.hp + "/" + client.getMaxHp() + "]");
+            
+            // Consistent format for opponent notification
+            String opponentMsg = emoji + " " + client.username + " hat einen " + potionName + " konsumiert";
+            if (potionType == Game.Item.HPOTION) {
+                opponentMsg += " [" + client.hp + "/" + client.getMaxHp() + "]";
+            } else {
+                opponentMsg += ".";
+            }
+            telegram.sendMessage(opponent.chatId, opponentMsg);
         } else {
             telegram.sendMessage(client.chatId, clientMsg);
         }
+    }
+
+    // Functional interface for potion effects
+    private interface PotionEffect {
+        void apply(Client client);
+    }
+
+    private void consumePotion(Client client) {
+        consumePotionGeneric(client, Game.Item.HPOTION, "Heiltrank", (c) -> {
+            c.hp += 5;
+            if (c.hp > c.getMaxHp()) {
+                c.hp = c.getMaxHp();
+            }
+        });
+    }
+
+    private void consumeStrengthPotion(Client client) {
+        consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
+            // No effect for now as requested
+        });
+    }
+
+    private void consumeLuckPotion(Client client) {
+        consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
+            // No effect for now as requested
+        });
     }
 
     private void makeHitTask(Client client, Client victim, boolean isSuccess) {

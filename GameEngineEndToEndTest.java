@@ -270,7 +270,7 @@ public class GameEngineEndToEndTest {
             engine.processUpdate(telegram.getUpdates(4)[0]);
             
             // Verify potion was consumed
-            testPassed &= telegram.hasMessageForChatContaining(600, "Trank konsumiert");
+            testPassed &= telegram.hasMessageForChatContaining(600, "Heiltrank konsumiert");
             testPassed &= telegram.hasMessageForChatContaining(700, "hat einen Heiltrank konsumiert");
         }
         

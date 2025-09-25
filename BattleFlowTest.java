@@ -109,7 +109,7 @@ public class BattleFlowTest {
                     engine.processUpdate(potionUpdates[potionUpdates.length - 1]);
                 }
                 
-                if (!telegram.hasMessageForChatContaining(100, "Trank konsumiert")) {
+                if (!telegram.hasMessageForChatContaining(100, "Heiltrank konsumiert")) {
                     System.out.println("Potion usage failed");
                     return false;
                 }

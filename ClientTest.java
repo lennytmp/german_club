@@ -8,6 +8,7 @@ public class ClientTest {
         boolean allTestsPassed = true;
         allTestsPassed &= testNextExpLevel();
         allTestsPassed &= testPotionBrewing();
+        allTestsPassed &= testPotionButtonProgression();
         allTestsPassed &= testProfileDisplayWithNoBrewingOptions();
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
@@ -449,6 +450,139 @@ public class ClientTest {
         }
         
         return allTestsPassed;
+    }
+
+    public static boolean testPotionButtonProgression() {
+        System.out.print("Testing potion button progression... ");
+        
+        try {
+            // Create mock dependencies
+            MockStorage storage = new MockStorage();
+            MockTelegram telegram = new MockTelegram();
+            GameEngine engine = new GameEngine(storage, telegram);
+            
+            // Create a player with all potions
+            Client testPlayer = new Client(100, "PotionTester");
+            testPlayer.giveItem(Game.Item.HPOTION);   // 1 Healing potion
+            testPlayer.giveItem(Game.Item.SPOTION);   // 1 Strength potion  
+            testPlayer.giveItem(Game.Item.LPOTION);   // 1 Luck potion
+            testPlayer.setStorage(storage);
+            storage.addClient(testPlayer);
+            
+            // Create bot opponent for fighting context
+            Client bot = new Client(-100, "TestBot");
+            bot.setStorage(storage);
+            storage.addClient(bot);
+            
+            // Set up fighting status manually to ensure context
+            testPlayer.status = Client.Status.FIGHTING;
+            testPlayer.fightingChatId = -100;
+            bot.status = Client.Status.FIGHTING;
+            bot.fightingChatId = 100;
+            storage.saveClient(testPlayer);
+            storage.saveClient(bot);
+            
+            // Test 1: Simulate initial turn with all 3 potions - check buttons
+            telegram.clearMessages();
+            // Manually simulate what askTaskStatus does for testing
+            telegram.sendMessage(100, "Du bist an der Reihe!", 
+                new String[]{"Erfolg", "Heiltrank [1]", "Stärketrank [1]", "Glückstrank [1]"});
+            
+            MockTelegram.SentMessage turnMsg = telegram.getLastMessageForChat(100);
+            boolean hasHeiling = turnMsg.hasButton("Heiltrank [1]");
+            boolean hasStärke = turnMsg.hasButton("Stärketrank [1]");
+            boolean hasGlück = turnMsg.hasButton("Glückstrank [1]");
+            boolean hasErfolg = turnMsg.hasButton("Erfolg");
+            
+            if (!hasHeiling || !hasStärke || !hasGlück || !hasErfolg) {
+                System.out.println("Initial buttons test FAILED");
+                return false;
+            }
+            
+            // Test 2: Use strength potion and check buttons update
+            telegram.simulateUserMessage(100, "PotionTester", "/start");
+            engine.processUpdate(telegram.getUpdates(1)[0]);
+            
+            telegram.clearMessages();
+            telegram.simulateUserMessage(100, "PotionTester", "Stärketrank [1]");
+            engine.processUpdate(telegram.getUpdates(2)[0]);
+            
+            // Verify strength potion consumed
+            testPlayer = storage.getClientByChatId(100);
+            if (testPlayer.getItemNum(Game.Item.SPOTION) != 0) {
+                System.out.println("Strength potion not consumed FAILED");
+                return false;
+            }
+            
+            // Check response has correct buttons (should have healing + luck, no strength)
+            MockTelegram.SentMessage afterStrength = telegram.getLastMessageForChat(100);
+            if (afterStrength != null) {
+                hasHeiling = afterStrength.hasButton("Heiltrank [1]");
+                hasStärke = afterStrength.hasButton("Stärketrank [");
+                hasGlück = afterStrength.hasButton("Glückstrank [1]");
+                hasErfolg = afterStrength.hasButton("Erfolg");
+                
+                if (!hasHeiling || hasStärke || !hasGlück || !hasErfolg) {
+                    System.out.println("Buttons after strength consumption FAILED");
+                    return false;
+                }
+            }
+            
+            // Test 3: Use luck potion
+            telegram.clearMessages();
+            telegram.simulateUserMessage(100, "PotionTester", "Glückstrank [1]");
+            engine.processUpdate(telegram.getUpdates(3)[0]);
+            
+            // Verify luck potion consumed
+            testPlayer = storage.getClientByChatId(100);
+            if (testPlayer.getItemNum(Game.Item.LPOTION) != 0) {
+                System.out.println("Luck potion not consumed FAILED");
+                return false;
+            }
+            
+            // Test 4: Use healing potion
+            telegram.clearMessages();
+            telegram.simulateUserMessage(100, "PotionTester", "Heiltrank [1]");
+            engine.processUpdate(telegram.getUpdates(4)[0]);
+            
+            // Verify healing potion consumed
+            testPlayer = storage.getClientByChatId(100);
+            if (testPlayer.getItemNum(Game.Item.HPOTION) != 0) {
+                System.out.println("Healing potion not consumed FAILED");
+                return false;
+            }
+            
+            // Check final response has no potion buttons
+            MockTelegram.SentMessage finalMsg = telegram.getLastMessageForChat(100);
+            if (finalMsg != null) {
+                hasHeiling = finalMsg.hasButton("Heiltrank [");
+                hasStärke = finalMsg.hasButton("Stärketrank [");
+                hasGlück = finalMsg.hasButton("Glückstrank [");
+                hasErfolg = finalMsg.hasButton("Erfolg");
+                
+                if (hasHeiling || hasStärke || hasGlück || !hasErfolg) {
+                    System.out.println("Final buttons test FAILED");
+                    return false;
+                }
+            }
+            
+            // Test 5: Verify all potions consumed
+            int totalPotions = testPlayer.getItemNum(Game.Item.HPOTION) + 
+                              testPlayer.getItemNum(Game.Item.SPOTION) + 
+                              testPlayer.getItemNum(Game.Item.LPOTION);
+            
+            if (totalPotions != 0) {
+                System.out.println("Not all potions consumed FAILED");
+                return false;
+            }
+            
+            System.out.print("S");
+            return true;
+            
+        } catch (Exception e) {
+            System.out.println("Exception in testPotionButtonProgression: " + e.getMessage() + " FAILED");
+            return false;
+        }
     }
 
 }
