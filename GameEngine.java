@@ -680,22 +680,8 @@ public class GameEngine {
         client.takeItem(potionType);
         storage.saveClient(client);
 
-        // Determine emoji based on potion type
-        String emoji;
-        switch (potionType) {
-            case HPOTION:
-                emoji = "\uD83C\uDF76"; // 🍶
-                break;
-            case SPOTION:
-                emoji = "\uD83D\uDCAA"; // 💪
-                break;
-            case LPOTION:
-                emoji = "\uD83C\uDF40"; // 🍀
-                break;
-            default:
-                emoji = "\uD83E\uDDEA"; // 🧪 (generic potion emoji for any future potions)
-                break;
-        }
+        // All potions use the same emoji
+        String emoji = "\uD83C\uDF76"; // 🍶
 
         // Build client message - consistent format for all potions
         String clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
