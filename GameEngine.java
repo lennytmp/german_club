@@ -210,6 +210,24 @@ public class GameEngine {
             return;
         }
 
+        if (txt.equals("/stärketrank") || txt.startsWith("Stärketrank [")) {
+            if (!client.hasItem(Game.Item.SPOTION)) {
+                telegram.sendMessage(client.chatId, "Du hast keine Stärketränke.");
+                return;
+            }
+            consumeStrengthPotion(client);
+            return;
+        }
+
+        if (txt.equals("/glückstrank") || txt.startsWith("Glückstrank [")) {
+            if (!client.hasItem(Game.Item.LPOTION)) {
+                telegram.sendMessage(client.chatId, "Du hast keine Glückstränke.");
+                return;
+            }
+            consumeLuckPotion(client);
+            return;
+        }
+
         if (txt.equals("Aufgabe") && client.status != Client.Status.FIGHTING && client.status != Client.Status.TRADING) {
             client.incSuccessToday();
             storage.saveClient(client);
@@ -633,11 +651,23 @@ public class GameEngine {
 
     private String[] addPotions(Client client, String[] options) {
         storage.saveClient(client);
-        int numPotions = client.getItemNum(Game.Item.HPOTION);
         List<String> optionsList = new ArrayList<>(Arrays.asList(options));
-        if (numPotions > 0) {
-            optionsList.add("Heiltrank [" + numPotions + "]");
+        
+        int numHealingPotions = client.getItemNum(Game.Item.HPOTION);
+        if (numHealingPotions > 0) {
+            optionsList.add("Heiltrank [" + numHealingPotions + "]");
         }
+        
+        int numStrengthPotions = client.getItemNum(Game.Item.SPOTION);
+        if (numStrengthPotions > 0) {
+            optionsList.add("Stärketrank [" + numStrengthPotions + "]");
+        }
+        
+        int numLuckPotions = client.getItemNum(Game.Item.LPOTION);
+        if (numLuckPotions > 0) {
+            optionsList.add("Glückstrank [" + numLuckPotions + "]");
+        }
+        
         return optionsList.toArray(new String[0]);
     }
 
@@ -657,6 +687,38 @@ public class GameEngine {
             Client opponent = getClientWithStorage(client.fightingChatId);
             telegram.sendMessage(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
                 "[" + client.hp + "/" + client.getMaxHp() + "]");
+        } else {
+            telegram.sendMessage(client.chatId, clientMsg);
+        }
+    }
+
+    private void consumeStrengthPotion(Client client) {
+        // For now, no effect as requested, just consume the potion
+        client.takeItem(Game.Item.SPOTION);
+        storage.saveClient(client);
+
+        String clientMsg = "\uD83D\uDCAA Stärketrank konsumiert, du hast " +
+            client.getItemNum(Game.Item.SPOTION) + " übrig. (Noch keine Wirkung)";
+        if (client.status == Client.Status.FIGHTING) {
+            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
+            Client opponent = getClientWithStorage(client.fightingChatId);
+            telegram.sendMessage(opponent.chatId, "\uD83D\uDCAA " + client.username + " hat einen Stärketrank konsumiert.");
+        } else {
+            telegram.sendMessage(client.chatId, clientMsg);
+        }
+    }
+
+    private void consumeLuckPotion(Client client) {
+        // For now, no effect as requested, just consume the potion
+        client.takeItem(Game.Item.LPOTION);
+        storage.saveClient(client);
+
+        String clientMsg = "\uD83C\uDF40 Glückstrank konsumiert, du hast " +
+            client.getItemNum(Game.Item.LPOTION) + " übrig. (Noch keine Wirkung)";
+        if (client.status == Client.Status.FIGHTING) {
+            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
+            Client opponent = getClientWithStorage(client.fightingChatId);
+            telegram.sendMessage(opponent.chatId, "\uD83C\uDF40 " + client.username + " hat einen Glückstrank konsumiert.");
         } else {
             telegram.sendMessage(client.chatId, clientMsg);
         }
