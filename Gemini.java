@@ -6,6 +6,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -42,8 +43,23 @@ public class Gemini {
             // Create an HttpClient instance
             HttpClient client = HttpClient.newHttpClient();
 
-            // Create the JSON payload
-            String jsonInputString = "{\"contents\":[{\"parts\":[{\"text\":\"" + prompt + "\"}]}]}";
+            // Create the JSON payload using proper JSON construction
+            JsonObject textPart = new JsonObject();
+            textPart.addProperty("text", prompt);
+            
+            JsonArray parts = new JsonArray();
+            parts.add(textPart);
+            
+            JsonObject contentItem = new JsonObject();
+            contentItem.add("parts", parts);
+            
+            JsonArray contents = new JsonArray();
+            contents.add(contentItem);
+            
+            JsonObject payload = new JsonObject();
+            payload.add("contents", contents);
+            
+            String jsonInputString = g.toJson(payload);
 
             // Create the HttpRequest
             HttpRequest request = HttpRequest.newBuilder()
