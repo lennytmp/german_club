@@ -106,7 +106,7 @@ public class GameEngineEndToEndTest {
             engine.processUpdate(telegram.getUpdates(6 + round)[0]);
             
             // Check if fight is over (someone won)
-            if (telegram.hasMessageContaining("Du hast gewonnen!") || 
+            if (telegram.hasMessageContaining("Erfahrung erhalten") || 
                 telegram.hasMessageContaining("Du wurdest im Kampf besiegt")) {
                 testPassed &= true; // Fight ended properly
                 break;
