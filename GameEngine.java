@@ -370,13 +370,14 @@ public class GameEngine {
                 if (client == null) return;
                 client.setStorage(storage); // Ensure storage dependency is set
                 
+                // Check if any effects were active before cleanup
+                boolean hadActiveEffects = client.hasActivePotionEffects();
+                
                 // Remove expired potion effects
-                int beforeCount = client.getActivePotionEffects().size();
-                client.removeExpiredEffects(curTimeSeconds);
-                int afterCount = client.getActivePotionEffects().size();
+                client.removeExpiredPotionEffects(curTimeSeconds);
                 
                 // Save client if any effects were removed
-                if (beforeCount != afterCount) {
+                if (hadActiveEffects && !client.hasActivePotionEffects()) {
                     storage.saveClient(client);
                 }
             }
@@ -748,13 +749,13 @@ public class GameEngine {
 
     private void consumeStrengthPotion(Client client) {
         consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
-            c.addPotionEffect(Client.PotionEffect.Type.STRENGTH, 5, curTimeSeconds);
+            c.addStrengthPotionEffect(5, curTimeSeconds);
         });
     }
 
     private void consumeLuckPotion(Client client) {
         consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
-            c.addPotionEffect(Client.PotionEffect.Type.LUCK, 5, curTimeSeconds);
+            c.addLuckPotionEffect(5, curTimeSeconds);
         });
     }
 
