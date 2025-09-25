@@ -671,57 +671,72 @@ public class GameEngine {
         return optionsList.toArray(new String[0]);
     }
 
-    private void consumePotion(Client client) {
-        client.hp += 5;
-        if (client.hp > client.getMaxHp()) {
-            client.hp = client.getMaxHp();
-        }
-        client.takeItem(Game.Item.HPOTION);
+    // Generic potion consumption method to avoid code duplication
+    private void consumePotionGeneric(Client client, Game.Item potionType, String emoji, String potionName, PotionEffect effect) {
+        // Apply the specific effect of the potion
+        effect.apply(client);
+        
+        // Remove the potion from inventory
+        client.takeItem(potionType);
         storage.saveClient(client);
 
-        String clientMsg = "\uD83C\uDF76 Trank konsumiert, du hast " +
-            client.getItemNum(Game.Item.HPOTION) + " übrig. " +
-            "[" + client.hp + "/" + client.getMaxHp() + "]";
+        // Build client message - keep backward compatibility for healing potions
+        String clientMsg;
+        if (potionType == Game.Item.HPOTION) {
+            // Use original format for healing potions to maintain test compatibility
+            clientMsg = emoji + " Trank konsumiert, du hast " +
+                client.getItemNum(potionType) + " übrig. " +
+                "[" + client.hp + "/" + client.getMaxHp() + "]";
+        } else {
+            // Use new format for other potions
+            clientMsg = emoji + " " + potionName + " konsumiert, du hast " +
+                client.getItemNum(potionType) + " übrig. (Noch keine Wirkung)";
+        }
+
+        // Send messages based on fighting status
         if (client.status == Client.Status.FIGHTING) {
             telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
             Client opponent = getClientWithStorage(client.fightingChatId);
-            telegram.sendMessage(opponent.chatId, "\uD83C\uDF76 " + client.username + " hat einen Heiltrank konsumiert " +
-                "[" + client.hp + "/" + client.getMaxHp() + "]");
+            
+            String opponentMsg;
+            if (potionType == Game.Item.HPOTION) {
+                // Keep original format for healing potions
+                opponentMsg = emoji + " " + client.username + " hat einen Heiltrank konsumiert " +
+                    "[" + client.hp + "/" + client.getMaxHp() + "]";
+            } else {
+                // Use new format for other potions
+                opponentMsg = emoji + " " + client.username + " hat einen " + potionName + " konsumiert.";
+            }
+            telegram.sendMessage(opponent.chatId, opponentMsg);
         } else {
             telegram.sendMessage(client.chatId, clientMsg);
         }
+    }
+
+    // Functional interface for potion effects
+    private interface PotionEffect {
+        void apply(Client client);
+    }
+
+    private void consumePotion(Client client) {
+        consumePotionGeneric(client, Game.Item.HPOTION, "\uD83C\uDF76", "Heiltrank", (c) -> {
+            c.hp += 5;
+            if (c.hp > c.getMaxHp()) {
+                c.hp = c.getMaxHp();
+            }
+        });
     }
 
     private void consumeStrengthPotion(Client client) {
-        // For now, no effect as requested, just consume the potion
-        client.takeItem(Game.Item.SPOTION);
-        storage.saveClient(client);
-
-        String clientMsg = "\uD83D\uDCAA Stärketrank konsumiert, du hast " +
-            client.getItemNum(Game.Item.SPOTION) + " übrig. (Noch keine Wirkung)";
-        if (client.status == Client.Status.FIGHTING) {
-            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
-            Client opponent = getClientWithStorage(client.fightingChatId);
-            telegram.sendMessage(opponent.chatId, "\uD83D\uDCAA " + client.username + " hat einen Stärketrank konsumiert.");
-        } else {
-            telegram.sendMessage(client.chatId, clientMsg);
-        }
+        consumePotionGeneric(client, Game.Item.SPOTION, "\uD83D\uDCAA", "Stärketrank", (c) -> {
+            // No effect for now as requested
+        });
     }
 
     private void consumeLuckPotion(Client client) {
-        // For now, no effect as requested, just consume the potion
-        client.takeItem(Game.Item.LPOTION);
-        storage.saveClient(client);
-
-        String clientMsg = "\uD83C\uDF40 Glückstrank konsumiert, du hast " +
-            client.getItemNum(Game.Item.LPOTION) + " übrig. (Noch keine Wirkung)";
-        if (client.status == Client.Status.FIGHTING) {
-            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
-            Client opponent = getClientWithStorage(client.fightingChatId);
-            telegram.sendMessage(opponent.chatId, "\uD83C\uDF40 " + client.username + " hat einen Glückstrank konsumiert.");
-        } else {
-            telegram.sendMessage(client.chatId, clientMsg);
-        }
+        consumePotionGeneric(client, Game.Item.LPOTION, "\uD83C\uDF40", "Glückstrank", (c) -> {
+            // No effect for now as requested
+        });
     }
 
     private void makeHitTask(Client client, Client victim, boolean isSuccess) {
