@@ -747,7 +747,12 @@ public class GameEngine {
         
         // Build comprehensive victory message for the winner
         StringBuilder victoryMessage = new StringBuilder();
-        victoryMessage.append("Du hast gewonnen!");
+        try {
+            victoryMessage.append(PhraseGenerator.getWonPhrase(winner, loser));
+        } catch (Exception e) {
+            // Fallback to simple message in case of phrase generation errors
+            victoryMessage.append("Du hast gewonnen!");
+        }
         
         // Add experience information
         int winnerExpUntilPromo = winner.nextExp() - winner.exp;
