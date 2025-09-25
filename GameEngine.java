@@ -339,6 +339,7 @@ public class GameEngine {
     public void runBackgroundTasks() {
         updateCurTime();
         cleanupDailySuccess();
+        cleanupExpiredPotionEffects();
         restoreHpIfNeeded(storage.getClientsByChatIds(injuredChats));
         assignBotsIfTimeout(storage.getClientsByChatIds(readyToFightChats));
         Client[] fightingClients = storage.getClientsByChatIds(fightingChats);
@@ -358,6 +359,25 @@ public class GameEngine {
                 if (client.getLastDailyCleanup() + 24 * 60 * 60 < curTimeSeconds) {
                     client.setSuccessToday(0);
                     client.setLastDailyCleanup(curTimeSeconds);
+                }
+            }
+        });
+    }
+    
+    private void cleanupExpiredPotionEffects() {
+        storage.forEachClient(new ClientDo() {
+            public void run(Client client) {
+                if (client == null) return;
+                client.setStorage(storage); // Ensure storage dependency is set
+                
+                // Remove expired potion effects
+                int beforeCount = client.getActivePotionEffects().size();
+                client.removeExpiredEffects(curTimeSeconds);
+                int afterCount = client.getActivePotionEffects().size();
+                
+                // Save client if any effects were removed
+                if (beforeCount != afterCount) {
+                    storage.saveClient(client);
                 }
             }
         });
@@ -728,13 +748,13 @@ public class GameEngine {
 
     private void consumeStrengthPotion(Client client) {
         consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
-            // No effect for now as requested
+            c.addPotionEffect(Client.PotionEffect.Type.STRENGTH, 5, curTimeSeconds);
         });
     }
 
     private void consumeLuckPotion(Client client) {
         consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
-            // No effect for now as requested
+            c.addPotionEffect(Client.PotionEffect.Type.LUCK, 5, curTimeSeconds);
         });
     }
 
@@ -903,10 +923,24 @@ public class GameEngine {
         String result = "*" + client.username + "*\n"
             + "Level: " + client.level + "\n"
             + "Gesundheit: " + client.hp + " (von " + client.getMaxHp() + ")\n"
-            + "Schaden: 1 - " + client.getMaxDamage() + "\n"
-            + "Stärke: " + client.strength + "\n"
-            + "Vitalität: " + client.vitality + "\n"
-            + "Glück: " + client.luck;
+            + "Schaden: 1 - " + client.getMaxDamage() + "\n";
+        
+        // Show strength with potion effects if any
+        if (client.getEffectiveStrength() != client.strength) {
+            result += "Stärke: " + client.strength + " (+" + (client.getEffectiveStrength() - client.strength) + " = " + client.getEffectiveStrength() + ")\n";
+        } else {
+            result += "Stärke: " + client.strength + "\n";
+        }
+        
+        result += "Vitalität: " + client.vitality + "\n";
+        
+        // Show luck with potion effects if any
+        if (client.getEffectiveLuck() != client.luck) {
+            result += "Glück: " + client.luck + " (+" + (client.getEffectiveLuck() - client.luck) + " = " + client.getEffectiveLuck() + ")";
+        } else {
+            result += "Glück: " + client.luck;
+        }
+        
         if (client.chatId > 0) {
             result += "\n"
                 + "Erfahrung: " + client.exp + " "
@@ -924,7 +958,7 @@ public class GameEngine {
         if (isSuccess) {
             result = Utils.rndInRange((maxDamage + 1) / 2, maxDamage);
         }
-        if (Utils.rndInRange(1, 100) < client.luck * client.luck) {
+        if (Utils.rndInRange(1, 100) < client.getEffectiveLuck() * client.getEffectiveLuck()) {
             result *= 2;
         }
         return result;
@@ -948,12 +982,12 @@ public class GameEngine {
     // Determines who goes first based on luck values
     // Returns true if client goes first, false if opponent goes first
     private boolean determineTurnOrder(Client client, Client opponent) {
-        int totalLuck = client.luck + opponent.luck;
+        int totalLuck = client.getEffectiveLuck() + opponent.getEffectiveLuck();
         int randomValue = Utils.rndInRange(1, totalLuck);
         
         // If random value is <= opponent's luck, opponent goes first
         // Otherwise, client goes first
-        return randomValue > opponent.luck;
+        return randomValue > opponent.getEffectiveLuck();
     }
 
     public void prepareToFight(Client client, Client opponent) {

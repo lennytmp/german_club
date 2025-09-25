@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
 import java.util.LinkedList;
+import java.util.ArrayList;
 
 class Client {
   // TODO: Status and body port should move to Game
@@ -44,6 +45,26 @@ class Client {
   // Trading system fields
   Game.Item offeredItem = null;
   Game.Item requestedItem = null;
+
+  // Potion effects tracking
+  private List<PotionEffect> activePotionEffects = new ArrayList<>();
+
+  // Inner class for tracking potion effects
+  public static class PotionEffect {
+    public enum Type {
+      STRENGTH, LUCK
+    }
+    
+    public Type type;
+    public int bonusValue;
+    public int expirationTime; // Unix timestamp when effect expires
+    
+    public PotionEffect(Type type, int bonusValue, int expirationTime) {
+      this.type = type;
+      this.bonusValue = bonusValue;
+      this.expirationTime = expirationTime;
+    }
+  }
 
   Client(int chatId, String username) {
     this.chatId = chatId;
@@ -193,7 +214,7 @@ class Client {
   }
 
   public int getMaxDamage() {
-    return strength;
+    return getEffectiveStrength();
   }
 
   public void giveItem(Game.Item item) {
@@ -205,10 +226,13 @@ class Client {
   public void takeItem(Game.Item item) {
     Integer curHave = inventory.get(item.ordinal());
     curHave = curHave == null ? 0 : curHave;
-    if (curHave - 1 == 0) {
-      inventory.remove(item.ordinal());
+    if (curHave > 0) {
+      if (curHave - 1 == 0) {
+        inventory.remove(item.ordinal());
+      } else {
+        inventory.put(item.ordinal(), curHave - 1);
+      }
     }
-    inventory.put(item.ordinal(), --curHave);
   }
 
   public boolean hasItem(Game.Item item) {
@@ -356,5 +380,39 @@ class Client {
     takeItem(offeredItem);
     giveItem(requestedItem);
     return true;
+  }
+
+  // Potion effect management methods
+  public void addPotionEffect(PotionEffect.Type type, int bonusValue, int currentTime) {
+    int expirationTime = currentTime + 180; // 3 minutes = 180 seconds
+    activePotionEffects.add(new PotionEffect(type, bonusValue, expirationTime));
+  }
+
+  public void removeExpiredEffects(int currentTime) {
+    activePotionEffects.removeIf(effect -> effect.expirationTime <= currentTime);
+  }
+
+  public int getEffectiveStrength() {
+    int baseStrength = strength;
+    for (PotionEffect effect : activePotionEffects) {
+      if (effect.type == PotionEffect.Type.STRENGTH) {
+        baseStrength += effect.bonusValue;
+      }
+    }
+    return baseStrength;
+  }
+
+  public int getEffectiveLuck() {
+    int baseLuck = luck;
+    for (PotionEffect effect : activePotionEffects) {
+      if (effect.type == PotionEffect.Type.LUCK) {
+        baseLuck += effect.bonusValue;
+      }
+    }
+    return baseLuck;
+  }
+
+  public List<PotionEffect> getActivePotionEffects() {
+    return new ArrayList<>(activePotionEffects);
   }
 }
