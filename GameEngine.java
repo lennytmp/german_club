@@ -460,10 +460,20 @@ public class GameEngine {
     
     // returns number of people who heard you
     private int sendToActiveUsers(String message) {
+        return sendToActiveUsers(message, null);
+    }
+    
+    // returns number of people who heard you, optionally excluding a specific chat ID
+    private int sendToActiveUsers(String message, Integer excludeChatId) {
         // If changed - also change the other function with the same name.
         int numListeners = 0;
         List<Integer> passive = new LinkedList<>();
         for (int recepientChatId : activeChats) {
+            // Skip the excluded chat ID if specified
+            if (excludeChatId != null && recepientChatId == excludeChatId.intValue()) {
+                continue;
+            }
+            
             Client recepient = getClientWithStorage(recepientChatId);
             if (recepient != null && recepient.lastActivity > curTimeSeconds - CHAT_TIMEOUT) {
                 telegram.sendMessage(recepient.chatId, message);
@@ -835,9 +845,9 @@ public class GameEngine {
         int expGained = loser.expForKillingMe();
         winner.exp += expGained;
         
-        // Send victory announcement to all active users
+        // Send victory announcement to all active users except the winner
         try {
-            sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser));
+            sendToActiveUsers(PhraseGenerator.getWonPhrase(winner, loser), winner.chatId);
         } catch (Exception e) {
             // Ignore phrase generation errors in test environment
         }
