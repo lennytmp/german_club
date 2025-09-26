@@ -98,6 +98,10 @@ class Game {
 
   static final Item[] ITEM_VALUES = Item.values();
 
+  // Potion effect constants
+  public static final int STRENGTH_POTION_BONUS = 2;
+  public static final int LUCK_POTION_BONUS = 2;
+
   // Define the recipe for brewing a healing potion
   private static final Map<Item, Integer> POTION_RECIPE = new EnumMap<>(Item.class);
   // Define the recipe for brewing a strength potion
