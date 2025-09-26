@@ -939,20 +939,20 @@ public class GameEngine {
         if (loser.chatId > 0) {
             winner.giveItem(Game.Item.HPOTION);
             lost = loser.loseRandomItems();
-            victoryMessage.append("\n\n💎 Du hast 1 Heiltrank gefunden!");
+            victoryMessage.append("\n\n🎒 Du hast 1 Heiltrank gefunden!");
             foundItems = true;
         } else {
             // logic for looting bots is here
             int rnd = Utils.rndInRange(1, 6);
             if (rnd == 1) {
                 winner.giveItem(Game.Item.HPOTION);
-                victoryMessage.append("\n\n💎 Du hast 1 Heiltrank gefunden!");
+                victoryMessage.append("\n\n🎒 Du hast 1 Heiltrank gefunden!");
                 foundItems = true;
             } else if (rnd < 4) {
                 Game.Item found = Game.ITEM_VALUES[Utils.getRndKeyWithWeight(
                     loser.inventory)];
                 winner.giveItem(found);
-                victoryMessage.append("\n\n💎 Du hast 1 ").append(found.singular).append(" gefunden!");
+                victoryMessage.append("\n\n🎒 Du hast 1 ").append(found.singular).append(" gefunden!");
                 foundItems = true;
             }
         }
