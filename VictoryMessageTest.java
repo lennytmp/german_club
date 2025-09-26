@@ -85,7 +85,7 @@ public class VictoryMessageTest {
                     
                     // Test 2: Check for proper formatting with emojis
                     testPassed &= message.contains("🎯");
-                    testPassed &= message.contains("💎");
+                    testPassed &= message.contains("🎒");
                     
                     // Test 3: Check that message has proper line breaks (not all on one line)
                     testPassed &= message.contains("\n");
