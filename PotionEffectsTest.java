@@ -44,15 +44,15 @@ public class PotionEffectsTest {
         allTestsPassed &= assertEquals(false, client.hasActivePotionEffects(), "Should have no active effects initially");
 
         // Add strength effect
-        client.addStrengthPotionEffect(5, currentTime);
-        allTestsPassed &= assertEquals(client.strength + 5, client.getEffectiveStrength(), "Effective strength should increase by 5");
+        client.addStrengthPotionEffect(2, currentTime);
+        allTestsPassed &= assertEquals(client.strength + 2, client.getEffectiveStrength(), "Effective strength should increase by 2");
         allTestsPassed &= assertEquals(client.luck, client.getEffectiveLuck(), "Luck should remain unchanged");
         allTestsPassed &= assertEquals(true, client.hasActivePotionEffects(), "Should have active effects");
 
         // Add luck effect
-        client.addLuckPotionEffect(5, currentTime);
-        allTestsPassed &= assertEquals(client.strength + 5, client.getEffectiveStrength(), "Strength should remain boosted");
-        allTestsPassed &= assertEquals(client.luck + 5, client.getEffectiveLuck(), "Effective luck should increase by 5");
+        client.addLuckPotionEffect(2, currentTime);
+        allTestsPassed &= assertEquals(client.strength + 2, client.getEffectiveStrength(), "Strength should remain boosted");
+        allTestsPassed &= assertEquals(client.luck + 2, client.getEffectiveLuck(), "Effective luck should increase by 2");
 
         return allTestsPassed;
     }
@@ -63,21 +63,21 @@ public class PotionEffectsTest {
         boolean allTestsPassed = true;
 
         // Add first strength potion
-        client.addStrengthPotionEffect(5, currentTime);
-        allTestsPassed &= assertEquals(client.strength + 5, client.getEffectiveStrength(), "First strength potion effect");
+        client.addStrengthPotionEffect(2, currentTime);
+        allTestsPassed &= assertEquals(client.strength + 2, client.getEffectiveStrength(), "First strength potion effect");
 
         // Add second strength potion
-        client.addStrengthPotionEffect(5, currentTime + 10);
-        allTestsPassed &= assertEquals(client.strength + 10, client.getEffectiveStrength(), "Two strength potions should stack");
+        client.addStrengthPotionEffect(2, currentTime + 10);
+        allTestsPassed &= assertEquals(client.strength + 4, client.getEffectiveStrength(), "Two strength potions should stack");
 
         // Add third strength potion
-        client.addStrengthPotionEffect(5, currentTime + 20);
-        allTestsPassed &= assertEquals(client.strength + 15, client.getEffectiveStrength(), "Three strength potions should stack");
+        client.addStrengthPotionEffect(2, currentTime + 20);
+        allTestsPassed &= assertEquals(client.strength + 6, client.getEffectiveStrength(), "Three strength potions should stack");
 
         // Add multiple luck potions
-        client.addLuckPotionEffect(5, currentTime);
-        client.addLuckPotionEffect(5, currentTime + 30);
-        allTestsPassed &= assertEquals(client.luck + 10, client.getEffectiveLuck(), "Two luck potions should stack");
+        client.addLuckPotionEffect(2, currentTime);
+        client.addLuckPotionEffect(2, currentTime + 30);
+        allTestsPassed &= assertEquals(client.luck + 4, client.getEffectiveLuck(), "Two luck potions should stack");
 
         return allTestsPassed;
     }
@@ -88,17 +88,17 @@ public class PotionEffectsTest {
         boolean allTestsPassed = true;
 
         // Add effects with known expiration times
-        client.addStrengthPotionEffect(5, currentTime);      // expires at 1180
-        client.addLuckPotionEffect(5, currentTime + 60);     // expires at 1240
+        client.addStrengthPotionEffect(2, currentTime);      // expires at 1180
+        client.addLuckPotionEffect(2, currentTime + 60);     // expires at 1240
 
-        allTestsPassed &= assertEquals(client.strength + 5, client.getEffectiveStrength(), "Strength effect should be active");
-        allTestsPassed &= assertEquals(client.luck + 5, client.getEffectiveLuck(), "Luck effect should be active");
+        allTestsPassed &= assertEquals(client.strength + 2, client.getEffectiveStrength(), "Strength effect should be active");
+        allTestsPassed &= assertEquals(client.luck + 2, client.getEffectiveLuck(), "Luck effect should be active");
         allTestsPassed &= assertEquals(true, client.hasActivePotionEffects(), "Should have active effects");
 
         // Advance time to 1190 (past strength effect expiration)
         client.removeExpiredPotionEffects(1190);
         allTestsPassed &= assertEquals(client.strength, client.getEffectiveStrength(), "Strength effect should be expired");
-        allTestsPassed &= assertEquals(client.luck + 5, client.getEffectiveLuck(), "Luck effect should remain");
+        allTestsPassed &= assertEquals(client.luck + 2, client.getEffectiveLuck(), "Luck effect should remain");
         allTestsPassed &= assertEquals(true, client.hasActivePotionEffects(), "Should still have luck effect");
 
         // Advance time to 1250 (past luck effect expiration)
@@ -121,12 +121,12 @@ public class PotionEffectsTest {
         int currentTime = 1000;
 
         // Apply potion effects
-        client.addStrengthPotionEffect(5, currentTime);
-        client.addLuckPotionEffect(5, currentTime);
+        client.addStrengthPotionEffect(2, currentTime);
+        client.addLuckPotionEffect(2, currentTime);
 
         // Verify effects are active
-        allTestsPassed &= assertEquals(client.strength + 5, client.getEffectiveStrength(), "Strength effect should be active before save");
-        allTestsPassed &= assertEquals(client.luck + 5, client.getEffectiveLuck(), "Luck effect should be active before save");
+        allTestsPassed &= assertEquals(client.strength + 2, client.getEffectiveStrength(), "Strength effect should be active before save");
+        allTestsPassed &= assertEquals(client.luck + 2, client.getEffectiveLuck(), "Luck effect should be active before save");
 
         // Save client to storage
         storage.saveClient(client);
@@ -136,15 +136,15 @@ public class PotionEffectsTest {
         loadedClient.setStorage(storage);
 
         // Verify effects persist after load
-        allTestsPassed &= assertEquals(loadedClient.strength + 5, loadedClient.getEffectiveStrength(), "Strength effect should persist after load");
-        allTestsPassed &= assertEquals(loadedClient.luck + 5, loadedClient.getEffectiveLuck(), "Luck effect should persist after load");
+        allTestsPassed &= assertEquals(loadedClient.strength + 2, loadedClient.getEffectiveStrength(), "Strength effect should persist after load");
+        allTestsPassed &= assertEquals(loadedClient.luck + 2, loadedClient.getEffectiveLuck(), "Luck effect should persist after load");
         allTestsPassed &= assertEquals(true, loadedClient.hasActivePotionEffects(), "Should have active effects after load");
 
         // Verify timestamp fields are preserved
         allTestsPassed &= assertEquals(currentTime + 180, loadedClient.strengthPotionExpiry, "Strength expiry timestamp should be preserved");
         allTestsPassed &= assertEquals(currentTime + 180, loadedClient.luckPotionExpiry, "Luck expiry timestamp should be preserved");
-        allTestsPassed &= assertEquals(5, loadedClient.strengthPotionBonus, "Strength bonus should be preserved");
-        allTestsPassed &= assertEquals(5, loadedClient.luckPotionBonus, "Luck bonus should be preserved");
+        allTestsPassed &= assertEquals(2, loadedClient.strengthPotionBonus, "Strength bonus should be preserved");
+        allTestsPassed &= assertEquals(2, loadedClient.luckPotionBonus, "Luck bonus should be preserved");
 
         return allTestsPassed;
     }
@@ -177,8 +177,8 @@ public class PotionEffectsTest {
         // Verify effect was applied
         Client updatedClient = storage.getClientByChatId(400);
         if (updatedClient != null) {
-            allTestsPassed &= assertEquals(initialStrength + 5, updatedClient.getEffectiveStrength(), "Strength should be boosted after potion");
-            allTestsPassed &= assertEquals(5, updatedClient.strengthPotionBonus, "Strength bonus should be 5");
+            allTestsPassed &= assertEquals(initialStrength + 2, updatedClient.getEffectiveStrength(), "Strength should be boosted after potion");
+            allTestsPassed &= assertEquals(2, updatedClient.strengthPotionBonus, "Strength bonus should be 2");
             allTestsPassed &= assertEquals(0, updatedClient.getItemNum(Game.Item.SPOTION), "Strength potion should be consumed");
         } else {
             System.out.println(" Test: GameEngine strength potion consumption FAILED: client not found");
@@ -196,8 +196,8 @@ public class PotionEffectsTest {
         // Verify luck effect was applied
         updatedClient = storage.getClientByChatId(400);
         if (updatedClient != null) {
-            allTestsPassed &= assertEquals(initialLuck + 5, updatedClient.getEffectiveLuck(), "Luck should be boosted after potion");
-            allTestsPassed &= assertEquals(5, updatedClient.luckPotionBonus, "Luck bonus should be 5");
+            allTestsPassed &= assertEquals(initialLuck + 2, updatedClient.getEffectiveLuck(), "Luck should be boosted after potion");
+            allTestsPassed &= assertEquals(2, updatedClient.luckPotionBonus, "Luck bonus should be 2");
             allTestsPassed &= assertEquals(0, updatedClient.getItemNum(Game.Item.LPOTION), "Luck potion should be consumed");
         } else {
             System.out.println(" Test: GameEngine luck potion consumption FAILED: client not found");
@@ -208,8 +208,8 @@ public class PotionEffectsTest {
         engine.runBackgroundTasks();
         updatedClient = storage.getClientByChatId(400);
         if (updatedClient != null) {
-            allTestsPassed &= assertEquals(initialStrength + 5, updatedClient.getEffectiveStrength(), "Effect should still be active after background tasks");
-            allTestsPassed &= assertEquals(initialLuck + 5, updatedClient.getEffectiveLuck(), "Luck effect should still be active after background tasks");
+            allTestsPassed &= assertEquals(initialStrength + 2, updatedClient.getEffectiveStrength(), "Effect should still be active after background tasks");
+            allTestsPassed &= assertEquals(initialLuck + 2, updatedClient.getEffectiveLuck(), "Luck effect should still be active after background tasks");
         } else {
             System.out.println(" Test: Background cleanup preservation FAILED: client not found");
             allTestsPassed = false;

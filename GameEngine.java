@@ -759,13 +759,13 @@ public class GameEngine {
 
     private void consumeStrengthPotion(Client client) {
         consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
-            c.addStrengthPotionEffect(5, curTimeSeconds);
+            c.addStrengthPotionEffect(2, curTimeSeconds);
         });
     }
 
     private void consumeLuckPotion(Client client) {
         consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
-            c.addLuckPotionEffect(5, curTimeSeconds);
+            c.addLuckPotionEffect(2, curTimeSeconds);
         });
     }
 
