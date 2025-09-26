@@ -2,6 +2,7 @@ package FightLang;
 
 import java.util.HashMap;
 import java.util.Map;
+import static FightLang.TestHelper.*;
 
 public class ClientTest {
     public static void main(String[] args) {
@@ -19,30 +20,7 @@ public class ClientTest {
         System.out.println();
     }
 
-    // A simple assertEquals function to compare expected and actual values
-    public static boolean assertEquals(int expected, int actual, String testName) {
-        if (expected == actual) {
-            System.out.print("S");
-            return true;
-        }
-        System.out.println(" Test: " + testName + " FAILED: expected " + expected + " but got " + actual);
-        return false;
-    }
-    
-    // Helper to check if string array contains specific value
-    public static boolean arrayContains(String[] array, String value) {
-        for (String item : array) {
-            if (item.equals(value)) {
-                return true;
-            }
-        }
-        return false;
-    }
-    
-    // Helper to check if message contains specific text
-    public static boolean messageContains(String message, String text) {
-        return message.contains(text);
-    }
+    // Removed duplicate helper methods - now using TestHelper utilities
 
     public static boolean testNextExpLevel() {
         Client c =  new Client(0, "test");
@@ -77,11 +55,8 @@ public class ClientTest {
     public static boolean testHealingPotionBrewing() {
         boolean allTestsPassed = true;
         
-        // Create inventory with healing potion ingredients
-        Map<Integer, Integer> inventory = new HashMap<>();
-        inventory.put(Game.Item.ASH.ordinal(), 1);      // 1 Ash
-        inventory.put(Game.Item.BANDAGE.ordinal(), 1);  // 1 Bandage  
-        inventory.put(Game.Item.BOTTLE.ordinal(), 1);   // 1 Bottle
+        // Create inventory with healing potion ingredients using TestHelper
+        Map<Integer, Integer> inventory = createHealingPotionIngredients();
         
         // Test can brew
         allTestsPassed &= assertEquals(1, Game.canBrewPotion(inventory) ? 1 : 0, 
@@ -104,11 +79,8 @@ public class ClientTest {
     public static boolean testStrengthPotionBrewing() {
         boolean allTestsPassed = true;
         
-        // Create inventory with strength potion ingredients
-        Map<Integer, Integer> inventory = new HashMap<>();
-        inventory.put(Game.Item.BONE.ordinal(), 1);    // 1 Bone
-        inventory.put(Game.Item.FLESH.ordinal(), 1);   // 1 Flesh  
-        inventory.put(Game.Item.FANG.ordinal(), 1);    // 1 Fang
+        // Create inventory with strength potion ingredients using TestHelper
+        Map<Integer, Integer> inventory = createStrengthPotionIngredients();
         
         // Test can brew
         allTestsPassed &= assertEquals(1, Game.canBrewStrengthPotion(inventory) ? 1 : 0, 
@@ -131,11 +103,8 @@ public class ClientTest {
     public static boolean testLuckPotionBrewing() {
         boolean allTestsPassed = true;
         
-        // Create inventory with luck potion ingredients
-        Map<Integer, Integer> inventory = new HashMap<>();
-        inventory.put(Game.Item.COIN.ordinal(), 1);    // 1 Coin
-        inventory.put(Game.Item.GOLD.ordinal(), 1);    // 1 Gold  
-        inventory.put(Game.Item.SILVER.ordinal(), 1);  // 1 Silver
+        // Create inventory with luck potion ingredients using TestHelper
+        Map<Integer, Integer> inventory = createLuckPotionIngredients();
         
         // Test can brew
         allTestsPassed &= assertEquals(1, Game.canBrewLuckPotion(inventory) ? 1 : 0, 
@@ -200,23 +169,14 @@ public class ClientTest {
         boolean allTestsPassed = true;
         
         try {
-            // Setup mocks using end-to-end approach
-            MockStorage storage = new MockStorage();
-            MockTelegram telegram = new MockTelegram();
-            GameEngine engine = new GameEngine(storage, telegram);
+            // Setup mocks using TestHelper
+            TestEnvironment env = createTestEnvironment();
             
             // Create a player with no items
-            telegram.simulateUserMessage(1, "TestUser", "/start");
-            engine.processUpdate(telegram.getUpdates(1)[0]);
+            createPlayer(env, 1, "TestUser");
             
-            telegram.clearMessages();
-            
-            // Player requests profile
-            telegram.simulateUserMessage(1, "TestUser", "Profil");
-            engine.processUpdate(telegram.getUpdates(2)[0]);
-            
-            // Check the profile response
-            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(1);
+            // Get player's profile
+            MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 1, "TestUser");
             allTestsPassed &= assertEquals(1, profileMsg != null ? 1 : 0, "Profile message should be sent");
             
             if (profileMsg != null) {
@@ -250,32 +210,14 @@ public class ClientTest {
         boolean allTestsPassed = true;
         
         try {
-            // Setup mocks using end-to-end approach
-            MockStorage storage = new MockStorage();
-            MockTelegram telegram = new MockTelegram();
-            GameEngine engine = new GameEngine(storage, telegram);
+            // Setup mocks using TestHelper
+            TestEnvironment env = createTestEnvironment();
             
-            // Create a player and give them healing potion ingredients
-            telegram.simulateUserMessage(2, "TestUser", "/start");
-            engine.processUpdate(telegram.getUpdates(1)[0]);
+            // Create a player with healing potion ingredients
+            createPlayerWithItems(env, 2, "TestUser", Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE);
             
-            // Add healing ingredients to the player
-            Client client = storage.getClientByChatId(2);
-            if (client != null) {
-                client.giveItem(Game.Item.ASH);
-                client.giveItem(Game.Item.BANDAGE);
-                client.giveItem(Game.Item.BOTTLE);
-                storage.saveClient(client);
-            }
-            
-            telegram.clearMessages();
-            
-            // Player requests profile
-            telegram.simulateUserMessage(2, "TestUser", "Profil");
-            engine.processUpdate(telegram.getUpdates(2)[0]);
-            
-            // Check the profile response
-            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(2);
+            // Get player's profile
+            MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 2, "TestUser");
             allTestsPassed &= assertEquals(1, profileMsg != null ? 1 : 0, "Profile message should be sent");
             
             if (profileMsg != null) {
@@ -319,41 +261,17 @@ public class ClientTest {
         boolean allTestsPassed = true;
         
         try {
-            // Setup mocks using end-to-end approach
-            MockStorage storage = new MockStorage();
-            MockTelegram telegram = new MockTelegram();
-            GameEngine engine = new GameEngine(storage, telegram);
+            // Setup mocks using TestHelper
+            TestEnvironment env = createTestEnvironment();
             
-            // Create a player and give them ingredients for all three potions
-            telegram.simulateUserMessage(3, "TestUser", "/start");
-            engine.processUpdate(telegram.getUpdates(1)[0]);
+            // Create a player with ingredients for all three potions
+            createPlayerWithItems(env, 3, "TestUser", 
+                Game.Item.ASH, Game.Item.BANDAGE, Game.Item.BOTTLE,      // Healing
+                Game.Item.BONE, Game.Item.FLESH, Game.Item.FANG,         // Strength  
+                Game.Item.COIN, Game.Item.GOLD, Game.Item.SILVER);       // Luck
             
-            // Add ingredients for all three potions
-            Client client = storage.getClientByChatId(3);
-            if (client != null) {
-                // Add healing ingredients
-                client.giveItem(Game.Item.ASH);
-                client.giveItem(Game.Item.BANDAGE);
-                client.giveItem(Game.Item.BOTTLE);
-                // Add strength ingredients
-                client.giveItem(Game.Item.BONE);
-                client.giveItem(Game.Item.FLESH);
-                client.giveItem(Game.Item.FANG);
-                // Add luck ingredients
-                client.giveItem(Game.Item.COIN);
-                client.giveItem(Game.Item.GOLD);
-                client.giveItem(Game.Item.SILVER);
-                storage.saveClient(client);
-            }
-            
-            telegram.clearMessages();
-            
-            // Player requests profile
-            telegram.simulateUserMessage(3, "TestUser", "Profil");
-            engine.processUpdate(telegram.getUpdates(2)[0]);
-            
-            // Check the profile response
-            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(3);
+            // Get player's profile
+            MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 3, "TestUser");
             allTestsPassed &= assertEquals(1, profileMsg != null ? 1 : 0, "Profile message should be sent");
             
             if (profileMsg != null) {
@@ -399,37 +317,19 @@ public class ClientTest {
         boolean allTestsPassed = true;
         
         try {
-            // Setup mocks using end-to-end approach
-            MockStorage storage = new MockStorage();
-            MockTelegram telegram = new MockTelegram();
-            GameEngine engine = new GameEngine(storage, telegram);
+            // Setup mocks using TestHelper
+            TestEnvironment env = createTestEnvironment();
             
-            // Create a player and give them some items
-            telegram.simulateUserMessage(124, "TraderUser", "/start");
-            engine.processUpdate(telegram.getUpdates(1)[0]);
-            
-            // Add some items to the player for trading
-            Client client = storage.getClientByChatId(124);
-            if (client != null) {
-                client.giveItem(Game.Item.COIN);
-                client.giveItem(Game.Item.BOTTLE);
-                storage.saveClient(client);
-            }
+            // Create a player with some items for trading
+            createPlayerWithItems(env, 124, "TraderUser", Game.Item.COIN, Game.Item.BOTTLE);
             
             // Test that new players with no items have empty inventory
-            telegram.simulateUserMessage(123, "EmptyUser", "/start");
-            engine.processUpdate(telegram.getUpdates(2)[0]);
-            
-            Client emptyClient = storage.getClientByChatId(123);
+            Client emptyClient = createPlayer(env, 123, "EmptyUser");
             allTestsPassed &= assertEquals(0, (emptyClient != null && emptyClient.hasAnyItems()) ? 1 : 0,
                 "New client should have no items");
             
             // Test that players with items can see their inventory in profile
-            telegram.clearMessages();
-            telegram.simulateUserMessage(124, "TraderUser", "Profil");
-            engine.processUpdate(telegram.getUpdates(3)[0]);
-            
-            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(124);
+            MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 124, "TraderUser");
             allTestsPassed &= assertEquals(1, profileMsg != null ? 1 : 0, "Profile message should be sent");
             
             if (profileMsg != null) {

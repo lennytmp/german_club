@@ -1,5 +1,7 @@
 package FightLang;
 
+import static FightLang.TestHelper.*;
+
 public class PotionEffectsTest {
     public static void main(String[] args) {
         boolean allTestsPassed = true;
@@ -16,33 +18,7 @@ public class PotionEffectsTest {
         System.out.println();
     }
 
-    // A simple assertEquals function to compare expected and actual values
-    public static boolean assertEquals(int expected, int actual, String testName) {
-        if (expected == actual) {
-            System.out.print("S");
-            return true;
-        }
-        System.out.println(" Test: " + testName + " FAILED: expected " + expected + " but got " + actual);
-        return false;
-    }
-
-    public static boolean assertEquals(boolean expected, boolean actual, String testName) {
-        if (expected == actual) {
-            System.out.print("S");
-            return true;
-        }
-        System.out.println(" Test: " + testName + " FAILED: expected " + expected + " but got " + actual);
-        return false;
-    }
-
-    public static boolean assertEquals(String expected, String actual, String testName) {
-        if (expected.equals(actual)) {
-            System.out.print("S");
-            return true;
-        }
-        System.out.println(" Test: " + testName + " FAILED: expected \"" + expected + "\" but got \"" + actual + "\"");
-        return false;
-    }
+    // Removed duplicate assert methods - now using TestHelper utilities
 
     public static boolean testBasicPotionEffects() {
         Client client = new Client(1, "TestUser");
@@ -122,13 +98,13 @@ public class PotionEffectsTest {
     }
 
     public static boolean testPotionPersistence() {
-        // Test that potion effects survive save/load cycles
-        MockStorage storage = new MockStorage();
+        // Test that potion effects survive save/load cycles using TestHelper
+        TestEnvironment env = createTestEnvironment();
         boolean allTestsPassed = true;
 
         // Create client with potion effects
         Client client = new Client(100, "PersistUser");
-        client.setStorage(storage);
+        client.setStorage(env.storage);
         int currentTime = 1000;
 
         // Apply potion effects
@@ -140,11 +116,11 @@ public class PotionEffectsTest {
         allTestsPassed &= assertEquals(client.luck + Game.LUCK_POTION_BONUS, client.getEffectiveLuck(), "Luck effect should be active before save");
 
         // Save client to storage
-        storage.saveClient(client);
+        env.storage.saveClient(client);
 
         // Load client from storage (simulating restart)
-        Client loadedClient = storage.getClientByChatId(100);
-        loadedClient.setStorage(storage);
+        Client loadedClient = env.storage.getClientByChatId(100);
+        loadedClient.setStorage(env.storage);
 
         // Verify effects persist after load
         allTestsPassed &= assertEquals(loadedClient.strength + Game.STRENGTH_POTION_BONUS, loadedClient.getEffectiveStrength(), "Strength effect should persist after load");
@@ -161,32 +137,24 @@ public class PotionEffectsTest {
     }
 
     public static boolean testGameEngineIntegration() {
-        // Test that the GameEngine correctly handles potion consumption
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
+        // Test that the GameEngine correctly handles potion consumption using TestHelper
+        TestEnvironment env = createTestEnvironment();
         boolean allTestsPassed = true;
 
-        // Create client with potions
-        Client client = new Client(400, "EngineUser");
-        client.setStorage(storage);
-        client.giveItem(Game.Item.SPOTION);
-        client.giveItem(Game.Item.LPOTION);
+        // Create client with potions using TestHelper
+        Client client = createPlayerWithItems(env, 400, "EngineUser", Game.Item.SPOTION, Game.Item.LPOTION);
         int initialStrength = client.strength;
         int initialLuck = client.luck;
-        storage.saveClient(client);
-
-        // Create GameEngine and simulate potion consumption
-        GameEngine engine = new GameEngine(storage, telegram);
 
         // Simulate strength potion consumption
-        telegram.simulateUserMessage(400, "EngineUser", "/stärketrank");
-        Telegram.Update[] updates = telegram.getUpdates(1);
+        env.telegram.simulateUserMessage(400, "EngineUser", "/stärketrank");
+        Telegram.Update[] updates = env.telegram.getUpdates(1);
         if (updates.length > 0) {
-            engine.processUpdate(updates[updates.length - 1]);
+            env.engine.processUpdate(updates[updates.length - 1]);
         }
 
         // Verify effect was applied
-        Client updatedClient = storage.getClientByChatId(400);
+        Client updatedClient = env.storage.getClientByChatId(400);
         if (updatedClient != null) {
             allTestsPassed &= assertEquals(initialStrength + Game.STRENGTH_POTION_BONUS, updatedClient.getEffectiveStrength(), "Strength should be boosted after potion");
             allTestsPassed &= assertEquals(Game.STRENGTH_POTION_BONUS, updatedClient.strengthPotionBonus, "Strength bonus should be " + Game.STRENGTH_POTION_BONUS);
@@ -197,15 +165,15 @@ public class PotionEffectsTest {
         }
 
         // Test luck potion consumption  
-        telegram.clearUpdates();
-        telegram.simulateUserMessage(400, "EngineUser", "/glückstrank");
-        updates = telegram.getUpdates(1);
+        env.telegram.clearUpdates();
+        env.telegram.simulateUserMessage(400, "EngineUser", "/glückstrank");
+        updates = env.telegram.getUpdates(1);
         if (updates.length > 0) {
-            engine.processUpdate(updates[updates.length - 1]);
+            env.engine.processUpdate(updates[updates.length - 1]);
         }
 
         // Verify luck effect was applied
-        updatedClient = storage.getClientByChatId(400);
+        updatedClient = env.storage.getClientByChatId(400);
         if (updatedClient != null) {
             allTestsPassed &= assertEquals(initialLuck + Game.LUCK_POTION_BONUS, updatedClient.getEffectiveLuck(), "Luck should be boosted after potion");
             allTestsPassed &= assertEquals(Game.LUCK_POTION_BONUS, updatedClient.luckPotionBonus, "Luck bonus should be " + Game.LUCK_POTION_BONUS);
@@ -216,8 +184,8 @@ public class PotionEffectsTest {
         }
 
         // Test background cleanup with no expiry
-        engine.runBackgroundTasks();
-        updatedClient = storage.getClientByChatId(400);
+        env.engine.runBackgroundTasks();
+        updatedClient = env.storage.getClientByChatId(400);
         if (updatedClient != null) {
             allTestsPassed &= assertEquals(initialStrength + Game.STRENGTH_POTION_BONUS, updatedClient.getEffectiveStrength(), "Effect should still be active after background tasks");
             allTestsPassed &= assertEquals(initialLuck + Game.LUCK_POTION_BONUS, updatedClient.getEffectiveLuck(), "Luck effect should still be active after background tasks");
