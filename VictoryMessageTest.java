@@ -1,6 +1,7 @@
 package FightLang;
 
 import java.util.List;
+import static FightLang.TestHelper.*;
 
 /**
  * Test that specifically verifies the consolidated victory message functionality.
@@ -30,44 +31,31 @@ public class VictoryMessageTest {
     private static boolean testConsolidatedVictoryMessage() {
         boolean testPassed = true;
         
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
+        TestEnvironment env = createTestEnvironment();
         
         // Create a player close to leveling up to test level-up integration
-        Client nearLevelUp = new Client(100, "LevelUpWinner");
-        nearLevelUp.exp = 25; // Close to level 2 (needs 30)
-        storage.addClient(nearLevelUp);
+        Client nearLevelUp = createPlayerWithStats(env, 100, "LevelUpWinner", 1, 25); // Close to level 2 (needs 30)
         
-        // Create opponent
-        telegram.simulateUserMessage(200, "Opponent", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
+        // Create opponent using TestHelper
+        createPlayer(env, 200, "Opponent");
         
-        telegram.clearMessages();
+        env.clearMessages();
         
-        // Start fight
-        telegram.simulateUserMessage(100, "LevelUpWinner", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
-        telegram.simulateUserMessage(200, "Opponent", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(3)[0]);
-        
-        // Find who has the turn and force fight to completion
-        boolean player1HasTurn = telegram.hasMessageForChatContaining(100, "Du bist an der Reihe!");
-        int activePlayer = player1HasTurn ? 100 : 200;
-        int passivePlayer = player1HasTurn ? 200 : 100;
+        // Start fight using TestHelper
+        int activePlayer = setupFight(env, 100, "LevelUpWinner", 200, "Opponent");
+        int passivePlayer = activePlayer == 100 ? 200 : 100;
         
         // Fight until victory
         for (int round = 0; round < 50; round++) {
-            telegram.clearMessages();
+            env.clearMessages();
             
-            telegram.simulateUserMessage(activePlayer, "Player" + activePlayer, "Erfolg");
-            engine.processUpdate(telegram.getUpdates(4 + round)[0]);
+            simulateAttack(env, activePlayer, "Player" + activePlayer);
             
             // Check if fight ended (look for victory phrases or experience gained)
-            if (telegram.hasMessageContaining("Erfahrung erhalten") || telegram.hasMessageContaining("hat") && telegram.hasMessageContaining("besiegt")) {
+            if (env.telegram.hasMessageContaining("Erfahrung erhalten") || env.telegram.hasMessageContaining("hat") && env.telegram.hasMessageContaining("besiegt")) {
                 // Find the victory message
                 MockTelegram.SentMessage victoryMessage = null;
-                for (MockTelegram.SentMessage msg : telegram.getSentMessages()) {
+                for (MockTelegram.SentMessage msg : env.telegram.getSentMessages()) {
                     if (msg.message.contains("Erfahrung erhalten")) {
                         victoryMessage = msg;
                         break;
@@ -100,7 +88,7 @@ public class VictoryMessageTest {
                 
                 // Test 5: Count victory-related messages - should be exactly 1
                 int victoryMessageCount = 0;
-                for (MockTelegram.SentMessage msg : telegram.getSentMessages()) {
+                for (MockTelegram.SentMessage msg : env.telegram.getSentMessages()) {
                     if (msg.chatId == activePlayer && 
                         (msg.message.contains("Erfahrung erhalten") ||
                          msg.message.contains("gefunden") ||

@@ -1,5 +1,7 @@
 package FightLang;
 
+import static FightLang.TestHelper.*;
+
 /**
  * Comprehensive battle flow test that demonstrates:
  * 1. Player registration
@@ -26,113 +28,83 @@ public class BattleFlowTest {
      */
     private static boolean runCompleteBattleScenario() {
         try {
-            // Setup mocks - this replaces the real database and Telegram API
-            MockStorage storage = new MockStorage();
-            MockTelegram telegram = new MockTelegram();
-            GameEngine engine = new GameEngine(storage, telegram);
+            // Setup mocks using TestHelper
+            TestEnvironment env = createTestEnvironment();
             
-            // Create two players using the new simulation approach
-            telegram.simulateUserMessage(100, "Alice", "/start");
-            engine.processUpdate(telegram.getUpdates(1)[0]);
+            // Create two players with Alice having a healing potion
+            createPlayer(env, 100, "Alice");
+            createPlayerWithItems(env, 200, "Bob", Game.Item.HPOTION);
             
-            telegram.simulateUserMessage(200, "Bob", "/start");
-            engine.processUpdate(telegram.getUpdates(2)[0]);
-            
-            // Give Alice a healing potion to test potion mechanics
-            Client player1 = storage.getClientByChatId(100);
-            if (player1 != null) {
-                player1.giveItem(Game.Item.HPOTION);
-                storage.saveClient(player1);
+            // Give Alice the healing potion instead
+            Client alice = env.storage.getClientByChatId(100);
+            if (alice != null) {
+                alice.giveItem(Game.Item.HPOTION);
+                env.storage.saveClient(alice);
             }
             
-            telegram.clearMessages();
+            env.clearMessages();
             
-            // Test profile display
-            telegram.simulateUserMessage(100, "Alice", "Profil");
-            engine.processUpdate(telegram.getUpdates(3)[0]); // Process Alice's profile request
-            
-            MockTelegram.SentMessage profileMsg = telegram.getLastMessageForChat(100);
-            if (profileMsg == null || !profileMsg.message.contains("Alice")) {
+            // Test profile display using TestHelper
+            MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 100, "Alice");
+            if (!validateBasicProfile(profileMsg, "Alice")) {
                 System.out.println("Profile display failed");
                 return false;
             }
             System.out.print("S"); // Profile test passed
             
-            telegram.clearMessages();
+            env.clearMessages();
             
-            // Alice looks for a fight
-            telegram.simulateUserMessage(100, "Alice", "Kämpfen");
-            engine.processUpdate(telegram.getUpdates(4)[0]); // Process Alice's fight request
+            // Setup fight using TestHelper
+            int activePlayer = setupFight(env, 100, "Alice", 200, "Bob");
             
-            // Bob also looks for a fight - this should match them
-            telegram.simulateUserMessage(200, "Bob", "Kämpfen");
-            engine.processUpdate(telegram.getUpdates(5)[0]); // Process Bob's fight request
-            
-            // Check that both players are notified about the fight
-            boolean aliceFightMsg = telegram.hasMessageForChatContaining(100, "Du kämpfst jetzt mit Bob");
-            boolean bobFightMsg = telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit Alice");
-            
-            if (!aliceFightMsg || !bobFightMsg) {
+            if (!validateFightInitiation(env, 100, "Alice", 200, "Bob")) {
                 System.out.println("Fight initiation failed");
                 return false;
             }
             System.out.print("S"); // Fight matching test passed
             
-            // Determine who goes first
-            boolean aliceHasTurn = telegram.hasMessageForChatContaining(100, "Du bist an der Reihe!");
-            boolean bobHasTurn = telegram.hasMessageForChatContaining(200, "Du bist an der Reihe!");
-            
-            if (aliceHasTurn == bobHasTurn) { // Both true or both false is wrong
+            if (!validateTurnSystem(env, 100, 200)) {
                 System.out.println("Turn system failed - unclear who goes first");
                 return false;
             }
             System.out.print("S"); // Turn system test passed
             
-            int activePlayer = aliceHasTurn ? 100 : 200;
-            int passivePlayer = aliceHasTurn ? 200 : 100;
-            String activePlayerName = aliceHasTurn ? "Alice" : "Bob";
+            int passivePlayer = activePlayer == 100 ? 200 : 100;
+            String activePlayerName = activePlayer == 100 ? "Alice" : "Bob";
             
             // Test potion usage if Alice has the turn
             if (activePlayer == 100) {
-                MockTelegram.SentMessage turnMsg = telegram.getLastMessageForChat(100);
+                MockTelegram.SentMessage turnMsg = env.telegram.getLastMessageForChat(100);
                 if (!turnMsg.hasButton("Heiltrank [1]")) {
                     System.out.println("Potion button not available");
                     return false;
                 }
                 
-                telegram.clearMessages();
+                env.clearMessages();
                 
-                // Alice uses her potion
-                telegram.simulateUserMessage(100, "Alice", "Heiltrank [1]");
-                Telegram.Update[] potionUpdates = telegram.getUpdates(1);
-                if (potionUpdates.length > 0) {
-                    engine.processUpdate(potionUpdates[potionUpdates.length - 1]);
-                }
+                // Alice uses her potion using TestHelper
+                usePotion(env, 100, "Alice", "Heiltrank [1]");
                 
-                if (!telegram.hasMessageForChatContaining(100, "Heiltrank konsumiert")) {
+                if (!env.telegram.hasMessageForChatContaining(100, "Heiltrank konsumiert")) {
                     System.out.println("Potion usage failed");
                     return false;
                 }
                 
-                if (!telegram.hasMessageForChatContaining(200, "hat einen Heiltrank konsumiert")) {
+                if (!env.telegram.hasMessageForChatContaining(200, "hat einen Heiltrank konsumiert")) {
                     System.out.println("Opponent not notified of potion usage");
                     return false;
                 }
                 System.out.print("S"); // Potion test passed
             }
             
-            telegram.clearMessages();
+            env.clearMessages();
             
-            // Active player makes a successful attack
-            telegram.simulateUserMessage(activePlayer, activePlayerName, "Erfolg");
-            Telegram.Update[] attackUpdates = telegram.getUpdates(1);
-            if (attackUpdates.length > 0) {
-                engine.processUpdate(attackUpdates[attackUpdates.length - 1]);
-            }
+            // Active player makes a successful attack using TestHelper
+            simulateAttack(env, activePlayer, activePlayerName);
             
             // Check that damage messages were sent
-            boolean attackerGotFeedback = telegram.getMessageCountForChat(activePlayer) > 0;
-            boolean victimGotDamage = telegram.getMessageCountForChat(passivePlayer) > 0;
+            boolean attackerGotFeedback = env.telegram.getMessageCountForChat(activePlayer) > 0;
+            boolean victimGotDamage = env.telegram.getMessageCountForChat(passivePlayer) > 0;
             
             if (!attackerGotFeedback || !victimGotDamage) {
                 System.out.println("Combat feedback failed");
@@ -141,13 +113,14 @@ public class BattleFlowTest {
             System.out.print("S"); // Combat test passed
             
             // Test task system with a new player
-            telegram.simulateUserMessage(300, "Charlie", "Aufgabe");
-            Telegram.Update[] taskUpdates = telegram.getUpdates(1);
+            createPlayer(env, 300, "Charlie");
+            env.telegram.simulateUserMessage(300, "Charlie", "Aufgabe");
+            Telegram.Update[] taskUpdates = env.telegram.getUpdates(1);
             if (taskUpdates.length > 0) {
-                engine.processUpdate(taskUpdates[taskUpdates.length - 1]);
+                env.engine.processUpdate(taskUpdates[taskUpdates.length - 1]);
             }
             
-            if (telegram.getMessageCountForChat(300) == 0) {
+            if (env.telegram.getMessageCountForChat(300) == 0) {
                 System.out.println("Task system failed");
                 return false;
             }

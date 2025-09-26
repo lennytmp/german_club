@@ -1,6 +1,7 @@
 package FightLang;
 
 import java.util.List;
+import static FightLang.TestHelper.*;
 
 /**
  * Simple end-to-end test that simulates the complete game flow:
@@ -34,14 +35,7 @@ public class SimpleEndToEndTest {
         System.out.println("\nAll end-to-end tests passed!");
     }
     
-    private static boolean assertEquals(boolean condition, String testName) {
-        if (condition) {
-            System.out.print("S");
-            return true;
-        }
-        System.out.println(" Test: " + testName + " FAILED");
-        return false;
-    }
+    // Removed duplicate assert method - now using TestHelper utilities
     
     /**
      * Test basic player registration and profile viewing
@@ -50,37 +44,29 @@ public class SimpleEndToEndTest {
         System.out.print("Testing player registration and profile... ");
         boolean testPassed = true;
         
-        // Setup mocks
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
+        // Setup mocks using TestHelper
+        TestEnvironment env = createTestEnvironment();
         
         // Player joins the game - simulate by sending any message that creates a new client
-        telegram.simulateUserMessage(100, "TestPlayer", "Profil");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
+        env.telegram.simulateUserMessage(100, "TestPlayer", "Profil");
+        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
         
         // Check welcome message (should be sent to new players)
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(100, "Willkommen im German Club!"), 
+        testPassed &= assertTrue(env.telegram.hasMessageForChatContaining(100, "Willkommen im German Club!"), 
                                   "Should receive welcome message");
-        testPassed &= assertEquals(telegram.getLastMessageForChat(100).hasButton("Kämpfen"), 
+        testPassed &= assertTrue(env.telegram.getLastMessageForChat(100).hasButton("Kämpfen"), 
                                   "Should have fight button");
-        testPassed &= assertEquals(telegram.getLastMessageForChat(100).hasButton("Profil"), 
+        testPassed &= assertTrue(env.telegram.getLastMessageForChat(100).hasButton("Profil"), 
                                   "Should have profile button");
-        testPassed &= assertEquals(telegram.getLastMessageForChat(100).hasButton("Aufgabe"), 
+        testPassed &= assertTrue(env.telegram.getLastMessageForChat(100).hasButton("Aufgabe"), 
                                   "Should have task button");
         
-        // Player views profile
-        telegram.clearMessages();
-        telegram.simulateUserMessage(100, "TestPlayer", "Profil");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
+        // Player views profile using TestHelper
+        MockTelegram.SentMessage profileMsg = getPlayerProfile(env, 100, "TestPlayer");
         
-        // Check profile information
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(100, "Level:"), 
-                                  "Profile should show level");
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(100, "Gesundheit:"), 
-                                  "Profile should show health");
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(100, "TestPlayer"), 
-                                  "Profile should show player name");
+        // Check profile information using TestHelper validation
+        testPassed &= assertTrue(validateBasicProfile(profileMsg, "TestPlayer"), 
+                                "Profile should contain basic player information");
         
         if (testPassed) {
             System.out.println(" PASSED");
@@ -98,46 +84,33 @@ public class SimpleEndToEndTest {
         System.out.print("Testing player vs player fight... ");
         boolean testPassed = true;
         
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
+        TestEnvironment env = createTestEnvironment();
         
-        // Create two players
-        telegram.simulateUserMessage(200, "Fighter1", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
-        telegram.simulateUserMessage(300, "Fighter2", "/start");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
+        // Create two players using TestHelper
+        createPlayer(env, 200, "Fighter1");
+        createPlayer(env, 300, "Fighter2");
         
-        telegram.clearMessages();
+        env.clearMessages();
         
-        // Player 1 looks for fight
-        telegram.simulateUserMessage(200, "Fighter1", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(3)[0]);
+        // Setup fight using TestHelper
+        int firstPlayer = setupFight(env, 200, "Fighter1", 300, "Fighter2");
         
-        // Player 1 should be waiting for opponent
-        testPassed &= assertEquals(telegram.getMessageCountForChat(200) > 0, 
+        // Player 1 should be waiting for opponent initially
+        testPassed &= assertTrue(env.telegram.getMessageCountForChat(200) > 0, 
                                   "Player 1 should receive response about looking for fight");
         
-        // Player 2 also looks for fight - should trigger match
-        telegram.simulateUserMessage(300, "Fighter2", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(4)[0]);
-        
-        // Both players should be notified they're fighting each other
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit Fighter2"), 
-                                  "Player 1 should be told they're fighting Fighter2");
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(300, "Du kämpfst jetzt mit Fighter1"), 
-                                  "Player 2 should be told they're fighting Fighter1");
+        // Validate fight initiation using TestHelper
+        testPassed &= assertTrue(validateFightInitiation(env, 200, "Fighter1", 300, "Fighter2"), 
+                                "Both players should be notified they're fighting each other");
         
         // Both should receive opponent stats
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(200, "Level:"), 
+        testPassed &= assertTrue(env.telegram.hasMessageForChatContaining(200, "Level:"), 
                                   "Player 1 should see opponent stats");
-        testPassed &= assertEquals(telegram.hasMessageForChatContaining(300, "Level:"), 
+        testPassed &= assertTrue(env.telegram.hasMessageForChatContaining(300, "Level:"), 
                                   "Player 2 should see opponent stats");
         
-        // One of them should be asked to make the first move
-        boolean player1HasTurn = telegram.hasMessageForChatContaining(200, "Du bist an der Reihe!");
-        boolean player2HasTurn = telegram.hasMessageForChatContaining(300, "Du bist an der Reihe!");
-        testPassed &= assertEquals((player1HasTurn || player2HasTurn) && !(player1HasTurn && player2HasTurn), 
+        // Validate turn system using TestHelper
+        testPassed &= assertTrue(validateTurnSystem(env, 200, 300), 
                                   "Exactly one player should have the first turn");
         
         if (testPassed) {
@@ -156,32 +129,29 @@ public class SimpleEndToEndTest {
         System.out.print("Testing task completion... ");
         boolean testPassed = true;
         
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
+        TestEnvironment env = createTestEnvironment();
         
-        // Create a player
-        telegram.simulateUserMessage(400, "TaskDoer", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
+        // Create a player using TestHelper
+        createPlayer(env, 400, "TaskDoer");
         
-        telegram.clearMessages();
+        env.clearMessages();
         
         // Player does a task
-        telegram.simulateUserMessage(400, "TaskDoer", "Aufgabe");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
+        env.telegram.simulateUserMessage(400, "TaskDoer", "Aufgabe");
+        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
         
         // Player should receive some response (either found item or nothing found)
-        testPassed &= assertEquals(telegram.getMessageCountForChat(400) > 0, 
+        testPassed &= assertTrue(env.telegram.getMessageCountForChat(400) > 0, 
                                   "Player should receive response to task");
         
         // Do multiple tasks to potentially find items
         for (int i = 0; i < 5; i++) {
-            telegram.simulateUserMessage(400, "TaskDoer", "Aufgabe");
-            engine.processUpdate(telegram.getUpdates(3 + i)[0]);
+            env.telegram.simulateUserMessage(400, "TaskDoer", "Aufgabe");
+            env.engine.processUpdate(env.telegram.getUpdates(2 + i)[0]);
         }
         
         // Player should have received responses
-        testPassed &= assertEquals(telegram.getMessageCountForChat(400) >= 6, 
+        testPassed &= assertTrue(env.telegram.getMessageCountForChat(400) >= 6, 
                                   "Player should receive responses to all tasks");
         
         if (testPassed) {

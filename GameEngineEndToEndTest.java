@@ -1,6 +1,7 @@
 package FightLang;
 
 import java.util.List;
+import static FightLang.TestHelper.*;
 
 /**
  * End-to-end test that simulates the complete game flow:
@@ -38,60 +39,55 @@ public class GameEngineEndToEndTest {
         System.out.print("Testing complete game flow... ");
         boolean testPassed = true;
         
-        // Setup mocks
-        MockStorage storage = new MockStorage();
-        MockTelegram telegram = new MockTelegram();
-        GameEngine engine = new GameEngine(storage, telegram);
+        // Setup mocks using TestHelper
+        TestEnvironment env = createTestEnvironment();
         
-        // Player 1 joins the game
-        telegram.simulateUserMessage(100, "TestPlayer1", "/start");
-        engine.processUpdate(telegram.getUpdates(1)[0]);
+        // Player 1 joins the game using TestHelper
+        createPlayer(env, 100, "TestPlayer1");
         
         // Check welcome message
-        testPassed &= telegram.hasMessageForChatContaining(100, "Willkommen im German Club!");
-        testPassed &= telegram.getLastMessageForChat(100).hasButton("Kämpfen");
-        testPassed &= telegram.getLastMessageForChat(100).hasButton("Profil");
-        testPassed &= telegram.getLastMessageForChat(100).hasButton("Aufgabe");
+        testPassed &= env.telegram.hasMessageForChatContaining(100, "Willkommen im German Club!");
+        testPassed &= env.telegram.getLastMessageForChat(100).hasButton("Kämpfen");
+        testPassed &= env.telegram.getLastMessageForChat(100).hasButton("Profil");
+        testPassed &= env.telegram.getLastMessageForChat(100).hasButton("Aufgabe");
         
         // Player 1 looks for fight
-        telegram.clearMessages();
-        telegram.simulateUserMessage(100, "TestPlayer1", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(2)[0]);
+        env.clearMessages();
+        env.telegram.simulateUserMessage(100, "TestPlayer1", "Kämpfen");
+        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
         
         // Player should be looking for opponent (no fight started yet)
-        testPassed &= telegram.getMessageCountForChat(100) > 0;
+        testPassed &= env.telegram.getMessageCountForChat(100) > 0;
         
         // Player 2 joins and also looks for fight
-        telegram.simulateUserMessage(200, "TestPlayer2", "/start");
-        engine.processUpdate(telegram.getUpdates(3)[0]);
+        createPlayer(env, 200, "TestPlayer2");
         
-        telegram.clearMessages();
-        telegram.simulateUserMessage(200, "TestPlayer2", "Kämpfen");
-        engine.processUpdate(telegram.getUpdates(4)[0]);
+        env.clearMessages();
+        env.telegram.simulateUserMessage(200, "TestPlayer2", "Kämpfen");
+        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
         
         // Now both players should be matched and fighting
-        testPassed &= telegram.hasMessageForChatContaining(100, "Du kämpfst jetzt mit TestPlayer2");
-        testPassed &= telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit TestPlayer1");
+        testPassed &= env.telegram.hasMessageForChatContaining(100, "Du kämpfst jetzt mit TestPlayer2");
+        testPassed &= env.telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit TestPlayer1");
         
         // One of them should be asked to make the first move
-        boolean player1HasTurn = telegram.hasMessageForChatContaining(100, "Du bist an der Reihe!");
-        boolean player2HasTurn = telegram.hasMessageForChatContaining(200, "Du bist an der Reihe!");
+        boolean player1HasTurn = env.telegram.hasMessageForChatContaining(100, "Du bist an der Reihe!");
+        boolean player2HasTurn = env.telegram.hasMessageForChatContaining(200, "Du bist an der Reihe!");
         testPassed &= (player1HasTurn || player2HasTurn) && !(player1HasTurn && player2HasTurn);
         
         // Determine who goes first and simulate their action
         int activePlayer = player1HasTurn ? 100 : 200;
         int passivePlayer = player1HasTurn ? 200 : 100;
         
-        telegram.clearMessages();
+        env.clearMessages();
         
         // Active player makes a successful hit
-        telegram.simulateUserMessage(activePlayer, "TestPlayer" + (activePlayer == 100 ? "1" : "2"), "Erfolg");
-        engine.processUpdate(telegram.getUpdates(5)[0]);
+        simulateAttack(env, activePlayer, "TestPlayer" + (activePlayer == 100 ? "1" : "2"));
         
         // Check that damage was dealt and passive player gets to respond
-        testPassed &= telegram.hasMessageForChatContaining(passivePlayer, "Du bist an der Reihe!");
-        testPassed &= telegram.getMessageCountForChat(activePlayer) > 0; // Active player gets feedback
-        testPassed &= telegram.getMessageCountForChat(passivePlayer) > 0; // Passive player gets damage message
+        testPassed &= env.telegram.hasMessageForChatContaining(passivePlayer, "Du bist an der Reihe!");
+        testPassed &= env.telegram.getMessageCountForChat(activePlayer) > 0; // Active player gets feedback
+        testPassed &= env.telegram.getMessageCountForChat(passivePlayer) > 0; // Passive player gets damage message
         
         // Continue the fight until someone wins
         int maxRounds = 50; // Prevent infinite loops
@@ -99,15 +95,14 @@ public class GameEngineEndToEndTest {
         int opponent = activePlayer;
         
         for (int round = 0; round < maxRounds; round++) {
-            telegram.clearMessages();
+            env.clearMessages();
             
             // Current player makes a successful hit
-            telegram.simulateUserMessage(currentPlayer, "TestPlayer" + (currentPlayer == 100 ? "1" : "2"), "Erfolg");
-            engine.processUpdate(telegram.getUpdates(6 + round)[0]);
+            simulateAttack(env, currentPlayer, "TestPlayer" + (currentPlayer == 100 ? "1" : "2"));
             
             // Check if fight is over (someone won)
-            if (telegram.hasMessageContaining("Erfahrung erhalten") || 
-                telegram.hasMessageContaining("Du wurdest im Kampf besiegt")) {
+            if (env.telegram.hasMessageContaining("Erfahrung erhalten") || 
+                env.telegram.hasMessageContaining("Du wurdest im Kampf besiegt")) {
                 testPassed &= true; // Fight ended properly
                 break;
             }
