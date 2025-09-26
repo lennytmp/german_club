@@ -417,4 +417,40 @@ class Client {
   public boolean hasActivePotionEffects() {
     return strengthPotionExpiry > 0 || luckPotionExpiry > 0;
   }
+
+  // Utility method to format time duration in a human-readable format (e.g., 1m32s)
+  public static String formatTimeRemaining(int seconds) {
+    if (seconds <= 0) {
+      return "0s";
+    }
+    
+    int minutes = seconds / 60;
+    int remainingSeconds = seconds % 60;
+    
+    if (minutes > 0) {
+      if (remainingSeconds > 0) {
+        return minutes + "m" + remainingSeconds + "s";
+      } else {
+        return minutes + "m";
+      }
+    } else {
+      return remainingSeconds + "s";
+    }
+  }
+
+  // Get remaining time for strength potion effect
+  public int getStrengthPotionRemainingTime(int currentTime) {
+    if (strengthPotionExpiry <= 0 || strengthPotionExpiry <= currentTime) {
+      return 0;
+    }
+    return strengthPotionExpiry - currentTime;
+  }
+
+  // Get remaining time for luck potion effect
+  public int getLuckPotionRemainingTime(int currentTime) {
+    if (luckPotionExpiry <= 0 || luckPotionExpiry <= currentTime) {
+      return 0;
+    }
+    return luckPotionExpiry - currentTime;
+  }
 }
