@@ -370,14 +370,31 @@ public class GameEngine {
                 if (client == null) return;
                 client.setStorage(storage); // Ensure storage dependency is set
                 
-                // Check if any effects were active before cleanup
-                boolean hadActiveEffects = client.hasActivePotionEffects();
+                // Check which effects were active before cleanup
+                boolean hadStrengthEffect = client.strengthPotionExpiry > 0 && client.strengthPotionExpiry > curTimeSeconds;
+                boolean hadLuckEffect = client.luckPotionExpiry > 0 && client.luckPotionExpiry > curTimeSeconds;
                 
                 // Remove expired potion effects
                 client.removeExpiredPotionEffects(curTimeSeconds);
                 
-                // Save client if any effects were removed
-                if (hadActiveEffects && !client.hasActivePotionEffects()) {
+                // Check which effects expired and send notifications
+                boolean strengthExpired = hadStrengthEffect && (client.strengthPotionExpiry <= 0 || client.strengthPotionExpiry <= curTimeSeconds);
+                boolean luckExpired = hadLuckEffect && (client.luckPotionExpiry <= 0 || client.luckPotionExpiry <= curTimeSeconds);
+                
+                if (strengthExpired || luckExpired) {
+                    // Only send notification to real players (not bots)
+                    if (client.chatId > 0) {
+                        String message = "⏰ ";
+                        if (strengthExpired && luckExpired) {
+                            message += "Deine Stärke- und Glückstrank-Effekte sind abgelaufen. Deine Stärke ist jetzt " + 
+                                client.strength + " und dein Glück ist " + client.luck + ".";
+                        } else if (strengthExpired) {
+                            message += "Dein Stärketrank-Effekt ist abgelaufen. Deine Stärke ist wieder " + client.strength + ".";
+                        } else if (luckExpired) {
+                            message += "Dein Glückstrank-Effekt ist abgelaufen. Dein Glück ist wieder " + client.luck + ".";
+                        }
+                        telegram.sendMessage(client.chatId, message);
+                    }
                     storage.saveClient(client);
                 }
             }
@@ -758,15 +775,65 @@ public class GameEngine {
     }
 
     private void consumeStrengthPotion(Client client) {
-        consumePotionGeneric(client, Game.Item.SPOTION, "Stärketrank", (c) -> {
-            c.addStrengthPotionEffect(Game.STRENGTH_POTION_BONUS, curTimeSeconds);
-        });
+        // Apply the effect first
+        client.addStrengthPotionEffect(Game.STRENGTH_POTION_BONUS, curTimeSeconds);
+        
+        // Remove the potion from inventory
+        client.takeItem(Game.Item.SPOTION);
+        storage.saveClient(client);
+
+        // Build enhanced message with effect information
+        String emoji = "\uD83C\uDF76"; // 🍶
+        int remainingTime = client.getStrengthPotionRemainingTime(curTimeSeconds);
+        String timeStr = Client.formatTimeRemaining(remainingTime);
+        int remainingPotions = client.getItemNum(Game.Item.SPOTION);
+        
+        String clientMsg = emoji + " Stärketrank konsumiert! Deine Stärke ist jetzt " + 
+            client.getEffectiveStrength() + " (läuft in " + timeStr + " ab). " +
+            "Du hast " + remainingPotions + " übrig.";
+
+        // Send messages based on fighting status
+        if (client.status == Client.Status.FIGHTING) {
+            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
+            Client opponent = getClientWithStorage(client.fightingChatId);
+            
+            String opponentMsg = emoji + " " + client.username + " hat einen Stärketrank konsumiert (Stärke: " + 
+                client.getEffectiveStrength() + ").";
+            telegram.sendMessage(opponent.chatId, opponentMsg);
+        } else {
+            telegram.sendMessage(client.chatId, clientMsg);
+        }
     }
 
     private void consumeLuckPotion(Client client) {
-        consumePotionGeneric(client, Game.Item.LPOTION, "Glückstrank", (c) -> {
-            c.addLuckPotionEffect(Game.LUCK_POTION_BONUS, curTimeSeconds);
-        });
+        // Apply the effect first
+        client.addLuckPotionEffect(Game.LUCK_POTION_BONUS, curTimeSeconds);
+        
+        // Remove the potion from inventory
+        client.takeItem(Game.Item.LPOTION);
+        storage.saveClient(client);
+
+        // Build enhanced message with effect information
+        String emoji = "\uD83C\uDF76"; // 🍶
+        int remainingTime = client.getLuckPotionRemainingTime(curTimeSeconds);
+        String timeStr = Client.formatTimeRemaining(remainingTime);
+        int remainingPotions = client.getItemNum(Game.Item.LPOTION);
+        
+        String clientMsg = emoji + " Glückstrank konsumiert! Dein Glück ist jetzt " + 
+            client.getEffectiveLuck() + " (läuft in " + timeStr + " ab). " +
+            "Du hast " + remainingPotions + " übrig.";
+
+        // Send messages based on fighting status
+        if (client.status == Client.Status.FIGHTING) {
+            telegram.sendMessage(client.chatId, clientMsg, addPotions(client, new String[] { TASK_SUCCESS }));
+            Client opponent = getClientWithStorage(client.fightingChatId);
+            
+            String opponentMsg = emoji + " " + client.username + " hat einen Glückstrank konsumiert (Glück: " + 
+                client.getEffectiveLuck() + ").";
+            telegram.sendMessage(opponent.chatId, opponentMsg);
+        } else {
+            telegram.sendMessage(client.chatId, clientMsg);
+        }
     }
 
     private void makeHitTask(Client client, Client victim, boolean isSuccess) {
@@ -930,7 +997,7 @@ public class GameEngine {
         telegram.sendMessage(loser.chatId, message, MAIN_BUTTONS);
     }
 
-    private static String getClientStats(Client client) {
+    private String getClientStats(Client client) {
         String result = "*" + client.username + "*\n"
             + "Level: " + client.level + "\n"
             + "Gesundheit: " + client.hp + " (von " + client.getMaxHp() + ")\n"
@@ -938,7 +1005,9 @@ public class GameEngine {
         
         // Show strength with potion effects if any
         if (client.getEffectiveStrength() != client.strength) {
-            result += "Stärke: " + client.strength + " (+" + (client.getEffectiveStrength() - client.strength) + " = " + client.getEffectiveStrength() + ")\n";
+            int remainingTime = client.getStrengthPotionRemainingTime(curTimeSeconds);
+            String timeStr = Client.formatTimeRemaining(remainingTime);
+            result += "Stärke: " + client.strength + " (+" + (client.getEffectiveStrength() - client.strength) + " = " + client.getEffectiveStrength() + " für " + timeStr + ")\n";
         } else {
             result += "Stärke: " + client.strength + "\n";
         }
@@ -947,7 +1016,9 @@ public class GameEngine {
         
         // Show luck with potion effects if any
         if (client.getEffectiveLuck() != client.luck) {
-            result += "Glück: " + client.luck + " (+" + (client.getEffectiveLuck() - client.luck) + " = " + client.getEffectiveLuck() + ")";
+            int remainingTime = client.getLuckPotionRemainingTime(curTimeSeconds);
+            String timeStr = Client.formatTimeRemaining(remainingTime);
+            result += "Glück: " + client.luck + " (+" + (client.getEffectiveLuck() - client.luck) + " = " + client.getEffectiveLuck() + " für " + timeStr + ")";
         } else {
             result += "Glück: " + client.luck;
         }

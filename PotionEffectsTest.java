@@ -8,6 +8,8 @@ public class PotionEffectsTest {
         allTestsPassed &= testPotionExpiration();
         allTestsPassed &= testPotionPersistence();
         allTestsPassed &= testGameEngineIntegration();
+        allTestsPassed &= testTimeFormatting();
+        allTestsPassed &= testRemainingTimeCalculation();
         if (!allTestsPassed) {
             System.exit(1);
         }
@@ -30,6 +32,15 @@ public class PotionEffectsTest {
             return true;
         }
         System.out.println(" Test: " + testName + " FAILED: expected " + expected + " but got " + actual);
+        return false;
+    }
+
+    public static boolean assertEquals(String expected, String actual, String testName) {
+        if (expected.equals(actual)) {
+            System.out.print("S");
+            return true;
+        }
+        System.out.println(" Test: " + testName + " FAILED: expected \"" + expected + "\" but got \"" + actual + "\"");
         return false;
     }
 
@@ -215,6 +226,49 @@ public class PotionEffectsTest {
             allTestsPassed = false;
         }
 
+        return allTestsPassed;
+    }
+
+    public static boolean testTimeFormatting() {
+        boolean allTestsPassed = true;
+        
+        // Test formatting of different time durations
+        allTestsPassed &= assertEquals("0s", Client.formatTimeRemaining(0), "Zero seconds");
+        allTestsPassed &= assertEquals("5s", Client.formatTimeRemaining(5), "5 seconds");
+        allTestsPassed &= assertEquals("1m", Client.formatTimeRemaining(60), "1 minute");
+        allTestsPassed &= assertEquals("1m30s", Client.formatTimeRemaining(90), "1 minute 30 seconds");
+        allTestsPassed &= assertEquals("2m", Client.formatTimeRemaining(120), "2 minutes");
+        allTestsPassed &= assertEquals("3m", Client.formatTimeRemaining(180), "3 minutes");
+        allTestsPassed &= assertEquals("2m32s", Client.formatTimeRemaining(152), "2 minutes 32 seconds");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testRemainingTimeCalculation() {
+        Client client = new Client(5, "TimeTestUser");
+        int currentTime = 1000;
+        boolean allTestsPassed = true;
+        
+        // Test when no effects are active
+        allTestsPassed &= assertEquals(0, client.getStrengthPotionRemainingTime(currentTime), "No strength effect remaining time");
+        allTestsPassed &= assertEquals(0, client.getLuckPotionRemainingTime(currentTime), "No luck effect remaining time");
+        
+        // Add effects
+        client.addStrengthPotionEffect(Game.STRENGTH_POTION_BONUS, currentTime);
+        client.addLuckPotionEffect(Game.LUCK_POTION_BONUS, currentTime + 30);
+        
+        // Test remaining time calculations
+        allTestsPassed &= assertEquals(180, client.getStrengthPotionRemainingTime(currentTime), "Strength effect remaining time at start");
+        allTestsPassed &= assertEquals(180, client.getLuckPotionRemainingTime(currentTime + 30), "Luck effect remaining time at start");
+        
+        // Test after some time has passed
+        allTestsPassed &= assertEquals(120, client.getStrengthPotionRemainingTime(currentTime + 60), "Strength effect remaining time after 60s");
+        allTestsPassed &= assertEquals(150, client.getLuckPotionRemainingTime(currentTime + 60), "Luck effect remaining time after 60s");
+        
+        // Test when effects have expired
+        allTestsPassed &= assertEquals(0, client.getStrengthPotionRemainingTime(currentTime + 200), "Strength effect expired");
+        allTestsPassed &= assertEquals(0, client.getLuckPotionRemainingTime(currentTime + 250), "Luck effect expired");
+        
         return allTestsPassed;
     }
 }
