@@ -1017,6 +1017,9 @@ public class GameEngine {
     }
 
     private String getClientStats(Client client) {
+        // Remove expired potion effects before displaying stats
+        client.removeExpiredPotionEffects(curTimeSeconds);
+        
         String result = "*" + client.username + "*\n"
             + "Level: " + client.level + "\n"
             + "Gesundheit: " + client.hp + " (von " + client.getMaxHp() + ")\n"
