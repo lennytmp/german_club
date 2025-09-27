@@ -34,9 +34,9 @@ public class GameEngine {
       "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\" " + 
       "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
       "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
-    private static final String TRADER_PROMPT = "Der Held trifft auf einen geheimnisvollen Händler, der einen Tausch anbietet: " +
-      "1 %s gegen 1 %s. Du musst kurz beschreiben, wie der Händler aussieht und was er sagt. " +
-      "Zum Beispiel: \"Ein alter Mann mit einer Kapuze tritt aus den Schatten. Seine Augen glitzern im Mondlicht, als er dich mustert. " +
+    private static final String TRADER_PROMPT = "Der Held trifft auf einen Händler, der einen Tausch anbietet: " +
+      "1 %s gegen 1 %s. Du musst kurz beschreiben, wie der Händler aussieht und was er sagt. Der Held kann auch zu einem Markt oder " +
+      "in einen Laden kommen. Zum Beispiel: \"Ein alter Mann mit einer Kapuze tritt aus den Schatten. Seine Augen glitzern im Mondlicht, als er dich mustert. " +
       "'Ich habe etwas, was du gebrauchen könntest', flüstert er mit rauer Stimme. 'Gib mir deine Klaue und ich gebe dir dafür Gold. " +
       "Was sagst du?'\" Beschreibe die Kreatur oder Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
       "Verwende nicht das Wort 'Händler' in der Beschreibung.";
