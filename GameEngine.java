@@ -120,6 +120,7 @@ public class GameEngine {
         String txt = upd.message.text;
 
         if (txt.equals("/start")) {
+            sendStartMessage(client);
             return;
         }
 
@@ -503,6 +504,24 @@ public class GameEngine {
             activeChats.remove(passiveChatId);
         }
         return numListeners;
+    }
+    
+    private void sendStartMessage(Client client) {
+        StringBuilder startMessage = new StringBuilder();
+        startMessage.append("🗡️ **Willkommen beim German Club!** ⚔️\n\n");
+        startMessage.append("Du bist ein mutiger Held in einer magischen Welt voller Gefahren und Abenteuer!\n\n");
+        startMessage.append("🎯 **Deine Mission:**\n");
+        startMessage.append("• Kämpfe gegen andere Spieler und Monster\n");
+        startMessage.append("• Sammle wertvolle Gegenstände und braue Tränke\n");
+        startMessage.append("• Steige im Level auf und verbessere deine Fähigkeiten\n");
+        startMessage.append("• Werde der mächtigste Kämpfer im German Club!\n\n");
+        startMessage.append("⚡ **Erste Schritte:**\n");
+        startMessage.append("• Nutze *Kämpfen* um gegen andere zu kämpfen\n");
+        startMessage.append("• Verwende *Aufgabe* um Gegenstände zu finden\n");
+        startMessage.append("• Schau dir dein *Profil* an um deine Statistiken zu sehen\n\n");
+        startMessage.append("🎮 Nutze die Buttons unten, um zu beginnen!");
+        
+        telegram.sendMessage(client.chatId, startMessage.toString(), MAIN_BUTTONS);
     }
     
     private void showProfile(Client client) {
