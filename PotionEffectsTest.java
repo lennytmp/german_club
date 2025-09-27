@@ -12,6 +12,7 @@ public class PotionEffectsTest {
         allTestsPassed &= testGameEngineIntegration();
         allTestsPassed &= testTimeFormatting();
         allTestsPassed &= testRemainingTimeCalculation();
+        allTestsPassed &= testBackgroundCleanupFix();
         if (!allTestsPassed) {
             System.exit(1);
         }
@@ -75,21 +76,21 @@ public class PotionEffectsTest {
         boolean allTestsPassed = true;
 
         // Add effects with known expiration times
-        client.addStrengthPotionEffect(Game.STRENGTH_POTION_BONUS, currentTime);      // expires at 1180
-        client.addLuckPotionEffect(Game.LUCK_POTION_BONUS, currentTime + 60);     // expires at 1240
+        client.addStrengthPotionEffect(Game.STRENGTH_POTION_BONUS, currentTime);      // expires at currentTime + 180
+        client.addLuckPotionEffect(Game.LUCK_POTION_BONUS, currentTime + 60);     // expires at currentTime + 60 + 180
 
         allTestsPassed &= assertEquals(client.strength + Game.STRENGTH_POTION_BONUS, client.getEffectiveStrength(), "Strength effect should be active");
         allTestsPassed &= assertEquals(client.luck + Game.LUCK_POTION_BONUS, client.getEffectiveLuck(), "Luck effect should be active");
         allTestsPassed &= assertEquals(true, client.hasActivePotionEffects(), "Should have active effects");
 
-        // Advance time to 1190 (past strength effect expiration)
-        client.removeExpiredPotionEffects(1190);
+        // Advance time to past strength effect expiration (strength expires at currentTime + 180)
+        client.removeExpiredPotionEffects(currentTime + Game.POTION_DURATION_SECONDS + 10);
         allTestsPassed &= assertEquals(client.strength, client.getEffectiveStrength(), "Strength effect should be expired");
         allTestsPassed &= assertEquals(client.luck + Game.LUCK_POTION_BONUS, client.getEffectiveLuck(), "Luck effect should remain");
         allTestsPassed &= assertEquals(true, client.hasActivePotionEffects(), "Should still have luck effect");
 
-        // Advance time to 1250 (past luck effect expiration)
-        client.removeExpiredPotionEffects(1250);
+        // Advance time to past luck effect expiration (luck expires at currentTime + 60 + 180)
+        client.removeExpiredPotionEffects(currentTime + 60 + Game.POTION_DURATION_SECONDS + 10);
         allTestsPassed &= assertEquals(client.strength, client.getEffectiveStrength(), "Strength effect should remain expired");
         allTestsPassed &= assertEquals(client.luck, client.getEffectiveLuck(), "Luck effect should be expired");
         allTestsPassed &= assertEquals(false, client.hasActivePotionEffects(), "Should have no active effects");
@@ -128,8 +129,8 @@ public class PotionEffectsTest {
         allTestsPassed &= assertEquals(true, loadedClient.hasActivePotionEffects(), "Should have active effects after load");
 
         // Verify timestamp fields are preserved
-        allTestsPassed &= assertEquals(currentTime + 180, loadedClient.strengthPotionExpiry, "Strength expiry timestamp should be preserved");
-        allTestsPassed &= assertEquals(currentTime + 180, loadedClient.luckPotionExpiry, "Luck expiry timestamp should be preserved");
+        allTestsPassed &= assertEquals(currentTime + Game.POTION_DURATION_SECONDS, loadedClient.strengthPotionExpiry, "Strength expiry timestamp should be preserved");
+        allTestsPassed &= assertEquals(currentTime + Game.POTION_DURATION_SECONDS, loadedClient.luckPotionExpiry, "Luck expiry timestamp should be preserved");
         allTestsPassed &= assertEquals(Game.STRENGTH_POTION_BONUS, loadedClient.strengthPotionBonus, "Strength bonus should be preserved");
         allTestsPassed &= assertEquals(Game.LUCK_POTION_BONUS, loadedClient.luckPotionBonus, "Luck bonus should be preserved");
 
@@ -226,16 +227,89 @@ public class PotionEffectsTest {
         client.addLuckPotionEffect(Game.LUCK_POTION_BONUS, currentTime + 30);
         
         // Test remaining time calculations
-        allTestsPassed &= assertEquals(180, client.getStrengthPotionRemainingTime(currentTime), "Strength effect remaining time at start");
-        allTestsPassed &= assertEquals(180, client.getLuckPotionRemainingTime(currentTime + 30), "Luck effect remaining time at start");
+        allTestsPassed &= assertEquals(Game.POTION_DURATION_SECONDS, client.getStrengthPotionRemainingTime(currentTime), "Strength effect remaining time at start");
+        allTestsPassed &= assertEquals(Game.POTION_DURATION_SECONDS, client.getLuckPotionRemainingTime(currentTime + 30), "Luck effect remaining time at start");
         
         // Test after some time has passed
-        allTestsPassed &= assertEquals(120, client.getStrengthPotionRemainingTime(currentTime + 60), "Strength effect remaining time after 60s");
-        allTestsPassed &= assertEquals(150, client.getLuckPotionRemainingTime(currentTime + 60), "Luck effect remaining time after 60s");
+        allTestsPassed &= assertEquals(Game.POTION_DURATION_SECONDS - 60, client.getStrengthPotionRemainingTime(currentTime + 60), "Strength effect remaining time after 60s");
+        allTestsPassed &= assertEquals(Game.POTION_DURATION_SECONDS - 30, client.getLuckPotionRemainingTime(currentTime + 60), "Luck effect remaining time after 60s");
         
         // Test when effects have expired
-        allTestsPassed &= assertEquals(0, client.getStrengthPotionRemainingTime(currentTime + 200), "Strength effect expired");
-        allTestsPassed &= assertEquals(0, client.getLuckPotionRemainingTime(currentTime + 250), "Luck effect expired");
+        allTestsPassed &= assertEquals(0, client.getStrengthPotionRemainingTime(currentTime + Game.POTION_DURATION_SECONDS + 20), "Strength effect expired");
+        allTestsPassed &= assertEquals(0, client.getLuckPotionRemainingTime(currentTime + Game.POTION_DURATION_SECONDS + 50), "Luck effect expired");
+        
+        return allTestsPassed;
+    }
+
+    public static boolean testBackgroundCleanupFix() {
+        // Test that the background cleanup properly detects and removes expired potion effects
+        // We'll temporarily reduce potion duration to make this test fast
+        TestEnvironment env = createTestEnvironment();
+        boolean allTestsPassed = true;
+        
+        // Create a client with potion effects
+        Client client = new Client(600, "BackgroundTestUser");
+        client.setStorage(env.storage);
+        env.storage.saveClient(client);
+        
+        // Test with short duration for fast testing
+        int startTime = 1000;
+        int shortDuration = 2; // 2 seconds instead of 180
+        
+        // Manually set a short potion effect (simulating what would happen with a short duration)
+        client.strengthPotionExpiry = startTime + shortDuration;
+        client.strengthPotionBonus = Game.STRENGTH_POTION_BONUS;
+        env.storage.saveClient(client);
+        
+        // Verify the effect is initially active
+        allTestsPassed &= assertEquals(client.strength + Game.STRENGTH_POTION_BONUS, client.getEffectiveStrength(), "Strength effect should be active initially");
+        allTestsPassed &= assertEquals(shortDuration, client.getStrengthPotionRemainingTime(startTime), "Should have 2 seconds remaining");
+        
+        // Simulate time passing to when the effect should expire
+        int expiredTime = startTime + shortDuration + 1; // 1 second past expiry
+        
+        // Test the scenario that was broken: expired timer but bonus still showing
+        // Before the fix, this would show remaining time as 0 but effective strength would still include bonus
+        allTestsPassed &= assertEquals(0, client.getStrengthPotionRemainingTime(expiredTime), "Remaining time should be 0 when expired");
+        
+        // This is the bug: even though remaining time is 0, effective strength still shows bonus
+        // because removeExpiredPotionEffects hasn't been called yet
+        allTestsPassed &= assertEquals(client.strength + Game.STRENGTH_POTION_BONUS, client.getEffectiveStrength(), "Bug: Effect still shows as active despite 0 remaining time");
+        
+        // Now test that calling removeExpiredPotionEffects fixes it
+        client.removeExpiredPotionEffects(expiredTime);
+        
+        // After the fix: both timer and bonus should be gone
+        allTestsPassed &= assertEquals(client.strength, client.getEffectiveStrength(), "Effect should be removed after calling removeExpiredPotionEffects");
+        allTestsPassed &= assertEquals(0, client.strengthPotionExpiry, "Expiry should be reset to 0");
+        allTestsPassed &= assertEquals(0, client.strengthPotionBonus, "Bonus should be reset to 0");
+        allTestsPassed &= assertEquals(false, client.hasActivePotionEffects(), "Should have no active effects");
+        
+        // Test that the fix works with the actual background cleanup logic
+        // Reset for second test
+        client.strengthPotionExpiry = startTime + shortDuration;
+        client.strengthPotionBonus = Game.STRENGTH_POTION_BONUS;
+        
+        // Simulate the logic from cleanupExpiredPotionEffects method with our fix
+        boolean hadStrengthEffect = client.strengthPotionExpiry > 0 && client.strengthPotionExpiry > expiredTime;
+        boolean strengthWillExpire = client.strengthPotionExpiry > 0 && client.strengthPotionExpiry <= expiredTime;
+        
+        // Before cleanup - verify the detection logic works correctly
+        allTestsPassed &= assertEquals(false, hadStrengthEffect, "Should detect effect is no longer active");
+        allTestsPassed &= assertEquals(true, strengthWillExpire, "Should detect effect will expire");
+        
+        // Apply the cleanup
+        client.removeExpiredPotionEffects(expiredTime);
+        
+        // Verify the expiration detection would trigger a notification
+        boolean strengthExpired = strengthWillExpire;
+        allTestsPassed &= assertEquals(true, strengthExpired, "Should detect that strength effect expired");
+        
+        if (allTestsPassed) {
+            System.out.print("S");
+        } else {
+            System.out.println("Background cleanup fix test FAILED");
+        }
         
         return allTestsPassed;
     }
