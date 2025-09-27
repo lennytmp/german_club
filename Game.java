@@ -101,6 +101,7 @@ class Game {
   // Potion effect constants
   public static final int STRENGTH_POTION_BONUS = 2;
   public static final int LUCK_POTION_BONUS = 2;
+  public static final int POTION_DURATION_SECONDS = 180; // 3 minutes
 
   // Define the recipe for brewing a healing potion
   private static final Map<Item, Integer> POTION_RECIPE = new EnumMap<>(Item.class);

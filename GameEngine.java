@@ -371,16 +371,18 @@ public class GameEngine {
                 if (client == null) return;
                 client.setStorage(storage); // Ensure storage dependency is set
                 
-                // Check which effects were active before cleanup
+                // Check which effects were active before cleanup and which will expire
                 boolean hadStrengthEffect = client.strengthPotionExpiry > 0 && client.strengthPotionExpiry > curTimeSeconds;
                 boolean hadLuckEffect = client.luckPotionExpiry > 0 && client.luckPotionExpiry > curTimeSeconds;
+                boolean strengthWillExpire = client.strengthPotionExpiry > 0 && client.strengthPotionExpiry <= curTimeSeconds;
+                boolean luckWillExpire = client.luckPotionExpiry > 0 && client.luckPotionExpiry <= curTimeSeconds;
                 
                 // Remove expired potion effects
                 client.removeExpiredPotionEffects(curTimeSeconds);
                 
                 // Check which effects expired and send notifications
-                boolean strengthExpired = hadStrengthEffect && (client.strengthPotionExpiry <= 0 || client.strengthPotionExpiry <= curTimeSeconds);
-                boolean luckExpired = hadLuckEffect && (client.luckPotionExpiry <= 0 || client.luckPotionExpiry <= curTimeSeconds);
+                boolean strengthExpired = strengthWillExpire;
+                boolean luckExpired = luckWillExpire;
                 
                 if (strengthExpired || luckExpired) {
                     // Only send notification to real players (not bots)

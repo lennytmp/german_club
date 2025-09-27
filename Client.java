@@ -380,7 +380,7 @@ class Client {
 
   // Potion effect management methods
   public void addStrengthPotionEffect(int bonusValue, int currentTime) {
-    int newExpiry = currentTime + 180; // 3 minutes = 180 seconds
+    int newExpiry = currentTime + Game.POTION_DURATION_SECONDS;
     
     // For stacking behavior: if current effect is still active, add to bonus
     // and set expiry to the new potion's expiry (each potion's effect is independent)
@@ -393,7 +393,7 @@ class Client {
   }
 
   public void addLuckPotionEffect(int bonusValue, int currentTime) {
-    int newExpiry = currentTime + 180; // 3 minutes = 180 seconds
+    int newExpiry = currentTime + Game.POTION_DURATION_SECONDS;
     
     // For stacking behavior: if current effect is still active, add to bonus
     // and set expiry to the new potion's expiry (each potion's effect is independent)
