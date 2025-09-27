@@ -80,7 +80,17 @@ class Client {
     }
     BotConfig bc = pickBotType();
     this.username = bc.name;
-    for (int i = 1; i < this.level; i++) {
+    // Allocate level-up points prioritizing vitality to avoid one-shot kills (except level 1 bots)
+    int pointsToAllocate = Math.max(this.level - 1, 0);
+    if (opponent.level != 1) {
+      int opponentMaxHit = opponent.getMaxDamage() * 2; // consider potential crit
+      while (pointsToAllocate > 0 && getMaxHp() <= opponentMaxHit) {
+        vitality++;
+        pointsToAllocate--;
+      }
+    }
+    // Allocate any remaining points using species weights
+    for (int i = 0; i < pointsToAllocate; i++) {
       int ch = Utils.rndInRangeWeighted(bc.characteristics);
       if (ch == 0) {
         strength++;
