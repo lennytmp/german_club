@@ -353,8 +353,6 @@ public class ClientTest {
     }
 
     public static boolean testPotionButtonProgression() {
-        System.out.print("Testing potion button progression... ");
-        
         try {
             // Create mock dependencies
             MockStorage storage = new MockStorage();
