@@ -274,6 +274,21 @@ class Client {
 
   private BotConfig pickBotType() {
     List<BotConfig> eligible = new LinkedList<>();
+    
+    // 10% chance to meet any mob that is lower level regardless of wins
+    if (Utils.roll(10)) {
+      for (BotConfig bc : Game.BOT_TYPES) {
+        if (bc.maxLevel < level) {
+          eligible.add(bc);
+        }
+      }
+      // If there are eligible lower level mobs, return one
+      if (!eligible.isEmpty()) {
+        return Utils.getRnd(eligible.toArray(new BotConfig[0]));
+      }
+    }
+    
+    // Original logic: pick mobs within the appropriate level range
     for (BotConfig bc : Game.BOT_TYPES) {
       if (level >= bc.minLevel && level <= bc.maxLevel) {
         eligible.add(bc);
