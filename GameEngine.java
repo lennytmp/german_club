@@ -932,43 +932,6 @@ public class GameEngine {
         loser.status = Client.Status.IDLE;
         fightingChats.remove(winner.chatId);
         fightingChats.remove(loser.chatId);
-
-        // Update simple difficulty tracking based on result
-        applyResultAndAdjustNextEnemy(winner, true);
-        applyResultAndAdjustNextEnemy(loser, false);
-        storage.saveClients(winner, loser);
-    }
-
-    // Keep names simple and readable
-    private void applyResultAndAdjustNextEnemy(Client player, boolean didWin) {
-        // Update win/loss streaks
-        if (didWin) {
-            player.winStreak++;
-            player.loseStreak = 0;
-        } else {
-            player.loseStreak++;
-            player.winStreak = 0;
-        }
-
-        // Update recent win rate as a weighted average (more weight to the latest fight)
-        double desiredWinRate = 0.70;  // where we want players to hover
-        double recentWeight = 0.25;     // how much the last fight influences recentWins
-        player.recentWins = (1.0 - recentWeight) * player.recentWins + (didWin ? recentWeight : 0.0);
-
-        // Decide how much to change next opponent power
-        double diff = player.recentWins - desiredWinRate;
-        double noChangeRange = 0.03;    // if close to target, do nothing
-        double baseChange = Math.abs(diff) <= noChangeRange ? 0.0 : 0.60 * diff; // 0.60 is a safe sensitivity
-
-        // Limit how much it can change in one fight
-        double maxChangePerFight = 0.05; // ±5%
-        if (baseChange > maxChangePerFight) baseChange = maxChangePerFight;
-        if (baseChange < -maxChangePerFight) baseChange = -maxChangePerFight;
-
-        // Apply multiplicatively and keep within reasonable bounds overall
-        player.nextEnemyPower *= (1.0 + baseChange);
-        if (player.nextEnemyPower < 0.85) player.nextEnemyPower = 0.85;
-        if (player.nextEnemyPower > 1.35) player.nextEnemyPower = 1.35;
     }
 
     private void finishFight(Client winner, Client loser) {
