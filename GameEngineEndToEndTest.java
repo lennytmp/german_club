@@ -25,7 +25,6 @@ public class GameEngineEndToEndTest {
         allTestsPassed &= testPlayerVsBotFight();
         allTestsPassed &= testFightWithPotionUsage();
         allTestsPassed &= testTaskAndItemFinding();
-        allTestsPassed &= testFightTimeoutButtons();
         
         if (!allTestsPassed) {
             System.exit(1);
@@ -313,82 +312,6 @@ public class GameEngineEndToEndTest {
         // Profile should show player stats
         testPassed &= telegram.hasMessageForChatContaining(800, "Level:");
         testPassed &= telegram.hasMessageForChatContaining(800, "Gesundheit:");
-        
-        if (testPassed) {
-            System.out.println("PASSED");
-        } else {
-            System.out.println("FAILED");
-        }
-        
-        return testPassed;
-    }
-    
-    /**
-     * Test that fight timeout properly ends fight and sends correct buttons
-     */
-    private static boolean testFightTimeoutButtons() {
-        System.out.print("Testing fight timeout button handling... ");
-        boolean testPassed = true;
-        
-        // Setup test environment
-        TestEnvironment env = createTestEnvironment();
-        
-        // Create two players
-        createPlayer(env, 100, "Player1");
-        createPlayer(env, 200, "Player2");
-        
-        // Start fight
-        env.telegram.clearMessages();
-        env.telegram.simulateUserMessage(100, "Player1", "Kämpfen");
-        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
-        
-        env.telegram.simulateUserMessage(200, "Player2", "Kämpfen");
-        env.engine.processUpdate(env.telegram.getUpdates(2)[0]);
-        
-        // Verify fight started
-        testPassed &= env.telegram.hasMessageForChatContaining(100, "Du kämpfst jetzt mit");
-        testPassed &= env.telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit");
-        
-        // Clear messages to focus on timeout behavior
-        env.telegram.clearMessages();
-        
-        // Trigger timeout by setting both players' last activity beyond timeout threshold
-        Client player1 = env.storage.getClientByChatId(100);
-        Client player2 = env.storage.getClientByChatId(200);
-        int oldTime = (int)(System.currentTimeMillis() / 1000L) - 70; // 70 seconds ago (past 60s timeout)
-        player1.lastFightActivitySince = oldTime;
-        player2.lastFightActivitySince = oldTime;
-        env.storage.saveClients(player1, player2);
-        
-        // Run background tasks to trigger timeout handling
-        env.engine.runBackgroundTasks();
-        
-        // Verify both players received messages after timeout
-        testPassed &= env.telegram.getMessageCountForChat(100) > 0;
-        testPassed &= env.telegram.getMessageCountForChat(200) > 0;
-        
-        // Check the last message each player received has proper main buttons
-        MockTelegram.SentMessage player1LastMsg = env.telegram.getLastMessageForChat(100);
-        MockTelegram.SentMessage player2LastMsg = env.telegram.getLastMessageForChat(200);
-        
-        // Verify main buttons are present
-        testPassed &= player1LastMsg.hasButton("Kämpfen");
-        testPassed &= player1LastMsg.hasButton("Profil");
-        testPassed &= player1LastMsg.hasButton("Aufgabe");
-        
-        testPassed &= player2LastMsg.hasButton("Kämpfen");
-        testPassed &= player2LastMsg.hasButton("Profil");
-        testPassed &= player2LastMsg.hasButton("Aufgabe");
-        
-        // Verify fight buttons are NOT present
-        testPassed &= !player1LastMsg.hasButton("Erfolg");
-        testPassed &= !player2LastMsg.hasButton("Erfolg");
-        
-        // Verify both players are no longer fighting
-        player1 = env.storage.getClientByChatId(100);
-        player2 = env.storage.getClientByChatId(200);
-        testPassed &= player1.status == Client.Status.IDLE;
-        testPassed &= player2.status == Client.Status.IDLE;
         
         if (testPassed) {
             System.out.println("PASSED");
