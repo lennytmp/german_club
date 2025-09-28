@@ -25,6 +25,7 @@ public class GameEngineEndToEndTest {
         allTestsPassed &= testPlayerVsBotFight();
         allTestsPassed &= testFightWithPotionUsage();
         allTestsPassed &= testTaskAndItemFinding();
+        allTestsPassed &= testFightTimeout();
         
         if (!allTestsPassed) {
             System.exit(1);
@@ -312,6 +313,80 @@ public class GameEngineEndToEndTest {
         // Profile should show player stats
         testPassed &= telegram.hasMessageForChatContaining(800, "Level:");
         testPassed &= telegram.hasMessageForChatContaining(800, "Gesundheit:");
+        
+        if (testPassed) {
+            System.out.println("PASSED");
+        } else {
+            System.out.println("FAILED");
+        }
+        
+        return testPassed;
+    }
+    
+    /**
+     * Test fight timeout handling - verifies that proper buttons are sent when fight times out
+     */
+    private static boolean testFightTimeout() {
+        System.out.print("Testing fight timeout handling... ");
+        boolean testPassed = true;
+        
+        // Setup test environment
+        TestEnvironment env = createTestEnvironment();
+        
+        // Create two players
+        createPlayer(env, 100, "Player1");
+        createPlayer(env, 200, "Player2");
+        
+        // Player 1 looks for fight
+        env.telegram.clearMessages();
+        env.telegram.simulateUserMessage(100, "Player1", "Kämpfen");
+        env.engine.processUpdate(env.telegram.getUpdates(1)[0]);
+        
+        // Player 2 looks for fight - they should be matched
+        env.telegram.simulateUserMessage(200, "Player2", "Kämpfen");
+        env.engine.processUpdate(env.telegram.getUpdates(2)[0]);
+        
+        // Verify fight started
+        testPassed &= env.telegram.hasMessageForChatContaining(100, "Du kämpfst jetzt mit");
+        testPassed &= env.telegram.hasMessageForChatContaining(200, "Du kämpfst jetzt mit");
+        
+        // Clear messages to focus on timeout behavior
+        env.telegram.clearMessages();
+        
+        // Manually trigger timeout by setting both players' last activity to be beyond timeout
+        Client player1 = env.storage.getClientByChatId(100);
+        Client player2 = env.storage.getClientByChatId(200);
+        int oldTime = (int)(System.currentTimeMillis() / 1000L) - 70; // 70 seconds ago (past 60s timeout)
+        player1.lastFightActivitySince = oldTime;
+        player2.lastFightActivitySince = oldTime;
+        env.storage.saveClients(player1, player2);
+        
+        // Run background tasks to trigger timeout handling
+        env.engine.runBackgroundTasks();
+        
+        // Verify timeout messages were sent to both players
+        testPassed &= env.telegram.hasMessageForChatContaining(100, "Zeitüberschreitung");
+        testPassed &= env.telegram.hasMessageForChatContaining(200, "Zeitüberschreitung");
+        
+        // Most importantly: verify that main buttons are sent, not fight buttons
+        MockTelegram.SentMessage player1LastMsg = env.telegram.getLastMessageForChat(100);
+        MockTelegram.SentMessage player2LastMsg = env.telegram.getLastMessageForChat(200);
+        
+        testPassed &= player1LastMsg.hasButton("Kämpfen");
+        testPassed &= player1LastMsg.hasButton("Profil");
+        testPassed &= player1LastMsg.hasButton("Aufgabe");
+        testPassed &= !player1LastMsg.hasButton("Erfolg"); // Should NOT have fight buttons
+        
+        testPassed &= player2LastMsg.hasButton("Kämpfen");
+        testPassed &= player2LastMsg.hasButton("Profil");
+        testPassed &= player2LastMsg.hasButton("Aufgabe");
+        testPassed &= !player2LastMsg.hasButton("Erfolg"); // Should NOT have fight buttons
+        
+        // Verify players are no longer fighting
+        player1 = env.storage.getClientByChatId(100); // Reload to get updated status
+        player2 = env.storage.getClientByChatId(200);
+        testPassed &= player1.status == Client.Status.IDLE;
+        testPassed &= player2.status == Client.Status.IDLE;
         
         if (testPassed) {
             System.out.println("PASSED");

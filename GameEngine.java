@@ -471,12 +471,25 @@ public class GameEngine {
             Client opponent = getClientWithStorage(client.fightingChatId);
             // Reset activity since we're handling the timeout
             client.lastFightActivitySince = curTimeSeconds;
-            // Timeout acts the same as pressing "Fail" - handle as failed task
-            handleHitTask(client, opponent, false);
+            
+            // Handle timeout by ending the fight properly
+            handleFightTimeout(client, opponent);
             storage.saveClients(opponent, client);
             if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
                 activateBotTask(opponent, client);
             }
+        }
+    }
+    
+    private void handleFightTimeout(Client client, Client opponent) {
+        // End the fight due to timeout - both players lose
+        updateFightStats(client, opponent);
+        
+        // Send timeout messages with proper main buttons
+        String timeoutMessage = "⏰ Der Kampf ist wegen Zeitüberschreitung beendet worden.";
+        telegram.sendMessage(client.chatId, timeoutMessage, MAIN_BUTTONS);
+        if (opponent.chatId > 0) {  // Only send to human players
+            telegram.sendMessage(opponent.chatId, timeoutMessage, MAIN_BUTTONS);
         }
     }
     
