@@ -109,12 +109,26 @@ class Client {
 
   
 
-  // Removes 1-3 random item units from the inventory (weighted by counts) and
+  // Removes 30% of inventory items (weighted by counts) and
   // returns a human-readable description of what was lost, e.g., "2 potions, 1 fang".
   public String loseRandomItems() {
     if (inventory.isEmpty()) {
       return "";
     }
+
+    // Calculate total number of items in inventory
+    int totalItems = 0;
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      totalItems += count;
+    }
+
+    if (totalItems == 0) {
+      return "";
+    }
+
+    // Calculate 30% of total items (minimum 1 item if inventory is not empty)
+    int numToLose = Math.max(1, (int) Math.round(totalItems * 0.3));
 
     // Build a weighted list of item indices according to their counts
     java.util.List<Integer> weighted = new java.util.ArrayList<>();
@@ -126,11 +140,6 @@ class Client {
       }
     }
 
-    if (weighted.isEmpty()) {
-      return "";
-    }
-
-    int numToLose = Utils.rndInRange(1, 3);
     java.util.Map<Integer, Integer> lostCounts = new java.util.HashMap<>();
     for (int i = 0; i < numToLose && !weighted.isEmpty(); i++) {
       int pickIdx = Utils.rndInRange(0, weighted.size() - 1);
@@ -147,8 +156,6 @@ class Client {
         // Track what was lost
         lostCounts.put(itemIndex, lostCounts.getOrDefault(itemIndex, 0) + 1);
       }
-
-      
     }
 
     // Build description string for lost items
