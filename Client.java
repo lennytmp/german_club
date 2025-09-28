@@ -42,6 +42,14 @@ class Client {
   // Enum ID to the quantity of that item.
   Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
 
+  // Simple adaptive difficulty tracking (keeps bot opponents fair over time)
+  // Starts at 1.0 (no change). Goes up slightly with winning, down with losing.
+  double nextEnemyPower = 1.0;
+  // Rolling win rate approximation (starts near the target 0.7 so new players don't get spikes)
+  double recentWins = 0.7;
+  int winStreak = 0;
+  int loseStreak = 0;
+
   // Trading system fields
   Game.Item offeredItem = null;
   Game.Item requestedItem = null;
@@ -77,6 +85,16 @@ class Client {
         k *= -1;
       }
       level = Math.max(opponent.level + k * Utils.rndInRange(0, 4), 1);
+    }
+    // Nudge bot level slightly based on opponent's nextEnemyPower (kept very small)
+    if (opponent.nextEnemyPower >= 1.20) {
+      level = Math.max(level + 2, 1);
+    } else if (opponent.nextEnemyPower >= 1.10) {
+      level = Math.max(level + 1, 1);
+    } else if (opponent.nextEnemyPower <= 0.80) {
+      level = Math.max(level - 2, 1);
+    } else if (opponent.nextEnemyPower <= 0.90) {
+      level = Math.max(level - 1, 1);
     }
     BotConfig bc = pickBotType();
     this.username = bc.name;
