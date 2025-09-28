@@ -42,6 +42,8 @@ class Client {
   // Enum ID to the quantity of that item.
   Map<Integer, Integer> inventory = new HashMap<>(Game.ITEM_VALUES.length);
 
+  
+
   // Trading system fields
   Game.Item offeredItem = null;
   Game.Item requestedItem = null;
@@ -78,6 +80,34 @@ class Client {
       }
       level = Math.max(opponent.level + k * Utils.rndInRange(0, 4), 1);
     }
+    // Tougher enemies for higher win percentage (no extra fields stored)
+    // Base random swing around opponent level (can be negative or positive)
+    int k = 1;
+    if (Utils.rndInRange(0, opponent.totalFights) > opponent.fightsWon) {
+      k *= -1;
+    }
+    int baseSwing = k * Utils.rndInRange(0, 4);
+
+    // Compute win rate (defaults to 0.5 if no fights yet)
+    double winRate = opponent.totalFights == 0 ? 0.5 : ((double)opponent.fightsWon / (double)opponent.totalFights);
+
+    // Add a positive bonus that grows with win rate
+    // 60%→0, 70%→+1, 80%→+2, 90%→+3, 100%→+4
+    int bonus = 0;
+    if (winRate >= 0.6) bonus++;
+    if (winRate >= 0.7) bonus++;
+    if (winRate >= 0.8) bonus++;
+    if (winRate >= 0.9) bonus++;
+
+    int delta = baseSwing + bonus;
+
+    // Ensure a minimum upward push at high win rates (keeps it progressive)
+    if (winRate >= 0.7 && delta < 1) delta = 1;
+    if (winRate >= 0.8 && delta < 2) delta = 2;
+    if (winRate >= 0.9 && delta < 3) delta = 3;
+
+    // Allow going above +4 if needed via bonus; keep level at least 1
+    level = Math.max(opponent.level + delta, 1);
     BotConfig bc = pickBotType();
     this.username = bc.name;
     // Allocate level-up points prioritizing vitality to avoid one-shot kills (except level 1 bots)
