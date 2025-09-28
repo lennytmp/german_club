@@ -999,11 +999,12 @@ public class GameEngine {
         }
         
         // Send the comprehensive victory message
-        if (leveledUp) {
-            telegram.sendMessage(winner.chatId, victoryMessage.toString(), LEVEL_POINT_BUTTONS);
-        } else {
-            telegram.sendMessage(winner.chatId, victoryMessage.toString(), MAIN_BUTTONS);
+        String[] buttonsToSend = leveledUp ? LEVEL_POINT_BUTTONS : MAIN_BUTTONS;
+        // Safety check to ensure buttons are never null or empty
+        if (buttonsToSend == null || buttonsToSend.length == 0) {
+            buttonsToSend = new String[] { "Kämpfen", "Profil", "Aufgabe" };
         }
+        telegram.sendMessage(winner.chatId, victoryMessage.toString(), buttonsToSend);
         if (loser.chatId < 0) {
             return;
         }
