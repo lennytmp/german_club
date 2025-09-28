@@ -471,9 +471,8 @@ public class GameEngine {
             Client opponent = getClientWithStorage(client.fightingChatId);
             // Reset activity since we're handling the timeout
             client.lastFightActivitySince = curTimeSeconds;
-            
-            // Handle timeout by ending the fight properly
-            handleFightTimeout(client, opponent);
+            // Timeout acts the same as pressing "Fail" - handle as failed task
+            handleHitTaskWithTimeout(client, opponent, false);
             storage.saveClients(opponent, client);
             if (opponent.chatId < 0 && opponent.status == Client.Status.FIGHTING) {
                 activateBotTask(opponent, client);
@@ -481,15 +480,37 @@ public class GameEngine {
         }
     }
     
-    private void handleFightTimeout(Client client, Client opponent) {
-        // End the fight due to timeout - both players lose
-        updateFightStats(client, opponent);
+    private void handleHitTaskWithTimeout(Client client, Client opponent, boolean isSuccess) {
+        makeHitTask(client, opponent, isSuccess);
+        // Force fight to end due to timeout, regardless of damage outcome
+        // Determine winner based on remaining HP after timeout damage
+        Client winner = null;
+        Client loser = null;
         
-        // Send timeout messages with proper main buttons
-        String timeoutMessage = "⏰ Der Kampf ist wegen Zeitüberschreitung beendet worden.";
-        telegram.sendMessage(client.chatId, timeoutMessage, MAIN_BUTTONS);
-        if (opponent.chatId > 0) {  // Only send to human players
-            telegram.sendMessage(opponent.chatId, timeoutMessage, MAIN_BUTTONS);
+        if (client.hp <= 0 && opponent.hp <= 0) {
+            // Both died - treat as a draw, both lose
+            updateFightStats(client, opponent);
+            String drawMessage = "⏰ Der Kampf ist wegen Zeitüberschreitung beendet worden. Unentschieden!";
+            telegram.sendMessage(client.chatId, drawMessage, MAIN_BUTTONS);
+            if (opponent.chatId > 0) {
+                telegram.sendMessage(opponent.chatId, drawMessage, MAIN_BUTTONS);
+            }
+        } else if (client.hp <= 0) {
+            winner = opponent;
+            loser = client;
+            finishFight(winner, loser);
+        } else if (opponent.hp <= 0) {
+            winner = client;
+            loser = opponent;
+            finishFight(winner, loser);
+        } else {
+            // Both still alive - force end as draw
+            updateFightStats(client, opponent);
+            String timeoutMessage = "⏰ Der Kampf ist wegen Zeitüberschreitung beendet worden. Unentschieden!";
+            telegram.sendMessage(client.chatId, timeoutMessage, MAIN_BUTTONS);
+            if (opponent.chatId > 0) {
+                telegram.sendMessage(opponent.chatId, timeoutMessage, MAIN_BUTTONS);
+            }
         }
     }
     
