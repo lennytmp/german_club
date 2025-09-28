@@ -1067,9 +1067,35 @@ public class GameEngine {
         if (isSuccess) {
             result = Utils.rndInRange((maxDamage + 1) / 2, maxDamage);
         }
-        if (Utils.rndInRange(1, 100) < client.getEffectiveLuck() * client.getEffectiveLuck()) {
-            result *= 2;
+        
+        // New critical hit system: luck affects both chance and damage multiplier
+        int luck = client.getEffectiveLuck();
+        int critChance;
+        
+        if (luck <= 10) {
+            // Original system: luck² percent chance up to 100% at luck 10
+            critChance = luck * luck;
+        } else {
+            // Beyond luck 10: guaranteed crit, but higher chance of bigger multipliers
+            critChance = 100;
         }
+        
+        if (Utils.rndInRange(1, 100) <= critChance) {
+            // Calculate critical damage multiplier based on luck
+            double multiplier;
+            if (luck <= 10) {
+                // Luck 1-10: standard 2x multiplier
+                multiplier = 2.0;
+            } else {
+                // Luck beyond 10: graduated damage scaling
+                // Base multiplier starts at 2.0 and grows by 0.1 per luck point beyond 10
+                // Luck 11 = 2.1x, Luck 15 = 2.5x, Luck 20 = 3.0x, etc.
+                multiplier = 2.0 + (luck - 10) * 0.1;
+            }
+            
+            result = (int) Math.round(result * multiplier);
+        }
+        
         return result;
     }
 
