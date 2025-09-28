@@ -906,36 +906,21 @@ public class GameEngine {
     }
 
     private void handleHitTask(Client client, Client opponent, boolean isSuccess) {
-        // Check if this will be a finishing blow before sending messages
-        int damage = getDamageTask(client, isSuccess);
-        boolean willKillOpponent = opponent.hp <= damage;
-        boolean willKillClient = client.hp <= 0; // Client was already damaged if applicable
-        
-        // If this attack will end the fight, skip the intermediate attack messages
-        // and go directly to the fight conclusion
-        if (willKillOpponent || willKillClient) {
-            // Apply damage
-            opponent.hp = Math.max(opponent.hp - damage, 0);
-            
-            // Determine winner and finish fight
-            Client winner = null;
-            Client loser = null;
-            if (client.hp <= 0) {
-                winner = opponent;
-                loser = client;
-            }
-            if (opponent.hp <= 0) {
-                winner = client;
-                loser = opponent;
-            }
-            if (winner != null) {
-                loser.hp = 0;
-                finishFight(winner, loser);
-            }
-        } else {
-            // Normal attack flow - send intermediate messages
-            makeHitTask(client, opponent, isSuccess);
-            // No winner since no one died
+        makeHitTask(client, opponent, isSuccess);
+        // Finish fight if needed
+        Client winner = null;
+        Client loser = null;
+        if (client.hp <= 0) {
+            winner = opponent;
+            loser = client;
+        }
+        if (opponent.hp <= 0) {
+            winner = client;
+            loser = opponent;
+        }
+        if (winner != null) {
+            loser.hp = 0;
+            finishFight(winner, loser);
         }
     }
 
