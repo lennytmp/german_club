@@ -487,48 +487,70 @@ public class ClientTest {
     public static boolean testPreventSelfItemTrades() {
         System.out.println("Testing prevention of self-item trades...");
         try {
-            // Create a client with only bones
-            Client client = new Client(1, "TestUser");
-            client.giveItem(Game.Item.BONE);
-            client.giveItem(Game.Item.BONE);
-            client.giveItem(Game.Item.BONE);
+            // Test Case 1: Player only has bones, trader offers bones - should fail
+            Client client1 = new Client(1, "TestUser1");
+            client1.giveItem(Game.Item.BONE);
+            client1.giveItem(Game.Item.BONE);
+            client1.giveItem(Game.Item.BONE);
             
-            // Try to generate a trade offer where trader offers bones (same as what player has)
-            boolean tradeGenerated = client.generateTradeOffer(Game.Item.BONE);
-            
-            // Should return false because player only has bones and trader is offering bones
+            boolean tradeGenerated = client1.generateTradeOffer(Game.Item.BONE);
             if (tradeGenerated) {
                 System.out.println("ERROR: Trade was generated when it should have been prevented (player only has bones, trader offers bones)");
                 return false;
             }
             
-            // Now add a different item to the player's inventory
-            client.giveItem(Game.Item.COIN);
+            // Test Case 2: Player has bones and coins, trader offers bones - should succeed with coin offered
+            Client client2 = new Client(2, "TestUser2");
+            client2.giveItem(Game.Item.BONE);
+            client2.giveItem(Game.Item.BONE);
+            client2.giveItem(Game.Item.COIN);
             
-            // Try again - now it should work because player has both bones and coins
-            tradeGenerated = client.generateTradeOffer(Game.Item.BONE);
-            
+            tradeGenerated = client2.generateTradeOffer(Game.Item.BONE);
             if (!tradeGenerated) {
                 System.out.println("ERROR: Trade was not generated when it should have been (player has bones and coins, trader offers bones)");
                 return false;
             }
             
             // Verify that the offered item is not the same as requested item
-            if (client.offeredItem == client.requestedItem) {
-                System.out.println("ERROR: Offered item is the same as requested item: " + client.offeredItem.singular);
+            if (client2.offeredItem == client2.requestedItem) {
+                System.out.println("ERROR: Offered item is the same as requested item: " + client2.offeredItem.singular);
                 return false;
             }
             
             // The offered item should be COIN (the only different item the player has)
-            if (client.offeredItem != Game.Item.COIN) {
-                System.out.println("ERROR: Expected offered item to be COIN, but got: " + client.offeredItem.singular);
+            if (client2.offeredItem != Game.Item.COIN) {
+                System.out.println("ERROR: Expected offered item to be COIN, but got: " + client2.offeredItem.singular);
                 return false;
             }
             
-            // Test the exclusion functionality - exclude coins, should get bones
-            Game.Item excludedResult = client.getRandomPlayerItemExcluding(Game.Item.COIN);
+            // Test Case 3: Test the exclusion method directly
+            Game.Item excludedResult = client2.getRandomPlayerItemExcluding(Game.Item.COIN);
             if (excludedResult != Game.Item.BONE) {
                 System.out.println("ERROR: Expected BONE when excluding COIN, but got: " + (excludedResult != null ? excludedResult.singular : "null"));
+                return false;
+            }
+            
+            // Test Case 4: Player has multiple different items, trader offers one of them
+            Client client3 = new Client(3, "TestUser3");
+            client3.giveItem(Game.Item.BONE);
+            client3.giveItem(Game.Item.COIN);
+            client3.giveItem(Game.Item.PAPER);
+            
+            tradeGenerated = client3.generateTradeOffer(Game.Item.COIN);
+            if (!tradeGenerated) {
+                System.out.println("ERROR: Trade should be generated when player has multiple different items");
+                return false;
+            }
+            
+            // Offered item should not be COIN (the requested item)
+            if (client3.offeredItem == Game.Item.COIN) {
+                System.out.println("ERROR: Offered item should not be the same as requested item (COIN)");
+                return false;
+            }
+            
+            // Offered item should be either BONE or PAPER
+            if (client3.offeredItem != Game.Item.BONE && client3.offeredItem != Game.Item.PAPER) {
+                System.out.println("ERROR: Expected offered item to be BONE or PAPER, but got: " + client3.offeredItem.singular);
                 return false;
             }
             
