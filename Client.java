@@ -393,6 +393,18 @@ class Client {
     return Game.ITEM_VALUES[randomIndex];
   }
 
+  public boolean hasOnlyOneItemType() {
+    // Count how many different item types the player has
+    int itemTypeCount = 0;
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      if (count > 0) {
+        itemTypeCount++;
+      }
+    }
+    return itemTypeCount == 1;
+  }
+
   public Game.Item getRandomPlayerItemExcluding(Game.Item excludeItem) {
     // Build a weighted list of item indices according to their counts, excluding the specified item
     java.util.List<Integer> weighted = new java.util.ArrayList<>();
@@ -433,14 +445,8 @@ class Client {
       return false;
     }
 
-    // Generate trade offer - ensure offered item is different from requested item
-    this.offeredItem = getRandomPlayerItemExcluding(requestedItem);
-    
-    if (this.offeredItem == null) {
-      // Player only has the same item type that trader is offering
-      return false;
-    }
-    
+    // Generate trade offer
+    this.offeredItem = getRandomPlayerItem();
     this.requestedItem = requestedItem;
     this.status = Client.Status.TRADING;
     return true;
