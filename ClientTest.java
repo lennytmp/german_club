@@ -525,6 +525,16 @@ public class ClientTest {
                 return false;
             }
             
+            // Test the new exclusion list functionality
+            java.util.List<Game.Item> excludeList = new java.util.ArrayList<>();
+            excludeList.add(Game.Item.BONE);
+            excludeList.add(Game.Item.COIN);
+            Game.Item excludedResult = client.getRandomPlayerItemExcluding(excludeList);
+            if (excludedResult != null) {
+                System.out.println("ERROR: Should return null when all items are excluded, but got: " + excludedResult.singular);
+                return false;
+            }
+            
             System.out.println("SUCCESS: Self-item trades are properly prevented");
             return true;
             
