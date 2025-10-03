@@ -14,6 +14,7 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
+        allTestsPassed &= testPreventSelfItemTrades();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -479,6 +480,56 @@ public class ClientTest {
             
         } catch (Exception e) {
             System.out.println("Exception in testPotionButtonProgression: " + e.getMessage() + " FAILED");
+            return false;
+        }
+    }
+
+    public static boolean testPreventSelfItemTrades() {
+        System.out.println("Testing prevention of self-item trades...");
+        try {
+            // Create a client with only bones
+            Client client = new Client(1, "TestUser");
+            client.giveItem(Game.Item.BONE);
+            client.giveItem(Game.Item.BONE);
+            client.giveItem(Game.Item.BONE);
+            
+            // Try to generate a trade offer where trader offers bones (same as what player has)
+            boolean tradeGenerated = client.generateTradeOffer(Game.Item.BONE);
+            
+            // Should return false because player only has bones and trader is offering bones
+            if (tradeGenerated) {
+                System.out.println("ERROR: Trade was generated when it should have been prevented (player only has bones, trader offers bones)");
+                return false;
+            }
+            
+            // Now add a different item to the player's inventory
+            client.giveItem(Game.Item.COIN);
+            
+            // Try again - now it should work because player has both bones and coins
+            tradeGenerated = client.generateTradeOffer(Game.Item.BONE);
+            
+            if (!tradeGenerated) {
+                System.out.println("ERROR: Trade was not generated when it should have been (player has bones and coins, trader offers bones)");
+                return false;
+            }
+            
+            // Verify that the offered item is not the same as requested item
+            if (client.offeredItem == client.requestedItem) {
+                System.out.println("ERROR: Offered item is the same as requested item: " + client.offeredItem.singular);
+                return false;
+            }
+            
+            // The offered item should be COIN (the only different item the player has)
+            if (client.offeredItem != Game.Item.COIN) {
+                System.out.println("ERROR: Expected offered item to be COIN, but got: " + client.offeredItem.singular);
+                return false;
+            }
+            
+            System.out.println("SUCCESS: Self-item trades are properly prevented");
+            return true;
+            
+        } catch (Exception e) {
+            System.out.println("Exception in testPreventSelfItemTrades: " + e.getMessage() + " FAILED");
             return false;
         }
     }
