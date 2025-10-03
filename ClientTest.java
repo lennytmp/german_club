@@ -525,13 +525,10 @@ public class ClientTest {
                 return false;
             }
             
-            // Test the new exclusion list functionality
-            java.util.List<Game.Item> excludeList = new java.util.ArrayList<>();
-            excludeList.add(Game.Item.BONE);
-            excludeList.add(Game.Item.COIN);
-            Game.Item excludedResult = client.getRandomPlayerItemExcluding(excludeList);
-            if (excludedResult != null) {
-                System.out.println("ERROR: Should return null when all items are excluded, but got: " + excludedResult.singular);
+            // Test the exclusion functionality - exclude coins, should get bones
+            Game.Item excludedResult = client.getRandomPlayerItemExcluding(Game.Item.COIN);
+            if (excludedResult != Game.Item.BONE) {
+                System.out.println("ERROR: Expected BONE when excluding COIN, but got: " + (excludedResult != null ? excludedResult.singular : "null"));
                 return false;
             }
             

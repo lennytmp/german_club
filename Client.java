@@ -393,15 +393,15 @@ class Client {
     return Game.ITEM_VALUES[randomIndex];
   }
 
-  public Game.Item getRandomPlayerItemExcluding(java.util.List<Game.Item> excludeItems) {
-    // Build a weighted list of item indices according to their counts, excluding the specified items
+  public Game.Item getRandomPlayerItemExcluding(Game.Item excludeItem) {
+    // Build a weighted list of item indices according to their counts, excluding the specified item
     java.util.List<Integer> weighted = new java.util.ArrayList<>();
     for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
       int itemIndex = entry.getKey();
       Game.Item item = Game.ITEM_VALUES[itemIndex];
       
-      // Skip any excluded items
-      if (excludeItems.contains(item)) {
+      // Skip the excluded item
+      if (item == excludeItem) {
         continue;
       }
       
@@ -434,9 +434,7 @@ class Client {
     }
 
     // Generate trade offer - ensure offered item is different from requested item
-    java.util.List<Game.Item> excludeItems = new java.util.ArrayList<>();
-    excludeItems.add(requestedItem);
-    this.offeredItem = getRandomPlayerItemExcluding(excludeItems);
+    this.offeredItem = getRandomPlayerItemExcluding(requestedItem);
     
     if (this.offeredItem == null) {
       // Player only has the same item type that trader is offering
