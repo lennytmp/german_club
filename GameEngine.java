@@ -1133,14 +1133,31 @@ public class GameEngine {
     }
 
     // Trading system methods
-    private Game.Item getRandomTradeItem() {
-        // Trader can offer any item in the game
-        return Utils.getRnd(Game.ITEM_VALUES);
+    private Game.Item getRandomTradeItem(Client client) {
+        // Trader should not offer an item that the player only has
+        // Get all possible items
+        java.util.List<Game.Item> availableItems = new java.util.ArrayList<>();
+        for (Game.Item item : Game.ITEM_VALUES) {
+            availableItems.add(item);
+        }
+        
+        // If player only has one type of item, remove it from trader's possible offers
+        if (client.hasOnlyOneItemType()) {
+            Game.Item playerOnlyItem = client.getRandomPlayerItem();
+            availableItems.remove(playerOnlyItem);
+        }
+        
+        // If no items available (shouldn't happen), fall back to any item
+        if (availableItems.isEmpty()) {
+            return Utils.getRnd(Game.ITEM_VALUES);
+        }
+        
+        return Utils.getRnd(availableItems.toArray(new Game.Item[0]));
     }
 
     private void initiateTradeOffer(Client client) {
         // Generate trade offer
-        Game.Item randomTradeItem = getRandomTradeItem();
+        Game.Item randomTradeItem = getRandomTradeItem(client);
         if (!client.generateTradeOffer(randomTradeItem)) {
             // This should never happen with the current logic, but fallback to nothing found
             handleNothingFound(client);

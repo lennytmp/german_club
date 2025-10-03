@@ -393,6 +393,44 @@ class Client {
     return Game.ITEM_VALUES[randomIndex];
   }
 
+  public boolean hasOnlyOneItemType() {
+    // Count how many different item types the player has
+    int itemTypeCount = 0;
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      if (count > 0) {
+        itemTypeCount++;
+      }
+    }
+    return itemTypeCount == 1;
+  }
+
+  public Game.Item getRandomPlayerItemExcluding(Game.Item excludeItem) {
+    // Build a weighted list of item indices according to their counts, excluding the specified item
+    java.util.List<Integer> weighted = new java.util.ArrayList<>();
+    for (Map.Entry<Integer, Integer> entry : inventory.entrySet()) {
+      int itemIndex = entry.getKey();
+      Game.Item item = Game.ITEM_VALUES[itemIndex];
+      
+      // Skip the excluded item
+      if (item == excludeItem) {
+        continue;
+      }
+      
+      int count = entry.getValue() == null ? 0 : entry.getValue();
+      for (int i = 0; i < count; i++) {
+        weighted.add(itemIndex);
+      }
+    }
+    
+    if (weighted.isEmpty()) {
+      return null;
+    }
+    
+    int randomIndex = weighted.get(Utils.rndInRange(0, weighted.size() - 1));
+    return Game.ITEM_VALUES[randomIndex];
+  }
+
   public void resetTradeState() {
     status = Client.Status.IDLE;
     offeredItem = null;
