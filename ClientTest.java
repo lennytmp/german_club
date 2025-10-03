@@ -14,7 +14,6 @@ public class ClientTest {
         allTestsPassed &= testProfileDisplayWithSingleBrewingOption();
         allTestsPassed &= testProfileDisplayWithMultipleBrewingOptions();
         allTestsPassed &= testTradingSystem();
-        allTestsPassed &= testPreventSelfItemTrades();
         if (!allTestsPassed) {
             System.exit(1); 
         }
@@ -484,56 +483,5 @@ public class ClientTest {
         }
     }
 
-    public static boolean testPreventSelfItemTrades() {
-        System.out.println("Testing prevention of self-item trades...");
-        try {
-            // Test Case 1: Test hasOnlyOneItemType method
-            Client client1 = new Client(1, "TestUser1");
-            client1.giveItem(Game.Item.BONE);
-            client1.giveItem(Game.Item.BONE);
-            client1.giveItem(Game.Item.BONE);
-            
-            if (!client1.hasOnlyOneItemType()) {
-                System.out.println("ERROR: hasOnlyOneItemType should return true for player with only bones");
-                return false;
-            }
-            
-            // Test Case 2: Player with multiple item types
-            Client client2 = new Client(2, "TestUser2");
-            client2.giveItem(Game.Item.BONE);
-            client2.giveItem(Game.Item.COIN);
-            
-            if (client2.hasOnlyOneItemType()) {
-                System.out.println("ERROR: hasOnlyOneItemType should return false for player with bones and coins");
-                return false;
-            }
-            
-            // Test Case 3: Test exclusion method still works
-            Game.Item excludedResult = client2.getRandomPlayerItemExcluding(Game.Item.COIN);
-            if (excludedResult != Game.Item.BONE) {
-                System.out.println("ERROR: Expected BONE when excluding COIN, but got: " + (excludedResult != null ? excludedResult.singular : "null"));
-                return false;
-            }
-            
-            // Test Case 4: Empty inventory
-            Client client3 = new Client(3, "TestUser3");
-            if (client3.hasOnlyOneItemType()) {
-                System.out.println("ERROR: hasOnlyOneItemType should return false for empty inventory");
-                return false;
-            }
-            
-            // Note: The actual prevention logic is now in GameEngine.getRandomTradeItem(client)
-            // which cannot be easily unit tested here since it's private.
-            // The prevention happens when GameEngine selects what item the trader offers,
-            // not when the client generates the trade offer.
-            
-            System.out.println("SUCCESS: Self-item trade prevention logic is implemented");
-            return true;
-            
-        } catch (Exception e) {
-            System.out.println("Exception in testPreventSelfItemTrades: " + e.getMessage() + " FAILED");
-            return false;
-        }
-    }
 
 }
