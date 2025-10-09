@@ -19,6 +19,7 @@ class Client {
   int chatId = 0;
   boolean nameChangeHintSent = false;
   Status status = Client.Status.IDLE;
+  String playerPrompt = ""; // Max 200 chars, attached to Gemini requests
 
   int fightingChatId = 0;
   int lastRestore = 0;
@@ -63,6 +64,26 @@ class Client {
   // Set storage dependency (needed after deserialization or for testing)
   public void setStorage(StorageInterface storage) {
     this.storage = storage;
+  }
+
+  // Set player prompt with validation (max 200 chars)
+  public boolean setPlayerPrompt(String prompt) {
+    if (prompt == null) {
+      prompt = "";
+    }
+    if (prompt.length() > 200) {
+      return false; // Validation failed
+    }
+    this.playerPrompt = prompt;
+    if (storage != null) {
+      storage.saveClient(this);
+    }
+    return true; // Success
+  }
+
+  // Get player prompt
+  public String getPlayerPrompt() {
+    return playerPrompt == null ? "" : playerPrompt;
   }
 
   // Used for creating bots

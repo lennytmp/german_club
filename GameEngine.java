@@ -173,6 +173,37 @@ public class GameEngine {
             return;
         }
 
+        if (txt.startsWith("/prompt ")) {
+            if (client.status != Client.Status.IDLE) {
+                telegram.sendMessage(client.chatId, "Du kannst deine Spielerbeschreibung nur ändern, wenn du nicht kämpfst.");
+                return;
+            }
+            String newPrompt = txt.substring(8); // "/prompt " is 8 characters
+            if (client.setPlayerPrompt(newPrompt)) {
+                if (newPrompt.isEmpty()) {
+                    telegram.sendMessage(client.chatId, "Deine Spielerbeschreibung wurde gelöscht.");
+                } else {
+                    telegram.sendMessage(client.chatId, "Deine Spielerbeschreibung wurde aktualisiert: \"" + newPrompt + "\"");
+                }
+            } else {
+                telegram.sendMessage(client.chatId, "Spielerbeschreibung ist zu lang! Maximal 200 Zeichen erlaubt.");
+            }
+            return;
+        }
+
+        if (txt.equals("/prompt")) {
+            String currentPrompt = client.getPlayerPrompt();
+            if (currentPrompt.isEmpty()) {
+                telegram.sendMessage(client.chatId, "Du hast keine Spielerbeschreibung gesetzt.\n\n" +
+                    "Verwende `/prompt <beschreibung>` um eine zu setzen (max. 200 Zeichen).\n" +
+                    "Beispiel: `/prompt Ich bin eine sehr attraktive Frau, die große Angst vor Spinnen und anderen Menschen hat.`");
+            } else {
+                telegram.sendMessage(client.chatId, "Deine aktuelle Spielerbeschreibung: \"" + currentPrompt + "\"\n\n" +
+                    "Verwende `/prompt <neue beschreibung>` um sie zu ändern oder `/prompt ` (mit Leerzeichen) um sie zu löschen.");
+            }
+            return;
+        }
+
         if (txt.startsWith("Stärke verbessern") || txt.startsWith("Vitalität verbessern") || txt.startsWith("Glück verbessern")) {
             String what = "";
             if (txt.startsWith("Stärke verbessern")) {
@@ -253,7 +284,8 @@ public class GameEngine {
             storage.saveClient(client);
             String foundMsg = "";
             try {
-                foundMsg = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + String.format(SOMETHING_FOUND_PROMPT, found.singular));
+                String prompt = buildGeminiPrompt(client, String.format(SOMETHING_FOUND_PROMPT, found.singular));
+                foundMsg = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
             }
@@ -1169,8 +1201,8 @@ public class GameEngine {
         // Try to get Gemini description for the trader encounter
         String tradeMessage = "";
         try {
-            tradeMessage = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + 
-                String.format(TRADER_PROMPT, client.requestedItem.singular, client.offeredItem.singular));
+            String prompt = buildGeminiPrompt(client, String.format(TRADER_PROMPT, client.requestedItem.singular, client.offeredItem.singular));
+            tradeMessage = Gemini.AskGemini(prompt);
         } catch (Exception e) {
             // Ignore Gemini errors in test environment
         }
@@ -1201,7 +1233,8 @@ public class GameEngine {
         } else {
             String notFound = "";
             try {
-                notFound = Gemini.AskGemini(GAME_DESCRIPTION_PROMPT + " " + NOT_FOUND_PROMPT);
+                String prompt = buildGeminiPrompt(client, NOT_FOUND_PROMPT);
+                notFound = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
             }
@@ -1249,5 +1282,17 @@ public class GameEngine {
             "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.",
             MAIN_BUTTONS);
         client.resetTradeState();
+    }
+    
+    // Helper method to build Gemini prompt with optional player prompt
+    private String buildGeminiPrompt(Client client, String specificPrompt) {
+        String basePrompt = GAME_DESCRIPTION_PROMPT;
+        String playerPrompt = client.getPlayerPrompt();
+        
+        if (!playerPrompt.isEmpty()) {
+            basePrompt += " Der Spieler beschreibt sich selbst als: " + playerPrompt + ".";
+        }
+        
+        return basePrompt + " " + specificPrompt;
     }
 }
