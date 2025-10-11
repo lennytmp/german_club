@@ -34,13 +34,14 @@ public class GameEngine {
       "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\" " + 
       "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
       "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
-    private static final String TRADER_PROMPT = "Der Held trifft auf einen Händler, der einen Tausch anbietet. " +
-      "WICHTIG: Der Händler GIBT dem Spieler 1 %s und der Spieler GIBT dem Händler 1 %s. " +
-      "Du musst kurz beschreiben, wie der Händler aussieht und was er sagt. Der Held kann auch zu einem Markt oder " +
-      "in einen Laden kommen. Zum Beispiel: \"Ein alter Mann mit einer Kapuze tritt aus den Schatten. Seine Augen glitzern im Mondlicht, als er dich mustert. " +
-      "'Ich habe etwas, was du gebrauchen könntest', flüstert er mit rauer Stimme. 'Gib mir deine Klaue und ich gebe dir dafür Gold. " +
-      "Was sagst du?'\" Beschreibe die Kreatur oder Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
-      "Verwende nicht das Wort 'Händler' in der Beschreibung.";
+    private static final String TRADER_PROMPT = "Der Held trifft auf eine Handelsperson, die einen Tausch anbietet. " +
+      "WICHTIG: Die Handelsperson GIBT dem Spieler 1 %s und der Spieler GIBT der Handelsperson 1 %s. " +
+      "Du musst kurz beschreiben, wie die Handelsperson aussieht und was sie sagt. Der Held kann auch zu einem Markt oder " +
+      "in einen Laden kommen. Erstelle sowohl männliche als auch weibliche Handelspartner mit gleicher Wahrscheinlichkeit. " +
+      "Beispiele: \"Eine geheimnisvolle Frau in einem dunklen Umhang tritt hervor. Ihre Augen funkeln neugierig.\" oder " +
+      "\"Ein alter Mann mit weißem Bart nickt dir zu. Seine Hände sind voller Schmuck.\" " +
+      "Beschreibe die Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
+      "Verwende nicht die Wörter 'Händler' oder 'Handelsperson' in der Beschreibung.";
     
     private Set<Integer> activeChats = new HashSet<>();
     private Set<Integer> injuredChats = new HashSet<>();
@@ -143,7 +144,7 @@ public class GameEngine {
             }
             // If player tries to use other commands while trading, resend the trade offer
             String tradeMessage = String.format(
-                "\uD83D\uDCBC Der Händler wartet auf deine Antwort!\n\n" +
+                "\uD83D\uDCBC Die Handelsperson wartet auf deine Antwort!\n\n" +
                 "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
                 "Du musst zuerst auf das Handelsangebot antworten, bevor du etwas anderes tun kannst.",
                 client.requestedItem.singular,
@@ -1210,7 +1211,7 @@ public class GameEngine {
         // Fallback to default message if Gemini fails or returns empty
         if (tradeMessage == null || tradeMessage.trim().isEmpty()) {
             tradeMessage = String.format(
-                "\uD83D\uDCBC Ein geheimnisvoller Händler erscheint vor dir!\n\n" +
+                "\uD83D\uDCBC Eine geheimnisvolle Person erscheint vor dir!\n\n" +
                 "\"Ich biete dir 1 %s für deine %s. Was sagst du?\"\n\n" +
                 "Du kannst das Angebot annehmen oder ablehnen.",
                 client.requestedItem.singular,
@@ -1263,7 +1264,7 @@ public class GameEngine {
         String successMessage = String.format(
             "\uD83E\uDD1D Handel erfolgreich!\n\n" +
             "Du hast deine %s gegen 1 %s getauscht.\n\n" +
-            "\"Danke für das Geschäft!\" sagt der Händler und verschwindet.",
+            "\"Danke für das Geschäft!\" sagt die Person und verschwindet.",
             offeredItem.singular,
             requestedItem.singular
         );
@@ -1279,7 +1280,7 @@ public class GameEngine {
 
         telegram.sendMessage(client.chatId, 
             "\uD83D\uDE45 Du lehnst das Angebot ab.\n\n" +
-            "\"Schade...\" murmelt der Händler und verschwindet in den Schatten.",
+            "\"Schade...\" murmelt die Person und verschwindet in den Schatten.",
             MAIN_BUTTONS);
         client.resetTradeState();
     }
