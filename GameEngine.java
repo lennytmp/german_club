@@ -22,49 +22,6 @@ public class GameEngine {
     private static final int REGEN_INTERVAL_SECONDS = 9;
     private static final String TASK_FAIL = "Fehler";
     private static final String TASK_SUCCESS = "Erfolg";
-    // Base game description without environmental context
-    private static final String BASE_GAME_DESCRIPTION = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
-      "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
-      "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
-      "Fleisch, Knochen, Crack, Flasche, Münze.";
-    
-    // Environmental contexts to balance tone
-    private static final String[] ENVIRONMENTAL_CONTEXTS = {
-        // Dark/Grim contexts (40% of the time)
-        "Die Welt ist von dunklen Schatten und verfallenen Ruinen geprägt. Nebel zieht durch verlassene Gassen und düstere Friedhöfe.",
-        "Das Abenteuer spielt sich in den dunklen Katakomben und schattigen Gassen einer alten, verfallenen Stadt ab.",
-        "Die Umgebung ist von Verfall und Dunkelheit geprägt - alte Grabstätten, verlassene Häuser und neblige Sümpfe.",
-        "Die Atmosphäre ist düster und geheimnisvoll, mit alten Ruinen und schattigen Wäldern voller Geheimnisse.",
-        
-        // Neutral/Balanced contexts (40% of the time)
-        "Das Abenteuer führt durch eine vielfältige Welt mit alten Bibliotheken, belebten Märkten und geheimnisvollen Wäldern.",
-        "Die Welt besteht aus verschiedenen Orten: sonnige Marktplätze wechseln sich mit mystischen Höhlen und alten Tempeln ab.",
-        "Der Held reist durch eine abwechslungsreiche Landschaft mit friedlichen Dörfern, antiken Ruinen und lebendigen Städten.",
-        "Die Umgebung variiert zwischen belebten Handelswegen, ruhigen Gärten und geheimnisvollen, aber nicht bedrohlichen Orten.",
-        
-        // Beautiful/Bright contexts (20% of the time)
-        "Die Welt ist voller Schönheit: blühende Gärten, kristallklare Seen, prächtige Paläste und sonnendurchflutete Marktplätze.",
-        "Das Abenteuer spielt in einer wunderschönen Welt mit goldenen Feldern, eleganten Städten und majestätischen Bibliotheken."
-    };
-    
-    // Weighted selection: 0-3 (dark), 4-7 (neutral), 8-9 (beautiful)
-    private static final int[] CONTEXT_WEIGHTS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
-    private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. " +
-        "Du musst etwas sagen wie: \"Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\" Du kannst dir einen " +
-        "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
-    private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %s gefunden. Du musst es kurz beschreiben. " +
-      "Zum Beispiel: \"Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
-      "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\" " + 
-      "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
-      "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
-    private static final String TRADER_PROMPT = "Der Held trifft auf eine Handelsperson, die einen Tausch anbietet. " +
-      "WICHTIG: Die Handelsperson GIBT dem Spieler 1 %s und der Spieler GIBT der Handelsperson 1 %s. " +
-      "Du musst kurz beschreiben, wie die Handelsperson aussieht und was sie sagt. Der Held kann auch zu einem Markt oder " +
-      "in einen Laden kommen. Erstelle sowohl männliche als auch weibliche Handelspartner mit gleicher Wahrscheinlichkeit. " +
-      "Beispiele: \"Eine geheimnisvolle Frau in einem dunklen Umhang tritt hervor. Ihre Augen funkeln neugierig.\" oder " +
-      "\"Ein alter Mann mit weißem Bart nickt dir zu. Seine Hände sind voller Schmuck.\" " +
-      "Beschreibe die Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
-      "Verwende nicht die Wörter 'Händler' oder 'Handelsperson' in der Beschreibung.";
     
     private Set<Integer> activeChats = new HashSet<>();
     private Set<Integer> injuredChats = new HashSet<>();
@@ -308,7 +265,7 @@ public class GameEngine {
             storage.saveClient(client);
             String foundMsg = "";
             try {
-                String prompt = buildGeminiPrompt(client, String.format(SOMETHING_FOUND_PROMPT, found.singular));
+                String prompt = Gemini.buildGamePrompt(client, Gemini.getSomethingFoundPrompt(found.singular));
                 foundMsg = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
@@ -1225,7 +1182,7 @@ public class GameEngine {
         // Try to get Gemini description for the trader encounter
         String tradeMessage = "";
         try {
-            String prompt = buildGeminiPrompt(client, String.format(TRADER_PROMPT, client.requestedItem.singular, client.offeredItem.singular));
+            String prompt = Gemini.buildGamePrompt(client, Gemini.getTraderPrompt(client.requestedItem.singular, client.offeredItem.singular));
             tradeMessage = Gemini.AskGemini(prompt);
         } catch (Exception e) {
             // Ignore Gemini errors in test environment
@@ -1257,7 +1214,7 @@ public class GameEngine {
         } else {
             String notFound = "";
             try {
-                String prompt = buildGeminiPrompt(client, NOT_FOUND_PROMPT);
+                String prompt = Gemini.buildGamePrompt(client, Gemini.getNotFoundPrompt());
                 notFound = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
@@ -1308,20 +1265,4 @@ public class GameEngine {
         client.resetTradeState();
     }
     
-    // Helper method to build Gemini prompt with balanced environmental context
-    private String buildGeminiPrompt(Client client, String specificPrompt) {
-        // Select environmental context based on weighted distribution
-        int weightIndex = Utils.rndInRange(0, CONTEXT_WEIGHTS.length - 1);
-        int contextIndex = CONTEXT_WEIGHTS[weightIndex];
-        String environmentalContext = ENVIRONMENTAL_CONTEXTS[contextIndex];
-        
-        String basePrompt = BASE_GAME_DESCRIPTION + " " + environmentalContext;
-        String playerPrompt = client.getPlayerPrompt();
-        
-        if (!playerPrompt.isEmpty()) {
-            basePrompt += " Der Spieler beschreibt sich selbst als: " + playerPrompt + ".";
-        }
-        
-        return basePrompt + " " + specificPrompt;
-    }
 }
