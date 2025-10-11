@@ -22,10 +22,33 @@ public class GameEngine {
     private static final int REGEN_INTERVAL_SECONDS = 9;
     private static final String TASK_FAIL = "Fehler";
     private static final String TASK_SUCCESS = "Erfolg";
-    private static final String GAME_DESCRIPTION_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
+    // Base game description without environmental context
+    private static final String BASE_GAME_DESCRIPTION = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
       "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
       "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
       "Fleisch, Knochen, Crack, Flasche, Münze.";
+    
+    // Environmental contexts to balance tone
+    private static final String[] ENVIRONMENTAL_CONTEXTS = {
+        // Dark/Grim contexts (40% of the time)
+        "Die Welt ist von dunklen Schatten und verfallenen Ruinen geprägt. Nebel zieht durch verlassene Gassen und düstere Friedhöfe.",
+        "Das Abenteuer spielt sich in den dunklen Katakomben und schattigen Gassen einer alten, verfallenen Stadt ab.",
+        "Die Umgebung ist von Verfall und Dunkelheit geprägt - alte Grabstätten, verlassene Häuser und neblige Sümpfe.",
+        "Die Atmosphäre ist düster und geheimnisvoll, mit alten Ruinen und schattigen Wäldern voller Geheimnisse.",
+        
+        // Neutral/Balanced contexts (40% of the time)
+        "Das Abenteuer führt durch eine vielfältige Welt mit alten Bibliotheken, belebten Märkten und geheimnisvollen Wäldern.",
+        "Die Welt besteht aus verschiedenen Orten: sonnige Marktplätze wechseln sich mit mystischen Höhlen und alten Tempeln ab.",
+        "Der Held reist durch eine abwechslungsreiche Landschaft mit friedlichen Dörfern, antiken Ruinen und lebendigen Städten.",
+        "Die Umgebung variiert zwischen belebten Handelswegen, ruhigen Gärten und geheimnisvollen, aber nicht bedrohlichen Orten.",
+        
+        // Beautiful/Bright contexts (20% of the time)
+        "Die Welt ist voller Schönheit: blühende Gärten, kristallklare Seen, prächtige Paläste und sonnendurchflutete Marktplätze.",
+        "Das Abenteuer spielt in einer wunderschönen Welt mit goldenen Feldern, eleganten Städten und majestätischen Bibliotheken."
+    };
+    
+    // Weighted selection: 0-3 (dark), 4-7 (neutral), 8-9 (beautiful)
+    private static final int[] CONTEXT_WEIGHTS = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. " +
         "Du musst etwas sagen wie: \"Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\" Du kannst dir einen " +
         "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
@@ -1285,9 +1308,14 @@ public class GameEngine {
         client.resetTradeState();
     }
     
-    // Helper method to build Gemini prompt with optional player prompt
+    // Helper method to build Gemini prompt with balanced environmental context
     private String buildGeminiPrompt(Client client, String specificPrompt) {
-        String basePrompt = GAME_DESCRIPTION_PROMPT;
+        // Select environmental context based on weighted distribution
+        int weightIndex = Utils.rndInRange(0, CONTEXT_WEIGHTS.length - 1);
+        int contextIndex = CONTEXT_WEIGHTS[weightIndex];
+        String environmentalContext = ENVIRONMENTAL_CONTEXTS[contextIndex];
+        
+        String basePrompt = BASE_GAME_DESCRIPTION + " " + environmentalContext;
         String playerPrompt = client.getPlayerPrompt();
         
         if (!playerPrompt.isEmpty()) {
