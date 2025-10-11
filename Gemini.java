@@ -56,11 +56,12 @@ public class Gemini {
     private static final String TRADER_PROMPT = "Der Held trifft auf eine Handelsperson, die einen Tausch anbietet. " +
       "WICHTIG: Die Handelsperson GIBT dem Spieler 1 %s und der Spieler GIBT der Handelsperson 1 %s. " +
       "Du musst kurz beschreiben, wie die Handelsperson aussieht und was sie sagt. Der Held kann auch zu einem Markt oder " +
-      "in einen Laden kommen. Erstelle sowohl männliche als auch weibliche Handelspartner mit gleicher Wahrscheinlichkeit. " +
+      "in einen Laden kommen. Erstelle EINE einzige Beschreibung - wähle zufällig zwischen einem männlichen oder weiblichen Handelspartner. " +
       "Beispiele: \"Eine geheimnisvolle Frau in einem dunklen Umhang tritt hervor. Ihre Augen funkeln neugierig.\" oder " +
       "\"Ein alter Mann mit weißem Bart nickt dir zu. Seine Hände sind voller Schmuck.\" " +
       "Beschreibe die Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
-      "Verwende nicht die Wörter 'Händler' oder 'Handelsperson' in der Beschreibung.";
+      "Verwende nicht die Wörter 'Händler' oder 'Handelsperson' in der Beschreibung. " +
+      "Gib NUR EINE Beschreibung zurück, keine Varianten oder Optionen.";
 
     private class Config {
         String gemini_api_key;
