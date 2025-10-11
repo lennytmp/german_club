@@ -22,26 +22,6 @@ public class GameEngine {
     private static final int REGEN_INTERVAL_SECONDS = 9;
     private static final String TASK_FAIL = "Fehler";
     private static final String TASK_SUCCESS = "Erfolg";
-    private static final String GAME_DESCRIPTION_PROMPT = "Du bist ein Rollenspiel. In diesem Spiel gibt es die folgenden Monster: " +
-      "Bettler, Betrunkener, Crack-Süchtiger, Skelett, Zombie, Geist, Mumie, Lich, Vampir, Ghul, Nekromant, Teufel und Dämon. " +
-      "Die Gegenstände, die Helden finden können, sind Gold, Silber, Asche, Papier, Klaue, Fangzahn, Wachs, Bandage, Seelenstein, " +
-      "Fleisch, Knochen, Crack, Flasche, Münze.";
-    private static final String NOT_FOUND_PROMPT = "In diesem Spiel suchte der Held nach etwas Nützlichem. " +
-        "Du musst etwas sagen wie: \"Du hast versucht, etwas Nützliches zu finden, aber du hast nichts gefunden.\" Du kannst dir einen " +
-        "Grund ausdenken, wo ich gesucht habe oder warum ich nichts gefunden habe. Halte dich kurz und erwähne nicht, wonach ich gesucht habe.";
-    private static final String SOMETHING_FOUND_PROMPT = "Der Held hat gerade %s gefunden. Du musst es kurz beschreiben. " +
-      "Zum Beispiel: \"Du bist durch den Wald spaziert und hast eine alte Feuerstelle gefunden, in der ein riesiges Skelett lag. " + 
-      "Nach genauer Untersuchung hast du die Krallen herausgezogen und in deinen Rucksack gesteckt.\" " + 
-      "Gib am Ende keine Zusammenfassung, der Spieler sollte den Text sorgfältig lesen, um zu verstehen, was er gefunden hat. Stelle keine Fragen. " +
-      "Gehe davon aus, dass der Held diesen Gegenstand am Ende in seinen Rucksack steckt.";
-    private static final String TRADER_PROMPT = "Der Held trifft auf eine Handelsperson, die einen Tausch anbietet. " +
-      "WICHTIG: Die Handelsperson GIBT dem Spieler 1 %s und der Spieler GIBT der Handelsperson 1 %s. " +
-      "Du musst kurz beschreiben, wie die Handelsperson aussieht und was sie sagt. Der Held kann auch zu einem Markt oder " +
-      "in einen Laden kommen. Erstelle sowohl männliche als auch weibliche Handelspartner mit gleicher Wahrscheinlichkeit. " +
-      "Beispiele: \"Eine geheimnisvolle Frau in einem dunklen Umhang tritt hervor. Ihre Augen funkeln neugierig.\" oder " +
-      "\"Ein alter Mann mit weißem Bart nickt dir zu. Seine Hände sind voller Schmuck.\" " +
-      "Beschreibe die Person kurz, halte dich an das Angebot und stelle am Ende die Frage nach der Entscheidung. " +
-      "Verwende nicht die Wörter 'Händler' oder 'Handelsperson' in der Beschreibung.";
     
     private Set<Integer> activeChats = new HashSet<>();
     private Set<Integer> injuredChats = new HashSet<>();
@@ -285,7 +265,7 @@ public class GameEngine {
             storage.saveClient(client);
             String foundMsg = "";
             try {
-                String prompt = buildGeminiPrompt(client, String.format(SOMETHING_FOUND_PROMPT, found.singular));
+                String prompt = Gemini.buildGamePrompt(client, Gemini.getSomethingFoundPrompt(found.singular));
                 foundMsg = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
@@ -1202,7 +1182,7 @@ public class GameEngine {
         // Try to get Gemini description for the trader encounter
         String tradeMessage = "";
         try {
-            String prompt = buildGeminiPrompt(client, String.format(TRADER_PROMPT, client.requestedItem.singular, client.offeredItem.singular));
+            String prompt = Gemini.buildGamePrompt(client, Gemini.getTraderPrompt(client.requestedItem.singular, client.offeredItem.singular));
             tradeMessage = Gemini.AskGemini(prompt);
         } catch (Exception e) {
             // Ignore Gemini errors in test environment
@@ -1234,7 +1214,7 @@ public class GameEngine {
         } else {
             String notFound = "";
             try {
-                String prompt = buildGeminiPrompt(client, NOT_FOUND_PROMPT);
+                String prompt = Gemini.buildGamePrompt(client, Gemini.getNotFoundPrompt());
                 notFound = Gemini.AskGemini(prompt);
             } catch (Exception e) {
                 // Ignore Gemini errors in test environment
@@ -1285,15 +1265,4 @@ public class GameEngine {
         client.resetTradeState();
     }
     
-    // Helper method to build Gemini prompt with optional player prompt
-    private String buildGeminiPrompt(Client client, String specificPrompt) {
-        String basePrompt = GAME_DESCRIPTION_PROMPT;
-        String playerPrompt = client.getPlayerPrompt();
-        
-        if (!playerPrompt.isEmpty()) {
-            basePrompt += " Der Spieler beschreibt sich selbst als: " + playerPrompt + ".";
-        }
-        
-        return basePrompt + " " + specificPrompt;
-    }
 }
